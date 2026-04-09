@@ -1,0 +1,20 @@
+name: zen-europe-env
+channels:
+  - conda-forge
+  - gurobi
+dependencies:
+  - pip
+  - python=3.13
+  - pip:
+      - -e .[dev,docs]
+
+
+# To install as a developer --------------------------------------------
+# conda env create -f zen_europe_env.yml
+# conda activate zen-europe-env
+# cd <path to zen_creator>
+# pip install -e .
+
+
+#  To remove as a developer --------------------------------------------
+# conda remove --name zen-europe-env --all

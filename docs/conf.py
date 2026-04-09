@@ -1,0 +1,155 @@
+# Configuration file for the Sphinx documentation builder.
+#
+# For the full list of built-in configuration values, see the documentation:
+# https://www.sphinx-doc.org/en/master/usage/configuration.html
+
+# -- Path setup --------------------------------------------------------------
+
+# If extensions (or modules to document with autodoc) are in another directory,
+# add these directories to sys.path here. If the directory is relative to the
+# documentation root, use os.path.abspath to make it absolute, like shown here.
+#
+import os
+import shutil
+import sys
+from importlib.metadata import version as get_version
+from pathlib import Path
+
+sys.path.insert(0, os.path.abspath(".."))
+sys.path.append(os.path.abspath("_ext"))
+
+# -- Project information -----------------------------------------------------
+# https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
+
+project = "ZEN-creator"
+copyright = "2026, Reliability and Risk Engineering lab, ETH Zurich"
+author = "Jacob Mannhardt, Christoph Funke"
+release = get_version("zen_creator")
+language = "en"
+
+# -- General configuration ---------------------------------------------------
+
+# Add any Sphinx extension module names here, as strings. They can be
+# extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
+# ones.
+extensions = [
+    "sphinx.ext.autodoc",
+    "sphinx.ext.napoleon",
+    "sphinx.ext.mathjax",
+    "sphinx.ext.autodoc",
+    "sphinx.ext.autosummary",
+    "sphinx.ext.intersphinx",
+    "sphinx.ext.todo",
+    #              "sphinx.ext.autosectionlabel",
+    "sphinx_reredirects",
+    "nbsphinx",
+    "nbsphinx_link",
+    "myst_parser",
+    "sphinx.ext.imgconverter",  # for SVG conversion
+    "sphinxcontrib.mermaid",  # for class diagrams
+    "docstring",  # custom extension for inserting docstring text
+]
+# allow errors in the notebooks
+nbsphinx_allow_errors = True
+
+# Generate .rst files when encountering an autosummary directive
+autosummary_generate = True
+autosummary_generate_overwrite = False
+
+# configure docstring options
+# todo_include_todos = True  # <- REQUIRED
+napoleon_attr_annotations = True
+napoleon_use_ivar = False
+
+# Specify the special members to include in the documentation
+autodoc_default_options = {
+    "members": True,
+    "special-members": "__init__",
+}
+
+numfig = True
+
+# Prevent Spynx from showing nested defaults and typehints.
+autodoc_typehints_format = "short"
+
+# Add any paths that contain templates here, relative to this directory.
+templates_path = ["_templates"]
+
+# List of patterns, relative to source directory, that match files and
+# directories to ignore when looking for source files.
+# This pattern also affects html_static_path and html_extra_path.
+# exclude all jupyter notebooks
+exclude_patterns = ["_build", "Thumbs.db", ".DS_Store", "**.ipynb_checkpoints"]
+
+
+mermaid_init_js = """
+mermaid.initialize({
+  startOnLoad: true,
+  theme: 'neutral',
+  classDiagram: {
+    curve: 'basis',
+    direction: 'TB'
+  },
+  mermaid_d3_zoom: true,
+  mermaid_fullscreen_button: true,
+  mermaid_verbose: True
+});
+"""
+
+# -- Options for HTML output -------------------------------------------------
+
+# The theme to use for HTML and HTML Help pages.  See the documentation for
+# a list of builtin themes.
+#
+# html_theme = 'sphinx_book_theme'
+html_theme = "furo"
+
+# Theme-specific options to customize the look of a theme
+# For a list of options available for each theme, see the documentation.
+## sphinx_book_theme options
+# html_theme_options = {
+#     "repository_url": "https://github.com/ZEN-universe/ZEN-garden",
+#     "use_repository_button": True,
+#     "show_navbar_depth": 1,
+#     "show_toc_level": 2,
+# }
+html_theme_options = {
+    "light_css_variables": {
+        "color-brand-primary": "#215CAF",
+        "color-brand-content": "#007894",
+    },
+    "source_repository": "https://github.com/ZEN-universe/ZEN-creator",
+    "source_branch": "main",
+    "source_directory": "docs/",
+    "top_of_page_buttons": ["view"],
+}
+
+
+# The name for this set of Sphinx documents.
+html_title = "ZEN-creator"
+html_short_title = "ZEN-creator"
+
+# The name of an image file (relative to this directory)
+html_logo = "files/figures/general/zen_garden_logo_text.png"
+
+# html_favicon = "images/zen_garden_logo.svg"
+html_favicon = "files/figures/general/zen_garden_logo_text.png"
+# Add any paths that contain custom static files (such as style sheets) here,
+# relative to this directory. They are copied after the builtin static files,
+# so a file named "default.css" will overwrite the builtin "default.css".
+# html_static_path = ['_static']
+
+
+## ----------------------------------------------------------------------------
+# copy changelog to allow it to appear in the documentation.
+# GitHub expects the changelog in the root directory
+# Sphinx requires the changelog to be in the docs folder
+def copy_changelog(app):
+    src = Path(app.confdir).parent / "CHANGELOG.md"
+    dst = Path(app.confdir) / "files" / "generated" / "changelog.md"
+    if src.exists():
+        shutil.copy(src, dst)
+
+
+def setup(app):
+    app.connect("builder-inited", copy_changelog)

@@ -1,0 +1,42 @@
+{
+    "demand": {
+        "default_value": 0.0,
+        "unit": "MW"
+    },
+    "availability_import": {
+        "default_value": 0.0,
+        "unit": "MW"
+    },
+    "availability_export": {
+        "default_value": 0.0,
+        "unit": "MW"
+    },
+    "availability_import_yearly": {
+        "default_value": 0.0,
+        "unit": "MWh"
+    },
+    "availability_export_yearly": {
+        "default_value": 0.0,
+        "unit": "MWh"
+    },
+    "price_import": {
+        "default_value": 0.0,
+        "unit": "Euro/MWh"
+    },
+    "price_export": {
+        "default_value": 0.0,
+        "unit": "Euro/MWh"
+    },
+    "carbon_intensity_carrier_import": {
+        "default_value": 0.0,
+        "unit": "kilotons/MWh"
+    },
+    "carbon_intensity_carrier_export": {
+        "default_value": 0.0,
+        "unit": "kilotons/MWh"
+    },
+    "price_shed_demand": {
+        "default_value": "inf",
+        "unit": "Euro/MWh"
+    }
+}
