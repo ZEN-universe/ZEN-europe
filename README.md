@@ -1,4 +1,4 @@
-# ZEN-creator
+# ZEN-europe
 
 
-See model documentation for details: https://zen-creator.readthedocs.io/en/latest/
+Data for the European, sector-coupled energy system model.
