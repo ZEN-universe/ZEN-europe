@@ -17,6 +17,9 @@ dependencies = [
     "zen-creator"
 ]
 
+[project.scripts]
+zen-europe = "zen_europe.elements.cli:zen_europe_cli"
+
 [project.optional-dependencies]
 
 docs = [
