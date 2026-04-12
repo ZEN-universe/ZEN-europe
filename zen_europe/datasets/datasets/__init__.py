@@ -1,23 +1,9 @@
-from .aa_template import TemplateDataset
-from .DIW import DIW
-from .ECB import ECB
-from .entsoe import ENTSOEAPI
-from .eu_building_observatory import EUBuildingObservatory
-from .eurostat import EurostatApi
-from .nuts_shp import NUTSshp
-from .potencia import Potencia
-from .tyndp_edges import TYNDP_2020_edges
-from .when2heat import When2Heat
+from .energy_system.nuts_shp import NUTSshp
+from .energy_system.tyndp_edges import TYNDP_2020_edges
+from .financial.ECB import ECB
 
 __all__ = [
-    "TemplateDataset",
     "ECB",
-    "ENTSOEAPI",
-    "EurostatApi",
-    "EUBuildingObservatory",
-    "When2Heat",
-    "DIW",
-    "Potencia",
     "NUTSshp",
     "TYNDP_2020_edges",
 ]

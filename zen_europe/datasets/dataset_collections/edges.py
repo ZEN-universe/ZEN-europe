@@ -7,17 +7,13 @@ import pandas as pd
 if TYPE_CHECKING:
     from pathlib import Path
 
-    from zen_creator.datasets.datasets.dataset import Dataset
-    from zen_creator.elements.element import Element
+    from zen_creator import Dataset, Element
 
 
-from zen_creator.datasets.datasets.nuts_shp import NUTSshp
-from zen_creator.datasets.datasets.tyndp_edges import TYNDP_2020_edges
+from zen_creator import Attribute, DatasetCollection
 
-from zen_creator.datasets.dataset_collections.dataset_collection import (
-    DatasetCollection,
-)
-from zen_creator.utils.attribute import Attribute
+from zen_europe.datasets.datasets.energy_system.nuts_shp import NUTSshp
+from zen_europe.datasets.datasets.energy_system.tyndp_edges import TYNDP_2020_edges
 
 
 class Edges(DatasetCollection):

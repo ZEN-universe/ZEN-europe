@@ -6,7 +6,6 @@ from pathlib import Path
 from typing import Iterator
 
 import pytest
-
 from zen_creator.model import Model
 from zen_creator.utils.singleton_registry_meta import SingletonRegistryMeta
 

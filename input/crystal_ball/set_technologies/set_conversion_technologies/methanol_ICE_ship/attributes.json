@@ -1,0 +1,89 @@
+{
+  "capacity_addition_min": {
+    "default_value": 0,
+    "unit": "GW"
+  },
+  "capacity_addition_max": {
+    "default_value": "inf",
+    "unit": "GW"
+  },
+  "capacity_addition_unbounded": {
+    "default_value": 0,
+    "unit": "GW"
+  },
+  "capacity_existing": {
+    "default_value": 0,
+    "unit": "GW"
+  },
+  "capacity_limit": {
+    "default_value": "inf",
+    "unit": "GW"
+  },
+  "min_load": {
+    "default_value": 0,
+    "unit": "1"
+  },
+  "max_load": {
+    "default_value": 0.4520547945205479,
+    "unit": "1"
+  },
+  "lifetime": {
+    "default_value": 30,
+    "unit": "1"
+  },
+  "opex_specific_variable": {
+    "default_value": 0,
+    "unit": "Euro/MWh"
+  },
+  "carbon_intensity_technology": {
+    "default_value": 0,
+    "unit": "kilotons/GWh"
+  },
+  "construction_time": {
+    "default_value": 0,
+    "unit": "1"
+  },
+  "capacity_investment_existing": {
+    "default_value": 0,
+    "unit": "GW"
+  },
+  "opex_specific_fixed": {
+    "default_value": 12.625,
+    "unit": "Euro/kW"
+  },
+  "max_diffusion_rate": {
+    "default_value": 0.13,
+    "unit": "1"
+  },
+  "capex_specific_conversion": {
+    "default_value": 505.0,
+    "unit": "Euro/kW"
+  },
+  "reference_carrier": {
+    "default_value": [
+      "shipping"
+    ]
+  },
+  "input_carrier": {
+    "default_value": [
+      "methanol"
+    ]
+  },
+  "output_carrier": {
+    "default_value": [
+      "shipping"
+    ]
+  },
+  "conversion_factor": [
+    {
+      "methanol": {
+        "default_value": 2.2222222222222223,
+        "unit": "GW/GW"
+      }
+    }
+  ],
+  "min_full_load_hours_fraction": {
+    "default_value": 0,
+    "unit": "1"
+  }
+}

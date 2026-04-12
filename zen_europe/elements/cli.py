@@ -10,7 +10,7 @@ def zen_europe_cli() -> None:
         "--config",
         type=Path,
         required=True,
-        help="Path to the model configuration file or directory",
+        help="Path to the model configuration file.",
     )
     args = parser.parse_args()
     run(args.config)

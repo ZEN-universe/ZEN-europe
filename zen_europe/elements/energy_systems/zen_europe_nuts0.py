@@ -5,39 +5,21 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from zen_creator.model import Model
 
-from zen_creator.utils.attribute import Attribute
+from zen_creator import Attribute, EnergySystem
 
-from .energy_system import EnergySystem
+from zen_europe.datasets.dataset_collections.edges import Edges
+from zen_europe.datasets.datasets.energy_system.nuts_shp import NUTSshp
 
 
-class TemplateEnergySystem(EnergySystem):
-    """Template class for energy systems.
-
-    This template is a starting point for implementing a custom energy system
-    class. You must implement both methods below to provide `set_nodes` and
-    `set_edges` for your model.
-
-    Search for `TODO` markers to find sections that should be customized.
+class EnergySystemNuts0(EnergySystem):
+    """Nuts0 energy system for Europe, with nodes based on NUTS0 regions
+    and edges based on adjacency of NUTS regions and TYNDP data.
     """
 
-    name: str = "template_energy_system"
+    name: str = "energy_system_nuts0"
 
     def __init__(self, model: Model):
         super().__init__(model=model)
-
-    def _set_set_nodes(self) -> Attribute:
-        """Return the set_nodes attribute.
-
-        TODO: Replace this placeholder with your node-loading logic.
-        """
-        return Attribute(name="set_nodes", default_value=None, element=self)
-
-    def _set_set_edges(self) -> Attribute:
-        """Return the set_edges attribute.
-
-        TODO: Replace this placeholder with your edge-loading logic.
-        """
-        return Attribute(name="set_edges", default_value=None, element=self)
 
     def _set_set_nodes(self) -> Attribute:
         attr = NUTSshp(source_path=self.source_path).get_set_nodes(self)

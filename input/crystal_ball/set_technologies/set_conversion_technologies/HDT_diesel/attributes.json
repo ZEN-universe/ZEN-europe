@@ -1,0 +1,89 @@
+{
+  "capacity_addition_min": {
+    "default_value": 0,
+    "unit": "megatkm/hour"
+  },
+  "capacity_addition_max": {
+    "default_value": "inf",
+    "unit": "megatkm/hour"
+  },
+  "capacity_addition_unbounded": {
+    "default_value": 0,
+    "unit": "megatkm/hour"
+  },
+  "capacity_existing": {
+    "default_value": 0,
+    "unit": "megatkm/hour"
+  },
+  "capacity_limit": {
+    "default_value": "inf",
+    "unit": "megatkm/hour"
+  },
+  "min_load": {
+    "default_value": 0,
+    "unit": "1"
+  },
+  "max_load": {
+    "default_value": 1,
+    "unit": "1"
+  },
+  "lifetime": {
+    "default_value": 20,
+    "unit": "1"
+  },
+  "opex_specific_variable": {
+    "default_value": 0.00995520878485768,
+    "unit": "Euro/tkm"
+  },
+  "carbon_intensity_technology": {
+    "default_value": 0,
+    "unit": "kilotons/tkm"
+  },
+  "construction_time": {
+    "default_value": 0,
+    "unit": "1"
+  },
+  "capacity_investment_existing": {
+    "default_value": 0,
+    "unit": "megatkm/hour"
+  },
+  "opex_specific_fixed": {
+    "default_value": 0,
+    "unit": "Euro / tkm * hour"
+  },
+  "max_diffusion_rate": {
+    "default_value": 0.29,
+    "unit": "1"
+  },
+  "capex_specific_conversion": {
+    "default_value": 230.7076297338436,
+    "unit": "Euro / tkm * hour"
+  },
+  "reference_carrier": {
+    "default_value": [
+      "truck_mileage"
+    ]
+  },
+  "input_carrier": {
+    "default_value": [
+      "diesel"
+    ]
+  },
+  "output_carrier": {
+    "default_value": [
+      "truck_mileage"
+    ]
+  },
+  "conversion_factor": [
+    {
+      "diesel": {
+        "default_value": 0.25488007513365124,
+        "unit": "kWh/tkm"
+      }
+    }
+  ],
+  "min_full_load_hours_fraction": {
+    "default_value": 0,
+    "unit": "1"
+  }
+}

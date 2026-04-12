@@ -5,56 +5,60 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from zen_creator.model import Model
 
-# from zen_creator.datasets.dataset_collections import (
-#     EconomicParameters,
-# )
-from zen_creator.elements import (
-    ConversionTechnology,
-)
-from zen_creator.utils.attribute import Attribute
+from zen_creator import Attribute, ConversionTechnology
 
 
 class Photovoltaics(ConversionTechnology):
+    """Class containing all data and assumptions for photovoltaics."""
 
     name: str = "photovoltaics"
 
-    def __init__(self, model: Model):
-        super().__init__(model=model)
+    def __init__(self, model: Model, power_unit: str = "MW"):
+        super().__init__(model=model, power_unit=power_unit)
 
-    def _set_lifetime(self) -> Attribute:
-        attr = self._lifetime
-        # lifetime = EconomicParameters(self.model.source_path).get_lifetime(self.name)
-        # return attr.set_data(default_value=lifetime, source="multiple sources")
-        return attr
-
-    # def _set_capex_specific_conversion(self) -> Attribute:
-    #     attr = self._capex_specific_conversion
-    #     capex = EconomicParameters(self.model.source_path).get_cost_data(
-    #         self.name, "capex", self.model.config
-    #     )
-    #     if capex is None:
-    #         raise ValueError("Capital costs could not be calculated")
-
-    #     sic = float(capex.loc[self.model.config.system.reference_year].iloc[0])
-
-    #     return attr.set_data(default_value=sic, unit="Euro/kW", source="")
-
-    def _set_conversion_factor(self) -> Attribute:
-        attr = self._conversion_factor
-        # return Attribute(
-        #     name="conversion_factor", default_value=[], source="", element=self
-        # )
-        return attr
+    # ---------- Required methods that are called during object construction ----------
 
     def _set_reference_carrier(self) -> Attribute:
+        """
+        Sets the reference carrier of photovoltaics to electricity.
+        """
         return Attribute(
             name="reference_carrier", default_value=["electricity"], element=self
         )
 
     def _set_input_carrier(self) -> Attribute:
+        """
+        Sets the input carrier of photovoltaics to an empty list.
+
+        This is because photovoltaics do not have an input carrier,
+        as they convert solar energy directly into electricity.
+        """
         return Attribute(name="input_carrier", default_value=[], element=self)
 
     def _set_output_carrier(self) -> Attribute:
+        """
+        Set the output carrier of photovoltaics to electricity.
+        """
         return Attribute(
             name="output_carrier", default_value=["electricity"], element=self
         )
+
+    # ---------- Required methods that are called during object build ----------
+
+    def _set_lifetime(self) -> Attribute:
+        """
+        Sets the lifetime of photovoltaics.
+
+        This method is currently returns the default value.
+        """
+        attr = self.lifetime
+        return attr
+
+    def _set_conversion_factor(self) -> Attribute:
+        """
+        Return the conversion factor of photovoltaics.
+
+        This method currently returns the default value.
+        """
+        attr = self.conversion_factor
+        return attr
