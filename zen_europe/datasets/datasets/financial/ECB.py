@@ -19,23 +19,23 @@ class ECB(Dataset[pd.DataFrame]):
         super().__init__(source_path=None)
 
     # ------ Metadata properties ------
-    def _get_author(self) -> str:
+    def _set_author(self) -> str:
         return "European Central Bank"
 
-    def _get_publication_year(self) -> int:
+    def _set_publication_year(self) -> int:
         return 2025
 
-    def _get_url(self) -> str:
+    def _set_url(self) -> str:
         return "https://data.ecb.europa.eu/"
 
-    def _get_path(self) -> Path | None:
+    def _set_path(self) -> Path | None:
         return None  # ECB data is accessed directly via URL, no local path needed
 
     # ----- Property overwrites -----
 
     # ----- Load and format Data -----
 
-    def _get_data(self) -> pd.DataFrame:
+    def _set_data(self) -> pd.DataFrame:
         """Method to get the inflation rate from ECB data."""
         url = "https://data-api.ecb.europa.eu/service/data/ICP/M.U2.N.000000.4.ANR?format=csvdata"
         df = pd.read_csv(url)

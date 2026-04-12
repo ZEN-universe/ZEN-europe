@@ -76,6 +76,7 @@ known-first-party = ["your_package_name"]
 #ignore_missing_imports = true
 #check_untyped_defs = false
 #disallow_untyped_defs = false
+python_version = "3.11"
 exclude = [
 
 ]

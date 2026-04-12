@@ -14,19 +14,27 @@ class TYNDP_2020_edges(Dataset[Dict[str, pd.DataFrame]]):
     def __init__(self, source_path: Path | str):
         super().__init__(source_path=source_path)
 
-    def _get_author(self) -> str:
+    def _set_title(self) -> str:
+        return "TYNDP 2020 transmission edges"
+
+    def _set_author(self) -> str:
         return "Jane Doe"
 
-    def _get_publication_year(self) -> int:
+    def _set_publication(self) -> str:
+        return "ENTSO-E"
+
+    def _set_publication_year(self) -> int:
         return 2026
 
-    def _get_url(self) -> str:
+    def _set_url(self) -> str:
         return "https://example.com/dataset.csv"
 
-    def _get_path(self) -> Path:
+    def _set_path(self) -> Path:
+        if self.source_path is None:
+            raise ValueError("source_path must be set to load the dataset.")
         return self.source_path / "01-energy_system" / "nodes_edges"
 
-    def _get_data(self) -> Dict[str, pd.DataFrame]:
+    def _set_data(self) -> Dict[str, pd.DataFrame]:
         # nodes from ENTSOE TYNDP 2020-scenario.xlsx
         # load nodes and edges
         nodes = pd.read_csv(

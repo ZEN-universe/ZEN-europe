@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Dict
+from typing import TYPE_CHECKING, Any, Dict, cast
 
 import pandas as pd
 
@@ -24,8 +24,11 @@ class Edges(DatasetCollection):
     def __init__(self, source_path: Path | str):
         super().__init__(source_path=source_path)
 
-    def _get_data(self) -> Dict[str, Dataset]:
+    def _get_data(self) -> Dict[str, Dataset[Any]]:
         """Load all available data sources."""
+
+        if self.source_path is None:
+            raise ValueError("source_path must be set to load the dataset collection.")
 
         return {
             "NUTSshp": NUTSshp(self.source_path),
@@ -41,8 +44,11 @@ class Edges(DatasetCollection):
         This function takes the union of both edge types.
         """
 
-        nuts_edges = self.data["NUTSshp"].get_set_edges(element).df
-        tyndp_edges = self.data["TYNDP_2020_edges"].get_set_edges(element).df
+        nuts_dataset = cast(NUTSshp, self.data["NUTSshp"])
+        tyndp_dataset = cast(TYNDP_2020_edges, self.data["TYNDP_2020_edges"])
+
+        nuts_edges = nuts_dataset.get_set_edges(element).df
+        tyndp_edges = tyndp_dataset.get_set_edges(element).df
 
         set_edges = pd.concat([nuts_edges, tyndp_edges]).drop_duplicates().sort_index()
 
