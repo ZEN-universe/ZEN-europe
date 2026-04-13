@@ -29,8 +29,4 @@ def zen_europe_cli() -> None:
     )
     args = parser.parse_args()
 
-    create_model(
-        config=args.config,
-        name=args.name,
-        output_folder=args.output_folder
-    )
+    create_model(config=args.config, name=args.name, output_folder=args.output_folder)

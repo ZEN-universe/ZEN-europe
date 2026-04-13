@@ -2,18 +2,17 @@
 
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 
-from zen_europe.model_creator import create_model
 from zen_europe.cli import zen_europe_cli
-import sys
-
+from zen_europe.model_creator import create_model
 
 
 def test_create_model() -> None:
     """Test that runner.run() executes without errors."""
     test_path = Path(__file__).resolve().parent
-    create_model(name="test_model", output_folder= test_path / "outputs")
+    create_model(name="test_model", output_folder=test_path / "outputs")
 
 
 def test_zen_europe_cli_entry_point(monkeypatch) -> None:
