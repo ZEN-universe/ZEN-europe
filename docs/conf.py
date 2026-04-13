@@ -9,22 +9,17 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-import os
 import shutil
-import sys
 from importlib.metadata import version as get_version
 from pathlib import Path
-
-sys.path.insert(0, os.path.abspath(".."))
-sys.path.append(os.path.abspath("_ext"))
 
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project = "ZEN-creator"
+project = "ZEN-europe"
 copyright = "2026, Reliability and Risk Engineering lab, ETH Zurich"
 author = "Jacob Mannhardt, Christoph Funke"
-release = get_version("zen_creator")
+release = get_version("zen_europe")
 language = "en"
 
 # -- General configuration ---------------------------------------------------
@@ -47,7 +42,6 @@ extensions = [
     "myst_parser",
     "sphinx.ext.imgconverter",  # for SVG conversion
     "sphinxcontrib.mermaid",  # for class diagrams
-    "docstring",  # custom extension for inserting docstring text
 ]
 # allow errors in the notebooks
 nbsphinx_allow_errors = True
