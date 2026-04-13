@@ -22,23 +22,19 @@ environment for use in subsequent workflow steps.
 import os
 import re
 import tomllib  # Python 3.11+
+from dataclasses import dataclass, field
 from datetime import date, datetime
 from pathlib import Path
 from typing import Tuple
 
-from pydantic import BaseModel, Field
 
-
-class ChangeCategory(BaseModel):
+@dataclass
+class ChangeCategory:
     title: str
-    changes: list[str] = Field(default_factory=list)
-
-    def __init__(self, title: str, changes: list[str] | None = None):
-        super().__init__(title=title, changes=[] if changes is None else changes)
+    changes: list[str] = field(default_factory=list)
 
 
 CategorizedChanges = dict[str, ChangeCategory]
-
 
 def extract_pr_info(pr_body_file: Path) -> Tuple[str, str, str]:
     """Extract pull request metadata and body text.
