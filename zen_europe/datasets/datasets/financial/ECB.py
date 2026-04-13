@@ -5,9 +5,11 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from pathlib import Path
 
+from datetime import datetime
+
 import pandas as pd
 import scipy.stats as stats
-from zen_creator.datasets.datasets.dataset import Dataset
+from zen_creator import Dataset
 
 
 class ECB(Dataset[pd.DataFrame]):
@@ -15,15 +17,21 @@ class ECB(Dataset[pd.DataFrame]):
 
     name = "ecb"
 
-    def __init__(self):
-        super().__init__(source_path=None)
+    def __init__(self, source_path: Path | str | None = None):
+        super().__init__(source_path=source_path)
 
     # ------ Metadata properties ------
+    def _set_title(self) -> str:
+        return "HICP - Overall index, Euro area, Monthly"
+
     def _set_author(self) -> str:
         return "European Central Bank"
 
+    def _set_publication(self) -> str:
+        return "European Central Bank"
+
     def _set_publication_year(self) -> int:
-        return 2025
+        return datetime.now().year
 
     def _set_url(self) -> str:
         return "https://data.ecb.europa.eu/"

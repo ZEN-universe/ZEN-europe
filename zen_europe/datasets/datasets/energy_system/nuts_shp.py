@@ -31,9 +31,6 @@ class NUTSshp(Dataset[pd.DataFrame]):
     def _set_publication_year(self) -> int:
         return 2026
 
-    def _set_title(self) -> str:
-        return "Territorial units for statistics (NUTS)"
-
     def _set_url(self) -> str:
         return "https://ec.europa.eu/eurostat/web/gisco/geodata/statistical-units/territorial-units-statistics"
 
