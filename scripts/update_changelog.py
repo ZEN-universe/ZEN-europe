@@ -36,6 +36,7 @@ class ChangeCategory:
 
 CategorizedChanges = dict[str, ChangeCategory]
 
+
 def extract_pr_info(pr_body_file: Path) -> Tuple[str, str, str]:
     """Extract pull request metadata and body text.
 
