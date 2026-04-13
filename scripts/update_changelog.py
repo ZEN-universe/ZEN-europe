@@ -101,7 +101,7 @@ def parse_changes_from_pr_body(
     entries formatted as:
         - type: description
 
-    Supported types are: feat, fix, docs, chore, breaking.
+    Supported types are: feat, fix, docs, chore, data, breaking.
 
     Args:
         pr_body (str): Full pull request body text.
@@ -139,6 +139,7 @@ def parse_changes_from_pr_body(
         "fix": ChangeCategory(title="Bug Fixes 🐛"),
         "docs": ChangeCategory(title="Documentation Changes 📝"),
         "chore": ChangeCategory(title="Maintenance Tasks 🧹"),
+        "data": ChangeCategory(title="Data Changes 📊"),
         "breaking": ChangeCategory(title="BREAKING CHANGES ⚠️"),
     }
     for line in changes_section.splitlines():
@@ -163,7 +164,7 @@ def determine_bump_type(categorized_changes: CategorizedChanges) -> str:
     """Determine the semantic version bump required.
 
     Bump precedence:
-        breaking > feat > fix > none
+        breaking > feat/data > fix > none
 
     Args:
         categorized_changes: Parsed PR changes grouped by type.
@@ -174,7 +175,7 @@ def determine_bump_type(categorized_changes: CategorizedChanges) -> str:
     # Determine semantic version bump
     if categorized_changes["breaking"].changes:
         semver_bump = "major"
-    elif categorized_changes["feat"].changes:
+    elif categorized_changes["feat"].changes or categorized_changes["data"].changes:
         semver_bump = "minor"
     elif categorized_changes["fix"].changes:
         semver_bump = "patch"
