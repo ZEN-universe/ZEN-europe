@@ -1,0 +1,162 @@
+name: Tests
+
+# Define when to run
+on:
+  schedule:
+    - cron:  '30 4 1 * *'
+
+  pull_request:
+    branches: 
+      - main
+    types: [opened, edited, synchronize]
+
+  push:
+    branches:
+      - main
+
+# Env variables
+env:
+  CACHE_NUMBER: 0  # increase to reset cache manually
+
+# Jobs
+jobs:
+
+  # check whether #skiptests is in pull request message or commmit message: 
+  # The option #skiptests skips the tests   
+  check_skiptests:
+    runs-on: ubuntu-latest
+    outputs:
+      skiptests: ${{ steps.check_skiptests.outputs.skiptests }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check for '#skiptests' in pull request title or body
+        id: check_skiptests
+        env:
+          TITLE: ${{ github.event.pull_request.title }}
+          BODY: ${{ github.event.pull_request.body }}
+        run: |
+          if [[ "$TITLE" =~ \#skiptests || "$BODY" =~ \#skiptests ]]; then
+            skip="true"
+          else
+            skip="false"
+          fi
+
+          echo "skiptests=$skip" >> $GITHUB_ENV
+          echo "skiptests=$skip" >> $GITHUB_OUTPUT
+          echo "PR Title: $TITLE"
+          echo "PR Body: $BODY"
+          echo "skiptests=$skip"
+          
+
+  matrix_prep:
+    if: ${{ github.repository == 'ZEN-universe/ZEN-europe' }}
+    needs: check_skiptests
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check Env File
+        id: check-env-file
+        uses: tj-actions/changed-files@v46
+        with:
+          files: |
+            zen_europe_env.yml
+
+      - name: Set Env
+        # trigger if env file change or on schedule
+        if: ${{ steps.check-env-file.outputs.any_changed == 'true' || github.event_name == 'schedule' }}
+        run: echo "ENV_STATE=env_change" >> $GITHUB_ENV
+
+      - id: set-matrix
+        uses: JoshuaTheMiller/conditional-build-matrix@main
+        with:
+          # Run filter -> see matrix_includes.json!
+          filter: '[?runs_when==`${{ env.ENV_STATE }}` || runs_when==`${{ github.event_name }}` || runs_when==`always`]'
+
+  build:
+    if: ${{ github.repository == 'ZEN-universe/ZEN-europe' }}
+    # the testing
+    needs: [matrix_prep, check_skiptests]
+    strategy:
+      fail-fast: false # if true all jobs are cancelled if one fails
+      matrix: ${{fromJson(needs.matrix_prep.outputs.matrix)}}
+    name: ${{ matrix.label }}
+    runs-on: ${{ matrix.os }}
+    env:
+      SKIPTESTS: ${{ needs.check_skiptests.outputs.skiptests }}
+    steps:
+      
+      - name: Check the value of SKIPTESTS
+        run: |
+          echo "skiptests output: ${{ env.SKIPTESTS }}"
+      
+      # checkout PR commit
+      - uses: actions/checkout@v4
+        if: ${{ env.SKIPTESTS == 'false' }}
+
+      # setup the conda env
+      - name: Setup Miniforge
+        if: ${{ env.SKIPTESTS == 'false' }}
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+            miniforge-variant: Miniforge3
+            miniforge-version: latest
+            activate-environment: zen-europe-env
+            use-mamba: true
+
+      # date for the cache
+      - name: Set cache date
+        if: ${{ env.SKIPTESTS == 'false' }}
+        run: echo "DATE=$(date +'%Y%m%d')" >> $GITHUB_ENV
+
+      # reset cache if env file changed
+      - uses: actions/cache@v3
+        if: ${{ env.SKIPTESTS == 'false' }}
+        with:
+          path: ${{ matrix.prefix }}
+          key: ${{ matrix.label }}-conda-${{ hashFiles('zen_europe_env.yml') }}-${{ env.DATE }}-${{ env.CACHE_NUMBER }}
+        id: cache
+
+      # This step is cached in case the env file was not changed
+      - name: Update environment
+        if: ${{ env.SKIPTESTS == 'false' && steps.cache.outputs.cache-hit != 'true'}}
+        run: mamba env update -f zen_europe_env.yml
+
+      - name: Install package
+        if: ${{ env.SKIPTESTS == 'false' }}
+        shell: bash -l {0}
+        run: pip install -e .
+
+      - name: Run Tests
+        if: ${{ env.SKIPTESTS == 'false' }}
+        shell: bash -l {0}
+        run: |
+          pytest --cov="zen_europe" -n auto tests/ -v
+#          coverage report -m
+
+    #   - name: Extract Coverage
+    #     if: ${{ always() && matrix.label == 'linux-64' && env.SKIPTESTS == 'false' && github.event_name == 'push'}} # include always to overwrite cancel on failure of previous step
+    #     shell: bash -l {0}
+    #     run: |
+    #       echo "COVERAGE_INT=$(coverage report -m | grep TOTAL | grep -oE '[0-9]+%' | grep -oE '[0-9]+')" >> $GITHUB_ENV
+    #       echo "COVERAGE_FLT=$(coverage report -m --precision=2 | grep TOTAL | grep -oE '[0-9]+\.[0-9]+')" >> $GITHUB_ENV
+
+    #   - name: Create Coverage Badge
+    #     if: ${{ always() && matrix.label == 'linux-64' && env.SKIPTESTS == 'false' && github.event_name == 'push'}}
+    #     uses: schneegans/dynamic-badges-action@v1.7.0
+    #     with:
+    #       auth: ${{ secrets.GIST_TOKEN }}
+    #       gistID: 30d479a5b4c591a63b7b0f41abbce6a0
+    #       filename: zen_garden_coverage.json
+    #       label: coverage
+    #       message: ${{ env.COVERAGE_FLT }}%
+    #       valColorRange: ${{ env.COVERAGE_INT }}
+    #       maxColorRange: 100
+    #       minColorRange: 0

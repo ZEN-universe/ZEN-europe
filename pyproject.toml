@@ -18,7 +18,7 @@ dependencies = [
 ]
 
 [project.scripts]
-zen-europe = "zen_europe.elements.cli:zen_europe_cli"
+zen-europe = "zen_europe.cli:zen_europe_cli"
 
 [project.optional-dependencies]
 
