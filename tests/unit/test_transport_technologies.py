@@ -25,7 +25,7 @@ def _transport_technology_classes(model: Model) -> list[type[TransportTechnology
 def _construct_transport_technology(
     transport_tech_cls: type[TransportTechnology], model: Model
 ) -> TransportTechnology:
-    """Construct a transport technology class with the expected constructor signature."""
+    """Construct a transport technology class."""
     transport_tech_factory = cast(type[Any], transport_tech_cls)
     return cast(TransportTechnology, transport_tech_factory(model=model))
 

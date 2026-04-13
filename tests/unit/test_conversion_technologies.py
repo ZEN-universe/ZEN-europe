@@ -1,4 +1,7 @@
-"""Unit tests for conversion_technologies module exports and singleton construction."""
+"""
+Unit tests for conversion_technologies module exports and singleton
+construction.
+"""
 
 from __future__ import annotations
 
@@ -27,7 +30,7 @@ def _conversion_technology_classes(
 def _construct_conversion_technology(
     conv_tech_cls: type[ConversionTechnology], model: Model
 ) -> ConversionTechnology:
-    """Construct a conversion technology class with the expected constructor signature."""
+    """Construct a conversion technology class."""
     conv_tech_factory = cast(type[Any], conv_tech_cls)
     return cast(ConversionTechnology, conv_tech_factory(model=model))
 

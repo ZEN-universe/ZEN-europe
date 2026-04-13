@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Iterator
 
 import pytest
-from pathlib import Path
-from zen_creator import Model, Dataset, DatasetCollection
+from zen_creator import Dataset, DatasetCollection, Model
 
 
 @pytest.fixture(autouse=True)
@@ -17,7 +17,8 @@ def reset_singleton_registries() -> Iterator[None]:
     yield
     Dataset._registries.clear()
     DatasetCollection._registries.clear()
-    
+
+
 @pytest.fixture
 def model(tmp_path: Path, request: pytest.FixtureRequest) -> Model:
     """Create a minimal model object that is sufficient for element tests.
@@ -31,4 +32,3 @@ def model(tmp_path: Path, request: pytest.FixtureRequest) -> Model:
     model.output_folder = tmp_path / "outputs"
     model.source_path = tmp_path
     return model
-
