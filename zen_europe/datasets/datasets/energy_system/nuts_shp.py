@@ -7,7 +7,8 @@ import geopandas as gpd
 import numpy as np
 import pandas as pd
 from zen_creator.datasets.datasets.dataset import Dataset
-from zen_creator.utils.attribute import Attribute
+from zen_creator.datasets.datasets.metadata import MetaData
+from zen_creator.utils.attribute import Attribute, SourceInformation
 
 if TYPE_CHECKING:
     from zen_creator.elements.element import Element
@@ -19,20 +20,15 @@ class NUTSshp(Dataset[pd.DataFrame]):
     def __init__(self, source_path: Path | str):
         super().__init__(source_path=source_path)
 
-    def _set_title(self) -> str:
-        return "Territorial units for statistics (NUTS)"
-
-    def _set_author(self) -> str:
-        return "Eurostat"
-
-    def _set_publication(self) -> str:
-        return "Eurostat"
-
-    def _set_publication_year(self) -> int:
-        return 2026
-
-    def _set_url(self) -> str:
-        return "https://ec.europa.eu/eurostat/web/gisco/geodata/statistical-units/territorial-units-statistics"
+    def _set_metadata(self) -> MetaData:
+        return MetaData(
+            name=self.name,
+            title="Territorial units for statistics (NUTS)",
+            author=["Eurostat"],
+            publication="Eurostat",
+            publication_year=2026,
+            url="https://ec.europa.eu/eurostat/web/gisco/geodata/statistical-units/territorial-units-statistics",
+        )
 
     def _set_path(self) -> Path:
         if self.source_path is None:
@@ -84,7 +80,17 @@ class NUTSshp(Dataset[pd.DataFrame]):
             element=element,
             default_value=[],
             df=set_edges,
-            source=self.metadata,
+            sources=[
+                SourceInformation(
+                    description=(
+                        "Creates a set of edges based on adjacency between NUTS0 "
+                        "regions. Any two regions that are touching each other are "
+                        "considered adjacent and therefore an edge is created "
+                        "between them."
+                    ),
+                    metadata=self.metadata,
+                )
+            ],
         )
 
         return attr
@@ -133,7 +139,17 @@ class NUTSshp(Dataset[pd.DataFrame]):
             element=element,
             default_value=None,
             df=set_nodes,
-            source=self.metadata,
+            sources=[
+                SourceInformation(
+                    description=(
+                        "For each node specified in the config, the centroid "
+                        "of the node is added as the location of the node. "
+                        "The centroids are computed in the WGS84 projection and the "
+                        "final coordinates are provided in longitude and latitude."
+                    ),
+                    metadata=self.metadata,
+                )
+            ],
         )
 
         return attr

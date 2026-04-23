@@ -10,6 +10,7 @@ from datetime import datetime
 import pandas as pd
 import scipy.stats as stats
 from zen_creator import Dataset
+from zen_creator.datasets.datasets.metadata import MetaData
 
 
 class ECB(Dataset[pd.DataFrame]):
@@ -20,21 +21,15 @@ class ECB(Dataset[pd.DataFrame]):
     def __init__(self, source_path: Path | str | None = None):
         super().__init__(source_path=source_path)
 
-    # ------ Metadata properties ------
-    def _set_title(self) -> str:
-        return "HICP - Overall index, Euro area, Monthly"
-
-    def _set_author(self) -> str:
-        return "European Central Bank"
-
-    def _set_publication(self) -> str:
-        return "European Central Bank"
-
-    def _set_publication_year(self) -> int:
-        return datetime.now().year
-
-    def _set_url(self) -> str:
-        return "https://data.ecb.europa.eu/"
+    def _set_metadata(self) -> MetaData:
+        return MetaData(
+            name=self.name,
+            title="HICP - Overall index, Euro area, Monthly",
+            author=["European Central Bank"],
+            publication="European Central Bank",
+            publication_year=datetime.now().year,
+            url="https://data.ecb.europa.eu/",
+        )
 
     def _set_path(self) -> Path | None:
         return None  # ECB data is accessed directly via URL, no local path needed

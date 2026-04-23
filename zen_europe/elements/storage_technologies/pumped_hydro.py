@@ -5,8 +5,9 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from zen_creator.model import Model
 
+from zen_creator.datasets.datasets.metadata import MetaData
 from zen_creator.elements import StorageTechnology
-from zen_creator.utils.attribute import Attribute
+from zen_creator.utils.attribute import Attribute, SourceInformation
 
 
 class PumpedHydro(StorageTechnology):
@@ -39,4 +40,15 @@ class PumpedHydro(StorageTechnology):
         varies over time.
         """
         attr = self.lifetime
-        return attr.set_data(default_value=25, source="assumption")
+    
+        return attr.set_data(default_value=25, source=SourceInformation(
+    description="Assumption for default pumped hydro lifetime.",
+    metadata=MetaData(
+        name="assumption",
+        title="Modeling assumption",
+        author=["ZEN Europe"],
+        publication="ZEN Europe",
+        publication_year=2026,
+        url=None,
+    ),
+))
