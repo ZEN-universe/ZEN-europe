@@ -40,15 +40,18 @@ class PumpedHydro(StorageTechnology):
         varies over time.
         """
         attr = self.lifetime
-    
-        return attr.set_data(default_value=25, source=SourceInformation(
-    description="Assumption for default pumped hydro lifetime.",
-    metadata=MetaData(
-        name="assumption",
-        title="Modeling assumption",
-        author=["ZEN Europe"],
-        publication="ZEN Europe",
-        publication_year=2026,
-        url=None,
-    ),
-))
+
+        return attr.set_data(
+            default_value=25,
+            source=SourceInformation(
+                description="Assumption for default pumped hydro lifetime.",
+                metadata=MetaData(
+                    name="assumption",
+                    title="Modeling assumption",
+                    author=["ZEN Europe"],
+                    publication="ZEN Europe",
+                    publication_year=2026,
+                    url=None,
+                ),
+            ),
+        )

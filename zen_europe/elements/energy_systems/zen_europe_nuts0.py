@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from zen_creator.model import Model
 
-from zen_creator import Attribute, EnergySystem
+from zen_creator import Attribute, EnergySystem, MetaData, SourceInformation
 
 from zen_europe.datasets.dataset_collections.edges import Edges
 from zen_europe.datasets.datasets.energy_system.nuts_shp import NUTSshp
@@ -39,7 +39,20 @@ class EnergySystemNuts0(EnergySystem):
         set_edges.loc["BE-NO", :] = ["BE", "NO"]
         set_edges.loc["SE-LT", :] = ["SE", "LT"]
         set_edges.loc["LT-SE", :] = ["LT", "SE"]
-        attr.set_data(df=set_edges.drop_duplicates().sort_index())
+        attr.set_data(
+            df=set_edges.drop_duplicates().sort_index(),
+            source=SourceInformation(
+                description="Manual added connections.",
+                metadata=MetaData(
+                    name="manual_connections",
+                    title="Manual Connections",
+                    author=["ZEN Europe"],
+                    publication="ZEN Europe",
+                    publication_year=2026,
+                    url=None,
+                ),
+            ),
+        )
 
         # write csv
         return attr
