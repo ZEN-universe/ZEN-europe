@@ -4,7 +4,7 @@ build-backend = "flit_core.buildapi"
 
 [project]
 name = "zen_europe"
-version = "0.0.2"
+version = "0.1.0"
 description="ZEN-europe hosts the european, sector-coupled dataset for ZEN-garden."
 readme = "README.md"
 requires-python = ">=3.11"
