@@ -3,6 +3,9 @@ from pathlib import Path
 
 from zen_europe.model_creator import create_model
 
+COLOR_SUCCESS = "\033[92m"
+COLOR_RESET = "\033[0m"
+
 
 def zen_europe_cli() -> None:
     parser = argparse.ArgumentParser(description="Run the ZEN Europe model")
@@ -21,7 +24,7 @@ def zen_europe_cli() -> None:
         help="Name of the model that will be used when saving.",
     )
     parser.add_argument(
-        "--output_folder",
+        "--output-folder",
         type=Path,
         required=False,
         default=".",
@@ -29,4 +32,11 @@ def zen_europe_cli() -> None:
     )
     args = parser.parse_args()
 
+    print(f"Generating model '{args.name}' ...")
     create_model(config=args.config, name=args.name, output_folder=args.output_folder)
+    path = (args.output_folder / args.name).resolve()
+    print(
+        COLOR_SUCCESS
+        + f"Successfully generated model '{args.name}' and saved to {path}/"
+        + COLOR_RESET
+    )
