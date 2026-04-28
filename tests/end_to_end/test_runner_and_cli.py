@@ -26,7 +26,7 @@ def test_zen_europe_cli_entry_point(monkeypatch) -> None:
             "zen-europe",
             "--name",
             "test_model_cli",
-            "--output_folder",
+            "--output-folder",
             output_path,
         ],
     )
