@@ -3,6 +3,12 @@
 This file gets automatically updated in ZEN-europe's continuous integration 
 procedures. Do not edit the file manually.
 
+## [v0.1.0] - 2026-04-28 
+
+### New Features ✨
+- add feedback to CLI output. [[🔀 PR #11](https://github.com/ZEN-universe/ZEN-europe/pull/11) @manud99]
+- replace underscore with dash in CLI arguments. [[🔀 PR #11](https://github.com/ZEN-universe/ZEN-europe/pull/11) @manud99]
+
 ## [v0.0.2] - 2026-04-28 
 
 ### Bug Fixes 🐛
