@@ -11,6 +11,7 @@ if TYPE_CHECKING:
 
 
 from zen_creator import Attribute, DatasetCollection
+from zen_creator.utils.attribute import SourceInformation
 
 from zen_europe.datasets.datasets.energy_system.nuts_shp import NUTSshp
 from zen_europe.datasets.datasets.energy_system.tyndp_edges import TYNDP_2020_edges
@@ -31,8 +32,8 @@ class Edges(DatasetCollection):
             raise ValueError("source_path must be set to load the dataset collection.")
 
         return {
-            "NUTSshp": NUTSshp(self.source_path),
-            "TYNDP_2020_edges": TYNDP_2020_edges(self.source_path),
+            "nuts_shp": NUTSshp(self.source_path),
+            "tyndp_2020_edges": TYNDP_2020_edges(self.source_path),
         }
 
     def get_set_edges(self, element: Element) -> Attribute:
@@ -44,8 +45,8 @@ class Edges(DatasetCollection):
         This function takes the union of both edge types.
         """
 
-        nuts_dataset = cast(NUTSshp, self.data["NUTSshp"])
-        tyndp_dataset = cast(TYNDP_2020_edges, self.data["TYNDP_2020_edges"])
+        nuts_dataset = cast(NUTSshp, self.data["nuts_shp"])
+        tyndp_dataset = cast(TYNDP_2020_edges, self.data["tyndp_2020_edges"])
 
         nuts_edges = nuts_dataset.get_set_edges(element).df
         tyndp_edges = tyndp_dataset.get_set_edges(element).df
@@ -58,7 +59,19 @@ class Edges(DatasetCollection):
             default_value=None,
             element=element,
             df=set_edges,
-            source=self.metadata,
+            sources=[
+                SourceInformation(
+                    description=(
+                        "Edges are constructed in two steps: first, NUTS0 "
+                        "countries that share a border are assumed to be "
+                        "connected by an edge [NUTSshp]; "
+                        "second, transmission edges from "
+                        "TYNDP are added to this adjacency-based network."
+                        "[tyndp_2020_edges]"
+                    ),
+                    metadata=self.metadata,
+                )
+            ],
         )
 
         return attr

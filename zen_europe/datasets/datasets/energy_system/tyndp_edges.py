@@ -4,8 +4,9 @@ from typing import Dict
 import numpy as np
 import pandas as pd
 from zen_creator.datasets.datasets.dataset import Dataset
+from zen_creator.datasets.datasets.metadata import MetaData
 from zen_creator.elements.element import Element
-from zen_creator.utils.attribute import Attribute
+from zen_creator.utils.attribute import Attribute, SourceInformation
 
 
 class TYNDP_2020_edges(Dataset[Dict[str, pd.DataFrame]]):
@@ -14,20 +15,15 @@ class TYNDP_2020_edges(Dataset[Dict[str, pd.DataFrame]]):
     def __init__(self, source_path: Path | str):
         super().__init__(source_path=source_path)
 
-    def _set_title(self) -> str:
-        return "TYNDP 2020 transmission edges"
-
-    def _set_author(self) -> str:
-        return "Jane Doe"
-
-    def _set_publication(self) -> str:
-        return "ENTSO-E"
-
-    def _set_publication_year(self) -> int:
-        return 2026
-
-    def _set_url(self) -> str:
-        return "https://example.com/dataset.csv"
+    def _set_metadata(self) -> MetaData:
+        return MetaData(
+            name=self.name,
+            title="TYNDP 2020 transmission edges",
+            author=["Jane Doe"],
+            publication="ENTSO-E",
+            publication_year=2026,
+            url="https://example.com/dataset.csv",
+        )
 
     def _set_path(self) -> Path:
         if self.source_path is None:
@@ -122,7 +118,14 @@ class TYNDP_2020_edges(Dataset[Dict[str, pd.DataFrame]]):
             element=element,
             default_value=None,
             df=set_edges,
-            source=self.metadata,
+            sources=[
+                SourceInformation(
+                    description="Edges area added between all All NUTS0 regions "
+                    "that are have transmission lines connecting them in the "
+                    "ENTSO-E TYNDP 2020 data",
+                    metadata=self.metadata,
+                )
+            ],
         )
 
         return attr
