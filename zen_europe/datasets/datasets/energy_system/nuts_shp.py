@@ -78,7 +78,7 @@ class NUTSshp(Dataset[pd.DataFrame]):
         attr = Attribute(
             "set_edges",
             element=element,
-            default_value=[],
+            default_value=None,
             df=set_edges,
             sources=[
                 SourceInformation(

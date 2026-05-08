@@ -1,0 +1,243 @@
+# global settings
+name: crystal_ball
+source_path: "./data"
+output_folder: null
+
+# all settings in the system.json file with the exception of technology lists
+system:
+  set_nodes:
+    - AT
+    - BE
+    - BG
+    - CH
+    - CZ
+    - DE
+    - DK
+    - EE
+    - EL
+    - ES
+    - FI
+    - FR
+    - HR
+    - HU
+    - IE
+    - IT
+    - LT
+    - LU
+    - LV
+    - NL
+    - "NO"
+    - PL
+    - PT
+    - RO
+    - SE
+    - SI
+    - SK
+    - UK
+  set_transport_technologies_loss_exponential: null
+  use_existing_capacities: null
+  allow_investment: null
+  double_capex_transport: null
+  unaggregated_time_steps_per_year: null
+  conduct_time_series_aggregation: true
+  aggregated_time_steps_per_year: 10
+  reference_year: 2022
+  total_hours_per_year: null
+  optimized_years: 15
+  interval_between_years: 2
+  use_rolling_horizon: false
+  years_in_rolling_horizon: null
+  years_in_decision_horizon: null
+  conduct_scenario_analysis: null
+  run_default_scenario: null
+  clean_sub_scenarios: null
+  storage_periodicity: null
+  multiyear_periodicity: null
+  exclude_parameters_from_TSA: null
+  knowledge_depreciation_rate: null
+  storage_charge_discharge_binary: null
+
+# add and remove technologies/carriers from the model
+elements:
+  insert:
+    energy_system: "energy_system_nuts0"
+    set_sectors: []
+    set_conversion_technologies:
+      - BEV
+      - BF_BOF
+      - DAC
+      - EAF
+      - H2_DRI
+      - HDT_BET
+      - HDT_FCEV
+      - HDT_diesel
+      - ICE_diesel
+      - ICE_petrol
+      - NG_DRI
+      - SMR
+      - ammonia_ICE_ship
+      - anaerobic_digestion
+      - biomass_boiler
+      - biomass_boiler_DH
+      - biomass_plant
+      - biomass_to_cement_fuel
+      - biomethane_conversion
+      - carbon_storage
+      - cement_kiln
+      - coal_to_cement_fuel
+      - diesel_ICE_ship
+      - district_heating_grid
+      - electrode_boiler
+      - electrode_boiler_DH
+      - electrolysis
+      - fischer_tropsch
+      - fuel_cell
+      - gasification
+      - haber_bosch
+      - hard_coal_boiler_DH
+      - hard_coal_plant
+      - heat_pump
+      - heat_pump_DH
+      - hydrogen_FC_ship
+      - hydrogen_to_cement_fuel
+      - industrial_gas_consumer
+      - lignite_coal_plant
+      - lng_terminal
+      - methanation
+      - methanol_ICE_ship
+      - methanol_from_biomass
+      - methanol_from_hydrogen
+      - methanol_from_natural_gas
+      - natural_gas_boiler
+      - natural_gas_boiler_DH
+      - natural_gas_turbine
+      - nuclear
+      - oil_boiler
+      - oil_boiler_DH
+      - oil_plant
+      - oil_to_diesel_conversion
+      - oil_to_gasoline_conversion
+      - oil_to_kerosene_conversion
+      - oil_to_naphtha_conversion
+      - olefin_from_methanol
+      - olefin_from_naphtha
+      - photovoltaics
+      - pyrolysis
+      - refining
+      - reservoir_hydro
+      - run-of-river_hydro
+      - waste_boiler_DH
+      - waste_plant
+      - waste_to_cement_fuel
+      - wind_offshore
+      - wind_onshore
+    set_storage_technologies:
+      - battery
+      - natural_gas_storage
+      - oil_storage
+      - pumped_hydro
+      - salt_cavern_storage
+    set_transport_technologies:
+      - carbon_pipeline
+      - hydrogen_pipeline
+      - natural_gas_pipeline
+      - oil_pipeline
+      - power_line
+    set_retrofitting_technologies:
+      - natural_gas_turbine_CCS
+      - biomass_plant_CCS
+      - SMR_CCS
+      - cement_post_comb
+      - BF_BOF_CCS
+      - NG_DRI_CCS
+    set_carriers:
+      - ammonia
+      - biomass
+      - biomethane
+      - carbon
+      - clinker
+      - crude_oil
+      - diesel
+      - district_heat
+      - electricity
+      - fuel_for_cement
+      - gasoline
+      - hard_coal
+      - heat
+      - hydrogen
+      - kerosene
+      - lignite
+      - lng
+      - methanol
+      - naphtha
+      - natural_gas
+      - natural_gas_industry
+      - oil
+      - olefin
+      - passenger_mileage
+      - primary_steel
+      - secondary_steel
+      - shipping
+      - truck_mileage
+      - uranium
+      - waste
+      - wet_biomass
+  exclude:
+    energy_system: ""
+    set_sectors: []
+    set_conversion_technologies: []
+    set_storage_technologies: []
+    set_transport_technologies: []
+    set_retrofitting_technologies: []
+    set_carriers: []
+
+# settings for individual data sources
+data:
+  datasets:
+    setting: true
+  dataset_collections:
+    setting: true
+
+# settings that go into the energy_system folder
+energy_system:
+  units:
+    base_units:
+      - hour
+      - GW
+      - km
+      - megatons
+      - megaEuro
+      - kilotCO2eq
+      - megapkm
+      - megatkm
+      - ktonproduct
+    definitions:
+      Euro:
+        dimension: currency
+        aliases:
+          - EURO
+          - Eur
+      tCO2eq:
+        dimension: massCO2eq
+        aliases:
+          - tonCO2eq
+          - tCO2
+          - tonne_carbon
+      pkm:
+        dimension: mileage
+        aliases:
+          - passenger_km
+          - passenger_kilometer
+      tkm:
+        dimension: tonne_mileage
+        aliases:
+          - tonne_km
+          - tonne_kilometer
+      tonproduct:
+        dimension: mass_product
+        aliases:
+          - tproduct
+          - tonne_product
+  parameters_interpolation_off:
+    parameter_name:
+      - carbon_emissions_limit
