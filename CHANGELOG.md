@@ -3,6 +3,13 @@
 This file gets automatically updated in ZEN-europe's continuous integration 
 procedures. Do not edit the file manually.
 
+## [v0.2.0] - 2026-06-05 
+
+### New Features ✨
+- import and register ZEN-europe's custom components [[🔀 PR #15](https://github.com/ZEN-universe/ZEN-europe/pull/15) @manud99]
+- add config file to register custom component such as `energy_system_nuts0` [[🔀 PR #15](https://github.com/ZEN-universe/ZEN-europe/pull/15) @manud99]
+- add DVC to track large data files. [[🔀 PR #15](https://github.com/ZEN-universe/ZEN-europe/pull/15) @manud99]
+
 ## [v0.1.0] - 2026-04-28 
 
 ### New Features ✨
