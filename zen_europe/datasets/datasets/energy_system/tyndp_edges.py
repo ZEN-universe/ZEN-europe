@@ -28,7 +28,7 @@ class TYNDP_2020_edges(Dataset[Dict[str, pd.DataFrame]]):
     def _set_path(self) -> Path:
         if self.source_path is None:
             raise ValueError("source_path must be set to load the dataset.")
-        return self.source_path / "01-energy_system" / "nodes_edges"
+        return self.source_path / "01-energy_system" / "TYNDP_2020_edges"
 
     def _set_data(self) -> Dict[str, pd.DataFrame]:
         # nodes from ENTSOE TYNDP 2020-scenario.xlsx

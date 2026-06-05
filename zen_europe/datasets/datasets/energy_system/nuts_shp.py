@@ -33,7 +33,7 @@ class NUTSshp(Dataset[pd.DataFrame]):
     def _set_path(self) -> Path:
         if self.source_path is None:
             raise ValueError("source_path must be set to load the dataset.")
-        return self.source_path / "01-energy_system" / "nodes_edges"
+        return self.source_path / "01-energy_system" / "NUTSshp"
 
     def _set_data(self) -> pd.DataFrame:
         gdf = gpd.read_file(self.path / "NUTS_RG_60M_2021_3035.shp")
