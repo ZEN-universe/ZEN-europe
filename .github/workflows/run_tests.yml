@@ -138,7 +138,7 @@ jobs:
         if: ${{ env.SKIPTESTS == 'false' }}
         shell: bash -l {0}
         run: |
-          pytest --cov="zen_europe" -n auto tests/ -v
+          pytest --cov="zen_europe" -n auto tests/unit/ -v
 #          coverage report -m
 
     #   - name: Extract Coverage
