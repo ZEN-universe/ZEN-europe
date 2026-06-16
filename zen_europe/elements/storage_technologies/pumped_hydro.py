@@ -1,14 +1,26 @@
 from __future__ import annotations
 
+from turtle import pd
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from zen_creator.model import Model
 
-from zen_creator.datasets.datasets.metadata import MetaData
-from zen_creator.elements import StorageTechnology
-from zen_creator.utils.attribute import Attribute, SourceInformation
+from zen_creator import MetaData, StorageTechnologyConfig, StorageTechnology, Attribute, SourceInformation
+from zen_europe.datasets.datasets import EntsoePPDataset, TYNDP2024Dataset
 
+class PumpedHydroConfig(StorageTechnologyConfig):
+    """
+    Configuration class for the PumpedHydro.
+
+    This class is used to define the configuration parameters for the
+    PumpedHydro.
+
+    """
+
+    name: str = "pumped_hydro"
+
+    use_entsoe_existing_capacities: bool = True
 
 class PumpedHydro(StorageTechnology):
     """Class containing all data and assumptions for pumped hydro storage technology."""
@@ -39,19 +51,39 @@ class PumpedHydro(StorageTechnology):
         either as a constant value or as a time series if the lifetime
         varies over time.
         """
-        attr = self.lifetime
+        return self.lifetime
 
-        return attr.set_data(
-            default_value=25,
-            source=SourceInformation(
-                description="Assumption for default pumped hydro lifetime.",
-                metadata=MetaData(
-                    name="assumption",
-                    title="Modeling assumption",
-                    author=["ZEN Europe"],
-                    publication="ZEN Europe",
-                    publication_year=2026,
-                    url=None,
-                ),
-            ),
-        )
+    def _set_capacity_existing(self) -> Attribute:
+        """
+        Return the capacity existing of pumped hydro.
+
+        Currently returns the default value. This method can be
+        customized to return a specific capacity existing for pumped hydro,
+        either as a constant value or as a time series if the capacity
+        varies over time.
+        """
+        attr = self.capacity_existing
+ 
+        if self.model.config.data.storage_techonology.pumped_hydro.use_ensoe_existing_capacities:
+            attr = EntsoePPDataset(self.source_path).get_capacity(element=self)
+
+        return attr
+    
+    def _set_capacity_existing_energy(self) -> Attribute:
+            """Return the energy capacity existing of pumped hydro."""
+            ep_ratio = 6.0  
+            
+            # Get power capacity to calculate energy capacity
+            power_attr = self._set_capacity_existing()
+                
+            df_energy = pd.DataFrame({
+                "capacity_existing_energy": power_attr.df["capacity_existing"] * ep_ratio
+            })
+                
+            attr = self.capacity_existing_energy
+            attr.set_data(
+                df=df_energy,
+                unit="GWh",
+                source=power_attr.sources[0]
+            )
+            return attr
