@@ -1,14 +1,18 @@
 from __future__ import annotations
+
 from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
     from zen_creator.model import Model
 
-from zen_creator import ConversionTechnologyConfig, ConversionTechnology, Attribute
+from zen_creator import Attribute, ConversionTechnology, ConversionTechnologyConfig
 
-class PHEVConfig(ConversionTechnologyConfig):
+
+class PHEVElectricPartConfig(ConversionTechnologyConfig):
     name: str = "PHEV electric part"
 
-class PHEV(ConversionTechnology):
+
+class PHEVElectricPart(ConversionTechnology):
     name: str = "PHEV electric part"
 
     def __init__(self, model: Model, power_unit: str = "MW"):

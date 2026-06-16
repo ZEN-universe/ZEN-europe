@@ -1,13 +1,20 @@
 from __future__ import annotations
 
-from turtle import pd
 from typing import TYPE_CHECKING
+
+import pandas as pd
 
 if TYPE_CHECKING:
     from zen_creator.model import Model
 
-from zen_creator import MetaData, StorageTechnologyConfig, StorageTechnology, Attribute, SourceInformation
-from zen_europe.datasets.datasets import EntsoePPDataset, TYNDP2024Dataset
+from zen_creator import (
+    Attribute,
+    StorageTechnology,
+    StorageTechnologyConfig,
+)
+
+from zen_europe.datasets.datasets import EntsoePPDataset
+
 
 class PumpedHydroConfig(StorageTechnologyConfig):
     """
@@ -21,6 +28,7 @@ class PumpedHydroConfig(StorageTechnologyConfig):
     name: str = "pumped_hydro"
 
     use_entsoe_existing_capacities: bool = True
+
 
 class PumpedHydro(StorageTechnology):
     """Class containing all data and assumptions for pumped hydro storage technology."""
@@ -63,27 +71,25 @@ class PumpedHydro(StorageTechnology):
         varies over time.
         """
         attr = self.capacity_existing
- 
-        if self.model.config.data.storage_techonology.pumped_hydro.use_ensoe_existing_capacities:
+
+        if (
+            self.model.config.data.storage_techonology.pumped_hydro.use_ensoe_existing_capacities
+        ):
             attr = EntsoePPDataset(self.source_path).get_capacity(element=self)
 
         return attr
-    
+
     def _set_capacity_existing_energy(self) -> Attribute:
-            """Return the energy capacity existing of pumped hydro."""
-            ep_ratio = 6.0  
-            
-            # Get power capacity to calculate energy capacity
-            power_attr = self._set_capacity_existing()
-                
-            df_energy = pd.DataFrame({
-                "capacity_existing_energy": power_attr.df["capacity_existing"] * ep_ratio
-            })
-                
-            attr = self.capacity_existing_energy
-            attr.set_data(
-                df=df_energy,
-                unit="GWh",
-                source=power_attr.sources[0]
-            )
-            return attr
+        """Return the energy capacity existing of pumped hydro."""
+        ep_ratio = 6.0
+
+        # Get power capacity to calculate energy capacity
+        power_attr = self._set_capacity_existing()
+
+        df_energy = pd.DataFrame(
+            {"capacity_existing_energy": power_attr.df["capacity_existing"] * ep_ratio}
+        )
+
+        attr = self.capacity_existing_energy
+        attr.set_data(df=df_energy, unit="GWh", source=power_attr.sources[0])
+        return attr

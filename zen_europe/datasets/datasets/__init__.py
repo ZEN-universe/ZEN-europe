@@ -11,5 +11,5 @@ __all__ = [
     "TYNDP_2020_edges",
     "ENSPRESO",
     "EntsoePPDataset",
-    "TYNDP2024Dataset"
+    "TYNDP2024Dataset",
 ]

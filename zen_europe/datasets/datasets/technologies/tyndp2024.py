@@ -1,9 +1,7 @@
-import numbers
 from pathlib import Path
 
 import pandas as pd
-
-from zen_creator import Dataset, Element, Attribute, MetaData, SourceInformation
+from zen_creator import Attribute, Dataset, Element, MetaData, SourceInformation
 
 
 class TYNDP2024Dataset(Dataset[pd.DataFrame]):
@@ -11,6 +9,7 @@ class TYNDP2024Dataset(Dataset[pd.DataFrame]):
     Dataset for TYNDP 2024.
     Gets capacity data for different years and scenarios (NT, DE, GA).
     """
+
     name = "TYNDP2024"
 
     def __init__(self, source_path: Path | str | None = None):
@@ -23,7 +22,7 @@ class TYNDP2024Dataset(Dataset[pd.DataFrame]):
             publication_year=2025,
             title="TYNDP 2024: Europe's electricity infrastructure plan.",
             publication="-",
-            url="https://2024.entsos-tyndp-scenarios.eu/download/"
+            url="https://2024.entsos-tyndp-scenarios.eu/download/",
         )
 
     def _set_path(self) -> Path | None:
@@ -49,13 +48,13 @@ class TYNDP2024Dataset(Dataset[pd.DataFrame]):
             "Nuclear": "nuclear",
             "Oil": "oil_plant",
             "PV-roof": "photovoltaics",
-            "Dam": "reservoir_hydro",  
+            "Dam": "reservoir_hydro",
             "RoR": "run-of-river_hydro",
             "Pump-Open": "pumped_hydro",
             "WindOff": "wind_offshore",
             "WindOn": "wind_onshore",
         }
-        
+
         # if fuel type is not in the map, keep original value (e.g., for waste_plant)
         data["Fuel"] = data["SubType"].map(lambda x: tyndp_fuel_map.get(x, x))
 
@@ -64,26 +63,36 @@ class TYNDP2024Dataset(Dataset[pd.DataFrame]):
     # ===================================================================
     # Method: get_capacity
     # ===================================================================
-    def get_capacity(self, element: Element, scenario: str = "NT", year: int = 2030, climate_year: int = 2009, **kwargs) -> Attribute:
+    def get_capacity(
+        self,
+        element: Element,
+        scenario: str = "NT",
+        year: int = 2030,
+        climate_year: int = 2009,
+        **kwargs,
+    ) -> Attribute:
         """
         Returns capacity for a specific scenario and year.
-        
+
         Expected format in ZEN-creator:
         MultiIndex (node, year) + column 'capacity_existing' in GW.
-        
+
         Keywords:
-            scenario (str): "NT" (National Trends), "DE" (Distributed Energy), "GA" (Global Ambition)
+            scenario (str):
+            "NT" (National Trends),
+            "DE" (Distributed Energy),
+            "GA" (Global Ambition)
             year (int): e.g., 2030, 2040, 2050
             climate_year (int): climate year, most commonly 1995, 2008 or 2009.
         """
         tech_name = element.name
-        
+
         # filter dataset for the given scenario, year, climate year and technology
         cond_active = (
-            (self.data["Policy"] == scenario) &
-            (self.data["start_year"] == year) &
-            (self.data["Climate Year"] == climate_year) &
-            (self.data["Fuel"] == tech_name)
+            (self.data["Policy"] == scenario)
+            & (self.data["start_year"] == year)
+            & (self.data["Climate Year"] == climate_year)
+            & (self.data["Fuel"] == tech_name)
         )
         df_tech = self.data[cond_active].copy()
 
@@ -91,23 +100,32 @@ class TYNDP2024Dataset(Dataset[pd.DataFrame]):
             df_capacity = pd.DataFrame(columns=["node", "year", "capacity_existing"])
             df_capacity = df_capacity.set_index(["node", "year"])
         else:
-            df_capacity = df_tech[["Country", "start_year", "P_gen_max in 2015 (MW)"]].rename(columns={
-                "Country": "node",
-                "start_year": "year",  
-                "P_gen_max in 2015 (MW)": "capacity_existing"
-            })
-
-            # switch from MW to GW and handle non-numeric values (e.g., if there are any missing or non-numeric entries, they will be set to 0)
-            df_capacity["capacity_existing"] = pd.to_numeric(
-                df_capacity["capacity_existing"], errors="coerce"
-            ).fillna(0) / 1000.0
-
-            # summarize capacities by node and year (in case there are multiple entries for the same node-year combination)
-            df_capacity = (
-                df_capacity.groupby(["node", "year"], as_index=False)["capacity_existing"]
-                .sum()
+            df_capacity = df_tech[
+                ["Country", "start_year", "P_gen_max in 2015 (MW)"]
+            ].rename(
+                columns={
+                    "Country": "node",
+                    "start_year": "year",
+                    "P_gen_max in 2015 (MW)": "capacity_existing",
+                }
             )
-            
+
+            # switch from MW to GW and handle non-numeric values
+            # (e.g., if there are any missing or non-numeric entries,
+            # they will be set to 0)
+            df_capacity["capacity_existing"] = (
+                pd.to_numeric(df_capacity["capacity_existing"], errors="coerce").fillna(
+                    0
+                )
+                / 1000.0
+            )
+
+            # summarize capacities by node and year
+            # (in case there are multiple entries for the same node-year combination)
+            df_capacity = df_capacity.groupby(["node", "year"], as_index=False)[
+                "capacity_existing"
+            ].sum()
+
             # set multi-index
             df_capacity = df_capacity.set_index(["node", "year"])
 
@@ -116,8 +134,8 @@ class TYNDP2024Dataset(Dataset[pd.DataFrame]):
             df=df_capacity,
             unit="GW",
             source=SourceInformation(
-                description=f"Capacities extracted from TYNDP2024 for Scenario {scenario}, Year {year}, Climate Year {climate_year}.",
-                metadata=self.metadata 
+                description=f"Capacities of {scenario}, {year}, CY {climate_year}.",
+                metadata=self.metadata,
             ),
         )
         return attr

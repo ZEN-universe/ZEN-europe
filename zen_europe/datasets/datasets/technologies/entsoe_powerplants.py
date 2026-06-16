@@ -1,9 +1,7 @@
-import numbers
 from pathlib import Path
 
 import pandas as pd
-
-from zen_creator import Dataset, Element, Attribute, MetaData, SourceInformation
+from zen_creator import Attribute, Dataset, Element, MetaData, SourceInformation
 
 
 class EntsoePPDataset(Dataset[pd.DataFrame]):
@@ -19,11 +17,11 @@ class EntsoePPDataset(Dataset[pd.DataFrame]):
     def _set_metadata(self) -> MetaData:
         return MetaData(
             name=self.name,  # Use the class attribute "entsoe_powerplants2025"
-            author=["ENTSO-E"], 
+            author=["ENTSO-E"],
             publication_year=2026,
-            title="Technology lifetimes and availability data for energy system modeling",
+            title="Technology lifetimes and availability data for ESM",
             publication="Journal of Reliability and Risk Engineering",
-            url="https://example.com/dataset.csv"
+            url="https://example.com/dataset.csv",
         )
 
     def _set_path(self) -> Path | None:
@@ -39,9 +37,9 @@ class EntsoePPDataset(Dataset[pd.DataFrame]):
 
         # Only keep plants that are operating in 2025
         cond_active = (
-            ((data["DateIn"] <= 2025) | data["DateIn"].isna()) &
-            ((data["DateOut"] > 2025) | data["DateOut"].isna()) &
-            (data["Status"] == "Operating")
+            ((data["DateIn"] <= 2025) | data["DateIn"].isna())
+            & ((data["DateOut"] > 2025) | data["DateOut"].isna())
+            & (data["Status"] == "Operating")
         )
         df_pp = data[cond_active].copy()
 
@@ -68,7 +66,9 @@ class EntsoePPDataset(Dataset[pd.DataFrame]):
             "Wind Offshore": "wind_offshore",
         }
         tech_dependent_mask = df_pp["Fueltype"].isin(["Wind", "Hydro"])
-        df_pp.loc[tech_dependent_mask, "Fuel"] = df_pp.loc[tech_dependent_mask, "Technology"].map(tech_map)
+        df_pp.loc[tech_dependent_mask, "Fuel"] = df_pp.loc[
+            tech_dependent_mask, "Technology"
+        ].map(tech_map)
 
         # Biomass/Waste 80/20 split (as in your ZEN-garden run)
         mask_bw = df_pp["Fueltype"] == "Biomass & Waste"
@@ -82,7 +82,7 @@ class EntsoePPDataset(Dataset[pd.DataFrame]):
 
         df_pp = pd.concat([df_pp, df_waste], ignore_index=True)
 
-        return df_pp  
+        return df_pp
 
     # ===================================================================
     # New method: get_capacity
@@ -96,18 +96,23 @@ class EntsoePPDataset(Dataset[pd.DataFrame]):
         df_tech = self.data[self.data["Fuel"] == tech_name].copy()
 
         if df_tech.empty:
-            df_capacity = pd.DataFrame(columns=["node", "year_construction", "capacity_existing"])
+            df_capacity = pd.DataFrame(
+                columns=["node", "year_construction", "capacity_existing"]
+            )
         else:
-            df_capacity = df_tech[["Country", "DateIn", "Capacity"]].rename(columns={
-                "Country": "node",
-                "DateIn": "year_construction",
-                "Capacity": "capacity_existing"
-            })
+            df_capacity = df_tech[["Country", "DateIn", "Capacity"]].rename(
+                columns={
+                    "Country": "node",
+                    "DateIn": "year_construction",
+                    "Capacity": "capacity_existing",
+                }
+            )
 
             # MW → GW
-            df_capacity["capacity_existing"] = pd.to_numeric(
-                df_capacity["capacity_existing"], errors="coerce"
-            ) / 1000.0
+            df_capacity["capacity_existing"] = (
+                pd.to_numeric(df_capacity["capacity_existing"], errors="coerce")
+                / 1000.0
+            )
 
             # unknown construction year → 2025
             df_capacity["year_construction"] = pd.to_numeric(
@@ -115,20 +120,21 @@ class EntsoePPDataset(Dataset[pd.DataFrame]):
             ).fillna(2025)
 
             # sum up capacities for plants
-            df_capacity = (
-                df_capacity.groupby(["node", "year_construction"], as_index=False)["capacity_existing"]
-                .sum()
-            )
-            #set multi-index
+            df_capacity = df_capacity.groupby(
+                ["node", "year_construction"], as_index=False
+            )["capacity_existing"].sum()
+            # set multi-index
             df_capacity = df_capacity.set_index(["node", "year_construction"])
 
-        attr = Attribute("capacity_existing", element=element,
+        attr = Attribute(
+            "capacity_existing",
+            element=element,
             df=df_capacity,
             unit="GW",
             default_value=0.0,
             source=SourceInformation(
                 description="Existing capacities extracted from ENTSO-E 2025 dataset.",
-                metadata=self.metadata 
+                metadata=self.metadata,
             ),
         )
         return attr
