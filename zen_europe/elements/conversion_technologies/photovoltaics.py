@@ -6,7 +6,11 @@ if TYPE_CHECKING:
     from zen_creator.model import Model
 
 import pandas as pd
-from zen_creator import Attribute, ConversionTechnology, ConversionTechnologyConfig
+from zen_creator import (
+    Attribute,
+    ConversionTechnologyConfig,
+    GenericConversionTechnology,
+)
 
 from zen_europe.datasets.datasets import TYNDP2024Dataset
 
@@ -17,7 +21,7 @@ class PhotovoltaicsConfig(ConversionTechnologyConfig):
     name: str = "photovoltaics"
 
 
-class Photovoltaics(ConversionTechnology):
+class Photovoltaics(GenericConversionTechnology):
     """Class containing all data and assumptions for photovoltaics."""
 
     name: str = "photovoltaics"

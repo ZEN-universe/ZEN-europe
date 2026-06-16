@@ -5,14 +5,18 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from zen_creator.model import Model
 
-from zen_creator import Attribute, ConversionTechnology, ConversionTechnologyConfig
+from zen_creator import (
+    Attribute,
+    ConversionTechnologyConfig,
+    GenericConversionTechnology,
+)
 
 
 class BEVConfig(ConversionTechnologyConfig):
     name: str = "BEV"
 
 
-class BEV(ConversionTechnology):
+class BEV(GenericConversionTechnology):
     name: str = "BEV"
 
     def __init__(self, model: Model, power_unit: str = "MW"):

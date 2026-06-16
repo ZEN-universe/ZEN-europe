@@ -8,8 +8,8 @@ if TYPE_CHECKING:
 import pandas as pd
 from zen_creator import (
     Attribute,
-    ConversionTechnology,
     ConversionTechnologyConfig,
+    GenericConversionTechnology,
 )
 
 from zen_europe.datasets.datasets import EntsoePPDataset, TYNDP2024Dataset
@@ -20,7 +20,7 @@ class HardCoalPlantConfig(ConversionTechnologyConfig):
     use_entsoe_existing_capacities: bool = True
 
 
-class HardCoalPlant(ConversionTechnology):
+class HardCoalPlant(GenericConversionTechnology):
     name: str = "hard_coal_plant"
 
     def __init__(self, model: Model, power_unit: str = "MW"):

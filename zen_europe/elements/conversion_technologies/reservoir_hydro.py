@@ -6,7 +6,11 @@ if TYPE_CHECKING:
     from zen_creator.model import Model
 
 import pandas as pd
-from zen_creator import Attribute, ConversionTechnology, ConversionTechnologyConfig
+from zen_creator import (
+    Attribute,
+    ConversionTechnologyConfig,
+    GenericConversionTechnology,
+)
 
 from zen_europe.datasets.datasets import EntsoePPDataset, TYNDP2024Dataset
 
@@ -16,7 +20,7 @@ class ReservoirHydroConfig(ConversionTechnologyConfig):
     use_entsoe_existing_capacities: bool = True
 
 
-class ReservoirHydro(ConversionTechnology):
+class ReservoirHydro(GenericConversionTechnology):
     name: str = "reservoir_hydro"
 
     def __init__(self, model: Model, power_unit: str = "MW"):
