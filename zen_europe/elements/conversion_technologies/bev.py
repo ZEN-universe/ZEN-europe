@@ -7,8 +7,8 @@ if TYPE_CHECKING:
 
 from zen_creator import (
     Attribute,
+    ConversionTechnology,
     ConversionTechnologyConfig,
-    GenericConversionTechnology,
 )
 
 
@@ -16,7 +16,7 @@ class BEVConfig(ConversionTechnologyConfig):
     name: str = "BEV"
 
 
-class BEV(GenericConversionTechnology):
+class BEV(ConversionTechnology):
     name: str = "BEV"
 
     def __init__(self, model: Model, power_unit: str = "MW"):

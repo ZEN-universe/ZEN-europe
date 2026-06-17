@@ -7,8 +7,8 @@ if TYPE_CHECKING:
 
 from zen_creator import (
     Attribute,
+    ConversionTechnology,
     ConversionTechnologyConfig,
-    GenericConversionTechnology,
 )
 
 
@@ -16,7 +16,7 @@ class PHEVElectricPartConfig(ConversionTechnologyConfig):
     name: str = "PHEV electric part"
 
 
-class PHEVElectricPart(GenericConversionTechnology):
+class PHEVElectricPart(ConversionTechnology):
     name: str = "PHEV electric part"
 
     def __init__(self, model: Model, power_unit: str = "MW"):
