@@ -33,7 +33,7 @@ class Biomass(Carrier):
         This method is used to set the self.availability_import property when
         the  model is built.
         """
-        attr = self.demand
+        attr = self.availability_import
 
         attr = ENSPRESO(self.model.source_path).get_availability_import(element=self)
         return attr
