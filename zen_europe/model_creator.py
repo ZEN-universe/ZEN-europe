@@ -40,8 +40,43 @@ def create_model(
     # apply changes
     model.build()
 
+    # =========================================================================
+    # Fix Units for Non-Energy Technologies (Steel/Chemicals)
+    # =========================================================================
+    for _tech_name, element in model.elements.items():
+        # Sync Power / Base Units
+        if hasattr(element, "capacity_lower_limit") and hasattr(
+            element, "capacity_limit"
+        ):
+            element.capacity_lower_limit.unit = element.capacity_limit.unit
+
+        # Sync Energy Units for Storage
+        if hasattr(element, "capacity_lower_limit_energy") and hasattr(
+            element, "capacity_limit_energy"
+        ):
+            element.capacity_lower_limit_energy.unit = (
+                element.capacity_limit_energy.unit
+            )
+
     # save model output
     if write:
         model.write()
+        # =========================================================================
+        # Post-write modifications & cleanup
+        # =========================================================================
+        print("\n--- Running Post-Write Actions ---")
+        new_model_path = model.output_folder / model.name
+        files_deleted = 0
+
+        if new_model_path.exists():
+            for file_path in new_model_path.rglob(
+                "capacity_limit_yearly_variation.csv"
+            ):
+                try:
+                    file_path.unlink()
+                    print(f"Deleted unneeded variation file: {file_path}")
+                    files_deleted += 1
+                except Exception as e:
+                    print(f"Could not delete {file_path}: {e}")
 
     return model
