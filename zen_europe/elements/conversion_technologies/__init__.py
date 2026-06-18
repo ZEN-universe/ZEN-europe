@@ -1,11 +1,9 @@
-from .bev import BEV, BEVConfig
 from .biomass_plant import BiomassPlant, BiomassPlantConfig
 from .hard_coal_plant import HardCoalPlant, HardCoalPlantConfig
 from .lignite_coal_plant import LigniteCoalPlant, LigniteCoalPlantConfig
 from .natural_gas_turbine import NaturalGasTurbine, NaturalGasTurbineConfig
 from .nuclear import Nuclear, NuclearConfig
 from .oil_plant import OilPlant, OilPlantConfig
-from .phev_electric_part import PHEVElectricPart, PHEVElectricPartConfig
 from .photovoltaics import Photovoltaics, PhotovoltaicsConfig
 from .reservoir_hydro import ReservoirHydro, ReservoirHydroConfig
 from .run_of_river_hydro import RunOfRiverHydro, RunOfRiverHydroConfig

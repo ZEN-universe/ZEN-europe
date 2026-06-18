@@ -43,71 +43,46 @@ class WastePlant(ConversionTechnology):
             attr = EntsoePPDataset(self.source_path).get_capacity(element=self)
         return attr
 
-    def _set_capacity_limit(self) -> Attribute:
-        return self._build_combined_limits(bound_type="upper")
-
-    def _set_capacity_lower_limit(self) -> Attribute:
-        return self._build_combined_limits(bound_type="lower")
-
-    def _build_combined_limits(self, bound_type: str) -> Attribute:
-        """Constructs 2025 and 2030 limits
-        by merging ENTSO-E and TYNDP spatial indexes."""
-        entsoe_attr = self._set_capacity_existing()
-        spatial_indices = [
-            idx
-            for idx in entsoe_attr.df.index.names
-            if idx in ["location", "node", "edge"]
-        ]
-
-        df_2025_base = entsoe_attr.df.copy().reset_index()
-        locs_2025 = (
-            df_2025_base[spatial_indices].drop_duplicates()
-            if not df_2025_base.empty
-            else pd.DataFrame(columns=spatial_indices)
-        )
-
-        try:
-            tyndp_attr = TYNDP2024Dataset(self.source_path).get_capacity(
-                element=self, target_year=2030
-            )
-            df_2030_base = tyndp_attr.df.copy().reset_index()
-        except Exception:
-            df_2030_base = pd.DataFrame()
-
-        locs_2030 = (
-            df_2030_base[spatial_indices].drop_duplicates()
-            if not df_2030_base.empty
-            else pd.DataFrame(columns=spatial_indices)
-        )
-        all_locs = pd.concat([locs_2025, locs_2030]).drop_duplicates()
-
-        # 2025 Limit (Set to 0)
-        df_2025 = all_locs.copy()
+    def _get_capacity_limit(self) -> Attribute:
+        """Overrides default to apply 2025/2030 limits directly."""
+        attr = self.capacity_limit
+        
+        # Load TYNDP data
+        tyndp_attr = TYNDP2024Dataset(self.source_path).get_capacity(element=self, target_year=2030)
+        df_base = tyndp_attr.df.copy().reset_index()
+        spatial_indices = [idx for idx in tyndp_attr.df.index.names if idx in ["location", "node", "edge"]]
+        
+        # Create 2025 (0.0) and 2030 (1.3x) dataframe
+        df_2025 = df_base[spatial_indices].drop_duplicates().copy()
         df_2025["year"] = 2025
+        df_2025["capacity_limit"] = 0.0
+        
+        df_2030 = df_base[spatial_indices].copy()
+        df_2030["year"] = 2030
+        df_2030["capacity_limit"] = df_base["capacity_existing"].map(lambda x: x * 1.3 if x > 0 else 0.1)
+        
+        df_final = pd.concat([df_2025, df_2030], ignore_index=True).set_index(spatial_indices + ["year"])
+        
+        attr.set_data(df=df_final, unit="GW", source=tyndp_attr.sources[0])
+        return attr
 
-        if bound_type == "upper":
-            df_2025["capacity_limit"] = 0.0
-            attr, col_name = self.capacity_limit, "capacity_limit"
-        else:
-            df_2025["capacity_lower_limit"] = 0.0
-            attr, col_name = self.capacity_lower_limit, "capacity_lower_limit"
-
-        # 2030 Limits
-        if not df_2030_base.empty:
-            df_2030 = df_2030_base[spatial_indices].copy()
-            df_2030["year"] = 2030
-            if bound_type == "upper":
-                df_2030[col_name] = df_2030_base["capacity_existing"].map(
-                    lambda x: x * 1.3 if x > 0 else 0.1
-                )
-            else:
-                df_2030[col_name] = df_2030_base["capacity_existing"] * 0.7
-            df_combined = pd.concat([df_2025, df_2030], ignore_index=True)
-            source = tyndp_attr.sources[0]
-        else:
-            df_combined = df_2025
-            source = entsoe_attr.sources[0]
-
-        df_combined.set_index(spatial_indices + ["year"], inplace=True)
-        attr.set_data(df=df_combined, unit="GW", source=source)
+    def _get_capacity_lower_limit(self) -> Attribute:
+        """Overrides default to apply 2025/2030 lower limits."""
+        attr = self.capacity_lower_limit
+        
+        tyndp_attr = TYNDP2024Dataset(self.source_path).get_capacity(element=self, target_year=2030)
+        df_base = tyndp_attr.df.copy().reset_index()
+        spatial_indices = [idx for idx in tyndp_attr.df.index.names if idx in ["location", "node", "edge"]]
+        
+        df_2025 = df_base[spatial_indices].drop_duplicates().copy()
+        df_2025["year"] = 2025
+        df_2025["capacity_lower_limit"] = 0.0
+        
+        df_2030 = df_base[spatial_indices].copy()
+        df_2030["year"] = 2030
+        df_2030["capacity_lower_limit"] = df_base["capacity_existing"] * 0.7
+        
+        df_final = pd.concat([df_2025, df_2030], ignore_index=True).set_index(spatial_indices + ["year"])
+        
+        attr.set_data(df=df_final, unit="GW", source=tyndp_attr.sources[0])
         return attr
