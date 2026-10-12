@@ -74,13 +74,8 @@ class ENTSOGCapacityMap(Dataset[pd.DataFrame]):
         points["section"] = points["Number"].where(is_section).ffill()
 
         for column in ("From CC", "To CC"):
-            points[column] = (
-                points[column]
-                .astype(str)
-                .str.strip()
-                .replace({"nan": None})  # type: ignore[dict-item]
-                .replace(self.COUNTRY_CODES)
-            )
+            codes = points[column].astype(str).str.strip()
+            points[column] = codes.mask(codes == "nan").replace(self.COUNTRY_CODES)
 
         points = points[
             (points["capacity"] > 0)

@@ -116,7 +116,7 @@ class ExistingVehicleCapacity(DatasetCollection):
         )
         mvkm_per_h = total_demand.sum() / fleet.iloc[:, -1].sum() / 8760  # mvkm/h
         capacity_existing = registrations * mvkm_per_h
-        capacity_existing = capacity_existing.loc[element.name]
+        capacity_existing = cast(pd.DataFrame, capacity_existing.loc[element.name])
         hourly_demand = cast(pd.DataFrame, passenger_mileage.demand.df)
         peak_demand_share = (hourly_demand / (total_demand / 8760)).max()
         # adjust the existing capacity to account for the peak demand share
@@ -151,7 +151,7 @@ class ExistingVehicleCapacity(DatasetCollection):
         total_demand = truck_transport_db._get_total_demand(element=truck_mileage)
         mtkm_per_h = total_demand.sum() / fleet.iloc[:, -1].sum() / 8760  # mtkm/h
         capacity_existing = registrations * mtkm_per_h
-        capacity_existing = capacity_existing.loc[element.name]
+        capacity_existing = cast(pd.DataFrame, capacity_existing.loc[element.name])
         peak_demand_share = truck_transport_db._get_peak_demand_share(
             element=truck_mileage
         )
