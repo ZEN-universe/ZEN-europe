@@ -11,7 +11,7 @@ from zen_europe.datasets.datasets.financial.ECB import ECBInflation
 from zen_europe.utils.constants import Constants
 
 
-class NorthernLightsCosts(Dataset[pd.DataFrame]):
+class NorthernLightsCosts(Dataset[pd.Series]):
     """
     Dataset class for the costs of the Northern Lights Carbon Capture and Storage (CCS)
     project. This data is based on the external report by Gassnova SF in 2025.
@@ -40,14 +40,12 @@ class NorthernLightsCosts(Dataset[pd.DataFrame]):
     def _set_path(self) -> Path | None:
         return None
 
-    def _set_data(self) -> dict[str, pd.Series]:
+    def _set_data(self) -> pd.Series:
         """
         No data to be set.
         """
-        data = {}
-
-        data = pd.Series(data)
-        return data
+        data: dict[str, float] = {}
+        return pd.Series(data)
 
     # -------- methods ------------------------
     def get_capex_specific(self, element: ConversionTechnology) -> Attribute:

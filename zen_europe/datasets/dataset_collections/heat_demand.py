@@ -43,7 +43,7 @@ class HeatDemand(DatasetCollection):
         self.settings = settings
         super().__init__(source_path=source_path)
 
-    def _get_data(self) -> Dict[str, Dataset[Any]]:
+    def _get_data(self) -> Dict[str, Dataset[Any] | DatasetCollection]:
         """Load all available data sources."""
 
         if self.source_path is None:
@@ -83,7 +83,7 @@ class HeatDemand(DatasetCollection):
         )
         return element.demand.set_data(source=source, df=demand, unit="GW")
 
-    def _calculate_demand(self, element: Element) -> pd.Series:
+    def _calculate_demand(self, element: Element) -> pd.DataFrame:
         """
         Calculate the heat demand.
 
@@ -94,7 +94,7 @@ class HeatDemand(DatasetCollection):
         desnz_dataset = cast(DESNZ, self.data["desnz"])
         bfe_dataset = cast(BFE, self.data["bfe"])
         energifaktanorge_dataset = cast(Energifaktanorge, self.data["energifaktanorge"])
-        data_jrc = jrc_idees_dataset.get_demand(element).squeeze()
+        data_jrc = jrc_idees_dataset.get_demand(element)
         missing_countries = pd.Index(element.model.config.system.set_nodes).difference(
             data_jrc.index.get_level_values("node").unique()
         )
@@ -103,15 +103,17 @@ class HeatDemand(DatasetCollection):
                 data = bfe_dataset.get_demand(element)
             elif country == "NO" or country == "UK":
                 # residential heat demand from Eurostat
-                data_res = eurostat_dataset.get_total_heat_household().squeeze()
-                data_res = data_res.loc[country]
+                data_res = cast(
+                    pd.Series, eurostat_dataset.get_total_heat_household().squeeze()
+                )
+                data_res = cast(pd.Series, data_res.loc[country])
                 # tertiary heat demand for UK from ECUK
                 if country == "UK":
                     data_ser = desnz_dataset.get_service_demand(element)
                 else:
                     data_ser = energifaktanorge_dataset.get_service_demand()
                 data = pd.concat({"residential": data_res, "tertiary": data_ser})
-                data = data.squeeze()
+                data = cast(pd.Series, data.squeeze())
             else:
                 raise ValueError(f"Missing heat demand data for country {country}.")
             data.index.names = ["sector", "category"]
@@ -150,12 +152,12 @@ class HeatDemand(DatasetCollection):
         # average COP
         when2heat_dataset = cast(When2Heat, self.data["when2heat"])
         cop_data = when2heat_dataset.get_COP()
-        cop_data = cop_data.xs("floor", level="category", axis=1).mean()
-        common_nodes = cop_data.index.intersection(
+        cop = cast(pd.DataFrame, cop_data.xs("floor", level="category", axis=1)).mean()
+        common_nodes = cop.index.intersection(
             household_heat.index.get_level_values(1).unique()
         )
-        cop_data = cop_data.loc[common_nodes]
-        electricity_hp = household_heat.loc["heat_pump"].div(cop_data - 1, axis=0)
+        cop = cop.loc[common_nodes]
+        electricity_hp = household_heat.loc["heat_pump"].div(cop - 1, axis=0)
         electricity_hp = electricity_hp.fillna(0)
         electricity_eb = household_heat.loc["electricity"] - electricity_hp
         electricity_eb = pd.concat([electricity_eb], keys=["electrode_boiler"])
@@ -190,8 +192,8 @@ class HeatDemand(DatasetCollection):
         # average COP
         when2heat_dataset = cast(When2Heat, self.data["when2heat"])
         cop_data = when2heat_dataset.get_COP()
-        cop_data = cop_data.xs("floor", level="category", axis=1).mean()
-        electricity_hp_dh = district_heat.loc["heat_pump_DH"].div(cop_data - 1, axis=0)
+        cop = cast(pd.DataFrame, cop_data.xs("floor", level="category", axis=1)).mean()
+        electricity_hp_dh = district_heat.loc["heat_pump_DH"].div(cop - 1, axis=0)
         electricity_hp_dh = electricity_hp_dh.fillna(0)
         electricity_eb_dh = district_heat.loc["electricity_DH"] - electricity_hp_dh
         electricity_eb_dh = pd.concat([electricity_eb_dh], keys=["electrode_boiler_DH"])
@@ -253,9 +255,10 @@ class HeatDemand(DatasetCollection):
             heating_share = heating_share.fillna(0)
             # apply district heating conversion factor to the heating share
             dhg = element.model.conversion_technologies["district_heating_grid"]
-            dhg_cf = dhg.conversion_factor.default_value[0]["district_heat"][
-                "default_value"
-            ]
+            dhg_conversion_factors = cast(
+                list[dict[str, dict[str, float]]], dhg.conversion_factor.default_value
+            )
+            dhg_cf = dhg_conversion_factors[0]["district_heat"]["default_value"]
             heating_share *= dhg_cf
             add_description = (
                 "The heating share for district heating is adjusted by the conversion "
@@ -264,7 +267,7 @@ class HeatDemand(DatasetCollection):
         assert element.name in heating_share.index.get_level_values(
             0
         ), f"Element {element.name} not found in heating share data."
-        heating_share_element = heating_share.loc[element.name]
+        heating_share_element = cast(pd.DataFrame, heating_share.loc[element.name])
         common_nodes = heating_share_element.index.intersection(peak_demand.index)
         missing_nodes = set(element.model.config.system.set_nodes).difference(
             common_nodes
@@ -280,7 +283,7 @@ class HeatDemand(DatasetCollection):
         capacity_addition = calculate_capacity_addition_from_cumulative(
             capacity_existing, element
         )
-        capacity_addition = format_capacity_existing(capacity_addition)
+        df = format_capacity_existing(capacity_addition)
 
         source = SourceInformation(
             description=(
@@ -295,7 +298,7 @@ class HeatDemand(DatasetCollection):
         )
         return element.capacity_existing.set_data(
             source=source,
-            df=capacity_addition,
+            df=df,
             unit="GW",
         )
 

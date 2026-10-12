@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, cast
+
+import pandas as pd
 
 from zen_europe.datasets.datasets.technology.CO2_storage_costs_ZEP import (
     CO2StorageCostsZEP,
@@ -91,7 +93,7 @@ class CarbonStorage(ConversionTechnology):
         = carbon), so the conversion factor is left empty.
         """
         attr = self.conversion_factor
-        cf = []
+        cf: list[dict[str, dict[str, Any]]] = []
         attr.set_data(
             default_value=cf,
             source=AssumptionInformation(
@@ -184,10 +186,10 @@ class CarbonStorage(ConversionTechnology):
                 source_path=self.source_path
             )
             return OG_extraction_db.get_capacity_limit_carbon_storage(self)
-        data = self.capacity_existing.df.groupby("node").sum()
+        attr = self.capacity_limit
+        data = cast(pd.Series, self.capacity_existing.df).groupby("node").sum()
         data.name = "capacity_limit"
-        return Attribute(
-            name="capacity_limit",
+        attr.set_data(
             default_value=0,
             df=data,
             unit="tCO2/h",
@@ -197,9 +199,12 @@ class CarbonStorage(ConversionTechnology):
                     "existing capacity from the IOGP report, which includes "
                     "all planned and under construction projects. "
                 ),
-                metadata=self.capacity_existing.sources[-1],
+                metadata=cast(
+                    SourceInformation, self.capacity_existing.sources[-1]
+                ).metadata,
             ),
         )
+        return attr
 
     def _set_max_diffusion_rate(self) -> Attribute:
         """

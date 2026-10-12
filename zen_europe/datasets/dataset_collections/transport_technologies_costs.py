@@ -217,7 +217,7 @@ class TransportTechnologiesCosts(DatasetCollection):
                 f"No cost source is available for technology "
                 f"'{technology.name}' in the dataset collection '{self.name}'."
             )
-        return self.data[self.SOURCES[technology.name]]
+        return cast("Dataset[Any]", self.data[self.SOURCES[technology.name]])
 
     def _get_rebasing(self, technology: TransportTechnology) -> tuple[float, str]:
         """Get the multiplier and the unit of the cost of a technology.
@@ -256,7 +256,7 @@ class TransportTechnologiesCosts(DatasetCollection):
         proxy_dataset_name = self.OFFSHORE_COST_INCREASE_PROXY.get(technology.name)
         if proxy_dataset_name is None:
             return None, None
-        proxy_dataset = self.data[proxy_dataset_name]
+        proxy_dataset = cast("Dataset[Any]", self.data[proxy_dataset_name])
         cost_increase = cast(Any, proxy_dataset).get_offshore_cost_increase()
         return onshore_cost * cost_increase, proxy_dataset
 

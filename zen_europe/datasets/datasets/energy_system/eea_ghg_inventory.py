@@ -290,8 +290,8 @@ class EEAGreenhouseGasInventory(Dataset[pd.DataFrame]):
         emissions_sectors, emissions_total = self.get_emissions(
             sectors,
             nodes,
-            include_international_transport,
-            start_year,
+            include_international_transport=include_international_transport,
+            start_year=start_year,
         )
         return emissions_sectors.sum() / emissions_total
 

@@ -13,7 +13,7 @@ from zen_creator.datasets.datasets.metadata import MetaData, SourceInformation
 from zen_europe.utils.constants import Constants
 
 
-class IPCCEmissionFactors(Dataset[pd.DataFrame]):
+class IPCCEmissionFactors(Dataset[pd.Series]):
     """
     IPCC emission factors dataset.
 

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import datetime
 from pathlib import Path
+from typing import cast
 
 import numpy as np
 import pandas as pd
@@ -17,7 +18,7 @@ _DAY_TYPES = {"w": "Werktag", "we": "Wochenende"}
 _COL_NAME = "Zuhause, am Arbeitsplatz und an öffentlichen Orten laden"
 
 
-class StandardLoadProfiles(Dataset[pd.DataFrame]):
+class StandardLoadProfiles(Dataset[dict[str, pd.DataFrame]]):
     """
     Standard load profiles dataset class.
 
@@ -55,23 +56,22 @@ class StandardLoadProfiles(Dataset[pd.DataFrame]):
         )
 
     def _set_data(self) -> dict[str, pd.DataFrame]:
-        data = {}
+        data: dict[str, pd.DataFrame] = {}
         for day_type, day_code in _DAY_TYPES.items():
-            data_reg = {}
+            data_reg: dict[str, pd.Series] = {}
             for region_type, region_code in _REGION_TYPES.items():
                 sheet_name = f"{region_code}_{day_code}"
                 df = pd.read_excel(
                     self.path, sheet_name=sheet_name, header=2
                 ).set_index("Ladeszenario")
                 df = df.iloc[:, np.where(df.columns == _COL_NAME)[0][0] :]
-                df.columns = df.loc["Ladeorte"]
+                df.columns = cast(pd.Series, df.loc["Ladeorte"])
                 df = df.iloc[2:]
                 # average per hour
                 df.index = pd.to_datetime(df.index)
                 df = df.resample("1h").mean().iloc[:-1]
                 # sum over location (home, work, public)
-                df = df.sum(axis=1)
-                data_reg[region_type] = df
+                data_reg[region_type] = df.sum(axis=1)
             data[day_type] = pd.concat(data_reg, keys=data_reg.keys(), axis=1)
         return data
 
@@ -119,7 +119,7 @@ class StandardLoadProfiles(Dataset[pd.DataFrame]):
         """
         new_cols = slp.rename(columns={"EL": "GR", "UK": "GB"})
         tz = {
-            old_cc: pytz.timezone(pytz.country_timezones(new_cc)[0])
+            old_cc: pytz.timezone(pytz.country_timezones[new_cc][0])
             for old_cc, new_cc in zip(slp.columns, new_cols.columns, strict=True)
             if new_cc in pytz.country_timezones
         }
@@ -135,7 +135,9 @@ class StandardLoadProfiles(Dataset[pd.DataFrame]):
         }
         delta_t = {cc: val - 24 if val > 12 else val for cc, val in delta_t.items()}
         slp_shifted = slp.apply(
-            lambda col: pd.Series(np.roll(col, delta_t[col.name]), index=col.index),
+            lambda col: pd.Series(
+                np.roll(col, int(delta_t[col.name])), index=col.index
+            ),
             axis=0,
         )
         return slp_shifted

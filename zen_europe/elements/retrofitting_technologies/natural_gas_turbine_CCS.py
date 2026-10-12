@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 from zen_europe.datasets.dataset_collections.ccs_conversion_factor import (
     CCSConversionFactor,
@@ -21,6 +21,7 @@ if TYPE_CHECKING:
 from zen_creator import (
     AssumptionInformation,
     Attribute,
+    ConversionTechnology,
     RetrofittingTechnology,
     SourceInformation,
 )
@@ -109,7 +110,9 @@ class NaturalGasTurbineCCS(RetrofittingTechnology):
         tech_db = TechnologyCostDatabase(
             settings=self.settings, source_path=self.source_path
         )
-        base_tech = self.model.elements[self.base_technology_name]
+        base_tech = cast(
+            ConversionTechnology, self.model.elements[self.base_technology_name]
+        )
         return tech_db.get_capex_specific_conversion_retrofit(
             self, base_technology=base_tech
         )
@@ -129,7 +132,9 @@ class NaturalGasTurbineCCS(RetrofittingTechnology):
         tech_db = TechnologyCostDatabase(
             settings=self.settings, source_path=self.source_path
         )
-        base_tech = self.model.elements[self.base_technology_name]
+        base_tech = cast(
+            ConversionTechnology, self.model.elements[self.base_technology_name]
+        )
         return tech_db.get_opex_specific_fixed_retrofit(self, base_technology=base_tech)
 
     def _set_opex_specific_variable(self) -> Attribute:
@@ -147,7 +152,9 @@ class NaturalGasTurbineCCS(RetrofittingTechnology):
         tech_db = TechnologyCostDatabase(
             settings=self.settings, source_path=self.source_path
         )
-        base_tech = self.model.elements[self.base_technology_name]
+        base_tech = cast(
+            ConversionTechnology, self.model.elements[self.base_technology_name]
+        )
         return tech_db.get_opex_specific_variable_retrofit(
             self, base_technology=base_tech
         )
@@ -160,7 +167,9 @@ class NaturalGasTurbineCCS(RetrofittingTechnology):
         ccs_cf_db = CCSConversionFactor(
             settings=self.settings, source_path=self.source_path
         )
-        base_tech = self.model.elements[self.base_technology_name]
+        base_tech = cast(
+            ConversionTechnology, self.model.elements[self.base_technology_name]
+        )
         cf = ccs_cf_db.get_conversion_factor_CCS(element=self, base_tech=base_tech)
         return cf
 
@@ -172,7 +181,9 @@ class NaturalGasTurbineCCS(RetrofittingTechnology):
         ccs_cf_db = CCSConversionFactor(
             settings=self.settings, source_path=self.source_path
         )
-        base_tech = self.model.elements[self.base_technology_name]
+        base_tech = cast(
+            ConversionTechnology, self.model.elements[self.base_technology_name]
+        )
         return ccs_cf_db.get_retrofit_flow_coupling_factor(
             element=self, base_tech=base_tech
         )
@@ -185,7 +196,9 @@ class NaturalGasTurbineCCS(RetrofittingTechnology):
             Attribute: An Attribute object containing the existing capacity data.
         """
         if self.settings.investment.use_existing_capacities:
-            igop_projects = IOGPCarbonStorageProjects(source_path=self.source_path)
+            igop_projects = IOGPCarbonStorageProjects(
+                settings=self.settings, source_path=self.source_path
+            )
             return igop_projects.get_capacity_existing_capture(self)
         else:
             attr = self.capacity_existing

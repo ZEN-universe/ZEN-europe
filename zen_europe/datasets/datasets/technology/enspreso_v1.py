@@ -8,7 +8,7 @@ from zen_creator.datasets.datasets.dataset import Dataset
 from zen_creator.datasets.datasets.metadata import MetaData
 
 
-class ENSPRESOV1(Dataset[pd.DataFrame]):
+class ENSPRESOV1(Dataset[dict[str, pd.Series]]):
     """
     ENSPRESO v1 dataset class for potential capacity.
 

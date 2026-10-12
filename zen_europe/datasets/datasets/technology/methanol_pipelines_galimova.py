@@ -17,7 +17,7 @@ from zen_creator.datasets.datasets.dataset import Dataset
 from zen_creator.datasets.datasets.metadata import MetaData
 
 
-class MethanolPipelinesGalimova(Dataset[pd.DataFrame]):
+class MethanolPipelinesGalimova(Dataset[dict[str, pd.DataFrame]]):
     """
     Methanol pipelines dataset class from Galimova et al. (2025).
 
@@ -59,7 +59,7 @@ class MethanolPipelinesGalimova(Dataset[pd.DataFrame]):
 
     def _set_data(self) -> dict[str, pd.DataFrame]:
         # TODO there is no data to be implemented
-        data = {}
+        data: dict[str, pd.DataFrame] = {}
         return data
 
     # -------- methods ------------------------

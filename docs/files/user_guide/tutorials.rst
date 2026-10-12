@@ -353,7 +353,7 @@ configuration file:
      fine_resolution:
        system:
          aggregated_time_steps_per_year: 96
-     resolution_sweep:
+     resolution_options:
        system:
          aggregated_time_steps_per_year:
            values: [24, 96, 192]

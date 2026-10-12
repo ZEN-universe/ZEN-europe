@@ -72,7 +72,9 @@ class PowerLineCapacityLimit(DatasetCollection):
     def get_capacity_limit(self, technology: TransportTechnology) -> Attribute:
         """Get the capacity limit of the power lines of every edge."""
         potential = self.settings.data_source.potential_capacity_power_line
-        set_edges = technology.model.energy_system.set_edges.df
+        set_edges = cast(
+            pd.DataFrame | None, technology.model.energy_system.set_edges.df
+        )
         if set_edges is None:
             raise ValueError(
                 "The capacity limit cannot be determined, because the energy "
@@ -98,6 +100,7 @@ class PowerLineCapacityLimit(DatasetCollection):
                 f"capacity limit in the dataset collection '{self.name}'."
             )
 
+        source_metadata = metadata if len(metadata) > 1 else list(metadata.values())[0]
         capacity_limit = pd.DataFrame(limits).max(axis=1)
         capacity_limit.name = "capacity_limit"
         capacity_limit.index.name = "edge"
@@ -108,9 +111,7 @@ class PowerLineCapacityLimit(DatasetCollection):
             unit="GW",
             source=SourceInformation(
                 description=self._get_description(potential),
-                metadata=(
-                    metadata if len(metadata) > 1 else next(iter(metadata.values()))
-                ),
+                metadata=source_metadata,
             ),
         )
 
@@ -131,8 +132,8 @@ class PowerLineCapacityLimit(DatasetCollection):
         increase = self._to_edges(self._symmetric(increase), set_edges)
 
         entsoe = cast(ENTSOE, self.data["entsoe"])
-        capacity_existing = entsoe.get_transmission_capacity()
-        capacity_existing = capacity_existing["capacity_existing"].droplevel(
+        transmission = entsoe.get_transmission_capacity()
+        capacity_existing = transmission["capacity_existing"].droplevel(
             "year_construction"
         )
         capacity_existing = (

@@ -75,7 +75,7 @@ class ExistingVehicleCapacity(DatasetCollection):
         self.settings = settings
         super().__init__(source_path=source_path)
 
-    def _get_data(self) -> Dict[str, Dataset[Any]]:
+    def _get_data(self) -> Dict[str, Dataset[Any] | DatasetCollection]:
         """Load all available data sources."""
 
         if self.source_path is None:
@@ -96,7 +96,7 @@ class ExistingVehicleCapacity(DatasetCollection):
 
     def get_existing_capacity_passenger(
         self, element: ConversionTechnology
-    ) -> pd.DataFrame:
+    ) -> pd.Series:
         """Get the existing vehicle capacity for passenger vehicles.
 
         Args:
@@ -104,8 +104,7 @@ class ExistingVehicleCapacity(DatasetCollection):
                 to get the existing vehicle capacity.
 
         Returns:
-            pd.DataFrame: A DataFrame containing the existing vehicle capacity for
-                passenger vehicles.
+            pd.Series: The existing vehicle capacity for passenger vehicles.
         """
         unece = cast(UNECE, self.data["unece"])
         fleet = unece.get_total_fleet()
@@ -118,15 +117,14 @@ class ExistingVehicleCapacity(DatasetCollection):
         mvkm_per_h = total_demand.sum() / fleet.iloc[:, -1].sum() / 8760  # mvkm/h
         capacity_existing = registrations * mvkm_per_h
         capacity_existing = capacity_existing.loc[element.name]
-        peak_demand_share = (passenger_mileage.demand.df / (total_demand / 8760)).max()
+        hourly_demand = cast(pd.DataFrame, passenger_mileage.demand.df)
+        peak_demand_share = (hourly_demand / (total_demand / 8760)).max()
         # adjust the existing capacity to account for the peak demand share
         capacity_existing = capacity_existing.mul(peak_demand_share, axis=0)
         data = format_capacity_existing(capacity_existing.stack().astype(float))
         return data
 
-    def get_existing_capacity_truck(
-        self, element: ConversionTechnology
-    ) -> pd.DataFrame:
+    def get_existing_capacity_truck(self, element: ConversionTechnology) -> pd.Series:
         """Get the existing vehicle capacity for trucks.
 
         Args:
@@ -134,8 +132,7 @@ class ExistingVehicleCapacity(DatasetCollection):
                 to get the existing vehicle capacity.
 
         Returns:
-            pd.DataFrame: A DataFrame containing the existing vehicle capacity for
-                trucks.
+            pd.Series: The existing vehicle capacity for trucks.
         """
         unece = cast(UNECE, self.data["unece"])
         fleet_by_tech = unece.get_truck_fleet()
@@ -146,7 +143,7 @@ class ExistingVehicleCapacity(DatasetCollection):
         diff_fleet = (fleet_by_tech.iloc[:, -1] - registrations.sum(axis=1)).clip(
             lower=0
         )
-        registrations[registrations.columns.min() - 1] = diff_fleet
+        registrations[cast(int, registrations.columns.min()) - 1] = diff_fleet
         registrations = registrations.sort_index(axis=1)
 
         truck_transport_db = cast(TruckMileageDemand, self.data["truck_mileage"])
@@ -194,7 +191,9 @@ class ExistingVehicleCapacity(DatasetCollection):
         fuel, consumers = _OIL_CONVERSION_CONSUMERS[element.name]
 
         fuel_demands = [
-            self._get_fleet_fuel_demand(element.model.elements[consumer], fuel)
+            self._get_fleet_fuel_demand(
+                cast(ConversionTechnology, element.model.elements[consumer]), fuel
+            )
             for consumer in consumers
             if consumer in element.model.elements
         ]
@@ -242,7 +241,10 @@ class ExistingVehicleCapacity(DatasetCollection):
     ) -> pd.Series:
         """Fuel demand in GW of the existing fleet of one vehicle technology,
         per node and year of construction."""
-        if element.reference_carrier.default_value[0] == _TRUCK_MILEAGE:
+        if (
+            cast(list[str], element.reference_carrier.default_value)[0]
+            == _TRUCK_MILEAGE
+        ):
             fleet = self.get_existing_capacity_truck(element=element)
         else:
             fleet = self.get_existing_capacity_passenger(element=element)
@@ -252,7 +254,10 @@ class ExistingVehicleCapacity(DatasetCollection):
     def _get_fuel_per_kilometre(element: ConversionTechnology, carrier: str) -> float:
         """Fuel demand of one vehicle per kilometre, scaled so that multiplying
         it with a fleet capacity in million kilometres per hour gives GW."""
-        for conversion_factor in element.conversion_factor.default_value:
+        conversion_factors = cast(
+            list[dict[str, dict[str, Any]]], element.conversion_factor.default_value
+        )
+        for conversion_factor in conversion_factors:
             if carrier not in conversion_factor:
                 continue
             factor = conversion_factor[carrier]
@@ -306,6 +311,7 @@ class ExistingVehicleCapacity(DatasetCollection):
         )
         capex = cars.get_cost(element, "capex")
 
+        df: pd.DataFrame | pd.Series | None
         if not element.settings.cost.use_learning_curves:
             # without learning curves every node and year uses the default
             df = None
@@ -368,8 +374,8 @@ class ExistingVehicleCapacity(DatasetCollection):
         )
 
         evolution = pd.Series(index=years, dtype=float)
-        evolution.loc[reference_year] = capex_battery_current
-        evolution.loc[_BATTERY_COST_FUTURE_YEAR] = capex_battery_future
+        evolution.at[reference_year] = capex_battery_current
+        evolution.at[_BATTERY_COST_FUTURE_YEAR] = capex_battery_future
         # held constant beyond the years the battery cost is known for
         evolution = evolution.interpolate(method="index")
         return evolution + capex - capex_battery_current

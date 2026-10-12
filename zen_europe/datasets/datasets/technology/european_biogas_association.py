@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import cast
 
 import numpy as np
 import pandas as pd
-from zen_creator import ConversionTechnology
+from zen_creator import Attribute, ConversionTechnology
 from zen_creator.datasets.datasets.dataset import Dataset
 from zen_creator.datasets.datasets.metadata import MetaData, SourceInformation
 
@@ -177,7 +178,7 @@ class EuropeanBiogasAssociation(Dataset[pd.DataFrame]):
             / "biomethane_conversion"
         )
 
-    def _set_data(self) -> dict[str, pd.Series]:
+    def _set_data(self) -> pd.DataFrame:
         data = pd.read_excel(
             self.path / "biomethane_production.xlsx", sheet_name="Append1"
         )
@@ -367,15 +368,15 @@ class EuropeanBiogasAssociation(Dataset[pd.DataFrame]):
             pd.Series: indexed by node and year_construction.
         """
         average_2026, _ = self.get_average_capacity_2026()
-        capacity = self.get_plant_additions().mul(average_2026, axis=0)
-        capacity = capacity.stack()
+        additions = self.get_plant_additions().mul(average_2026, axis=0)
+        capacity = cast(pd.Series, additions.stack())
         capacity.index.names = ["node", "year_construction"]
         return capacity.rename("capacity_existing")
 
     # -------- methods ------------------------
     def get_capacity_existing(
         self, element: ConversionTechnology, extend_to_2026: bool = True
-    ) -> pd.Series:
+    ) -> Attribute:
         """
         Get the existing capacity for biomethane conversion technologies.
 
@@ -394,7 +395,7 @@ class EuropeanBiogasAssociation(Dataset[pd.DataFrame]):
             extend_to_2026: If False, return the 2020 map on its own, as before.
 
         Returns:
-            pd.Series: A pandas Series containing the existing capacity data.
+            Attribute: The existing capacity attribute of the element.
         """
         lhv = self.DEFAULT_LHV_BIOMETHANE  # kWh/m3
         capa = self.get_capacity_existing_2020()

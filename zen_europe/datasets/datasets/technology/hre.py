@@ -7,7 +7,7 @@ from zen_creator.datasets.datasets.dataset import Dataset
 from zen_creator.datasets.datasets.metadata import MetaData
 
 
-class HRE(Dataset[pd.DataFrame]):
+class HRE(Dataset[pd.Series]):
     """
     Heat Roadmap Europe (HRE) 5 dataset.
 

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import cast
 
 import numpy as np
 import pandas as pd
@@ -11,7 +12,7 @@ from zen_creator.datasets.datasets.metadata import MetaData
 from zen_europe.utils.constants import Constants
 
 
-class TruckStandardLoadProfiles(Dataset[pd.DataFrame]):
+class TruckStandardLoadProfiles(Dataset[pd.Series]):
     """
     Truck standard load profiles dataset class.
 
@@ -54,16 +55,16 @@ class TruckStandardLoadProfiles(Dataset[pd.DataFrame]):
             raise ValueError("source_path must be set to load the dataset.")
         return Path(self.source_path) / "02-carrier" / "transport" / "slp_HDT.xlsx"
 
-    def _set_data(self) -> dict[str, pd.DataFrame]:
-        data = pd.read_excel(self.path, sheet_name="Sheet1").set_index("hour")
-        data = data.squeeze()
-        data = pd.concat([data] * 365).reset_index(drop=True)
+    def _set_data(self) -> pd.Series:
+        sheet = pd.read_excel(self.path, sheet_name="Sheet1").set_index("hour")
+        profile = cast(pd.Series, sheet.squeeze())
+        data = pd.concat([profile] * 365).reset_index(drop=True)
         data.index.name = "time"
         data = data / data.sum(axis=0)
         return data
 
     # -------- methods ------------------------
-    def get_standard_load_profiles(self) -> pd.DataFrame:
+    def get_standard_load_profiles(self) -> pd.Series:
         """
         Get the standard load profiles.
 
@@ -71,7 +72,7 @@ class TruckStandardLoadProfiles(Dataset[pd.DataFrame]):
         weighted by the share of the population in each region type.
 
         Returns:
-            A pandas DataFrame containing the standard load profiles.
+            A pandas Series containing the standard load profile.
         """
         return self.data
 
@@ -84,7 +85,7 @@ class TruckStandardLoadProfiles(Dataset[pd.DataFrame]):
         """
         new_cols = slp.rename(columns={"EL": "GR", "UK": "GB"})
         tz = {
-            old_cc: pytz.timezone(pytz.country_timezones(new_cc)[0])
+            old_cc: pytz.timezone(pytz.country_timezones[new_cc][0])
             for old_cc, new_cc in zip(slp.columns, new_cols.columns, strict=True)
             if new_cc in pytz.country_timezones
         }
@@ -100,7 +101,9 @@ class TruckStandardLoadProfiles(Dataset[pd.DataFrame]):
         }
         delta_t = {cc: val - 24 if val > 12 else val for cc, val in delta_t.items()}
         slp_shifted = slp.apply(
-            lambda col: pd.Series(np.roll(col, delta_t[col.name]), index=col.index),
+            lambda col: pd.Series(
+                np.roll(col, int(delta_t[col.name])), index=col.index
+            ),
             axis=0,
         )
         return slp_shifted

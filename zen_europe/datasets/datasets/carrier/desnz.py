@@ -1,15 +1,14 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 if TYPE_CHECKING:
     from pathlib import Path
 
-    from zen_creator.elements.carriers.carrier import Carrier
+    from zen_creator.elements.element import Element
 import pandas as pd
 from zen_creator.datasets.datasets.dataset import Dataset
 from zen_creator.datasets.datasets.metadata import MetaData
-from zen_creator.utils.attribute import Attribute
 
 from zen_europe.utils.constants import Constants
 
@@ -43,7 +42,7 @@ class DESNZ(Dataset[pd.DataFrame]):
             raise ValueError("source_path must be set to load the dataset.")
         return self.source_path / "02-carrier" / "heat"
 
-    def _set_data(self) -> dict[str, pd.DataFrame]:
+    def _set_data(self) -> pd.DataFrame:
         data = pd.read_excel(
             self.path / "ECUK_2025_End_Use_tables_200426.xlsx",
             sheet_name="Table U2",
@@ -53,15 +52,15 @@ class DESNZ(Dataset[pd.DataFrame]):
         return data.sort_index()
 
     # -------- methods ------------------------
-    def get_service_demand(self, element: Carrier) -> Attribute:
+    def get_service_demand(self, element: Element) -> pd.Series:
         """
         Get the UK heat demand for the Service sector.
 
         Args:
-            element (Carrier): The carrier element for which to get the demand.
+            element (Element): The element for which to get the demand.
         """
         year_time_series = element.model.settings.time.year_time_series
-        data_ser = self.data.loc["Services", "Total"]
+        data_ser = cast(pd.Series, self.data.loc["Services", "Total"])
         data_ser = data_ser.loc[["Space heating ", "Water heating "]]
         data_ser = data_ser.xs(year_time_series, level="Year")
         data_ser = data_ser.rename(

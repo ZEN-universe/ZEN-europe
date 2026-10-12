@@ -11,7 +11,7 @@ from zen_creator.datasets.datasets.dataset import Dataset
 from zen_creator.datasets.datasets.metadata import MetaData
 
 
-class MaterialEconomics(Dataset[pd.DataFrame]):
+class MaterialEconomics(Dataset[dict[str, pd.DataFrame]]):
     """
     Material economics dataset class.
 
@@ -42,11 +42,11 @@ class MaterialEconomics(Dataset[pd.DataFrame]):
 
     def _set_data(self) -> dict[str, pd.DataFrame]:
         # TODO there is no data to be implemented
-        data = {}
+        data: dict[str, pd.DataFrame] = {}
         return data
 
     # -------- methods ------------------------
-    def get_secondary_steel_ratios(self) -> tuple[float]:
+    def get_secondary_steel_ratios(self) -> tuple[float, float]:
         """
         Get the secondary steel ratios.
 

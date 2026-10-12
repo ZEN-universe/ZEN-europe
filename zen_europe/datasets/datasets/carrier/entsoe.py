@@ -5,6 +5,7 @@ import logging
 import os
 from datetime import datetime
 from pathlib import Path
+from typing import cast
 
 import pandas as pd
 import requests
@@ -434,7 +435,7 @@ class ENTSOE(Dataset[pd.DataFrame]):
                 series = series.sum(axis=1)
             if series.empty:
                 continue
-            series.index = series.index.year
+            series.index = cast(pd.DatetimeIndex, series.index).year
             series = series.groupby(series.index).sum()
             capacity[node] = (
                 float(series.loc[year])

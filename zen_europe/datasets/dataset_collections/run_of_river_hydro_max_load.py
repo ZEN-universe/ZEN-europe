@@ -9,7 +9,7 @@ from zen_europe.datasets.dataset_collections.hydro_existing_capacity import (
 if TYPE_CHECKING:
     from pathlib import Path
 
-    from zen_creator import Dataset, Element
+    from zen_creator import Dataset, Technology
 
 
 from zen_creator import Attribute, DatasetCollection
@@ -36,7 +36,7 @@ class RunOfRiverHydroMaxLoad(DatasetCollection):
         self.set_nodes = set_nodes
         super().__init__(source_path=source_path)
 
-    def _get_data(self) -> Dict[str, Dataset[Any]]:
+    def _get_data(self) -> Dict[str, Dataset[Any] | DatasetCollection]:
         """Load all available data sources."""
 
         if self.source_path is None:
@@ -58,7 +58,7 @@ class RunOfRiverHydroMaxLoad(DatasetCollection):
             ),
         }
 
-    def get_max_load(self, element: Element) -> Attribute:
+    def get_max_load(self, element: Technology) -> Attribute:
         """
         Get the maximum load for run-of-river hydro technologies.
 
@@ -84,7 +84,7 @@ class RunOfRiverHydroMaxLoad(DatasetCollection):
         missing_nodes_gen = set(element.model.config.system.set_nodes).difference(
             generation.columns
         )
-        add_nodes_pecd = generation_pecd.columns.intersection(missing_nodes_gen)
+        add_nodes_pecd = generation_pecd.columns.intersection(list(missing_nodes_gen))
         generation[add_nodes_pecd] = generation_pecd[add_nodes_pecd]
         common_nodes = generation.columns.intersection(capacity.index)
         max_load = generation[common_nodes].divide(capacity.loc[common_nodes], axis=1)

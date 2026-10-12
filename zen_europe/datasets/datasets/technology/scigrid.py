@@ -9,13 +9,13 @@ if TYPE_CHECKING:
 import pandas as pd
 from zen_creator.datasets.datasets.dataset import Dataset
 from zen_creator.datasets.datasets.metadata import MetaData, SourceInformation
-from zen_creator.elements import Element
+from zen_creator.elements import Element, StorageTechnology, Technology
 from zen_creator.utils.attribute import Attribute
 
 from zen_europe.utils.constants import Constants
 
 
-class SciGridIGGIELGNC1(Dataset[pd.DataFrame]):
+class SciGridIGGIELGNC1(Dataset[dict[str, pd.DataFrame]]):
     """
     SciGrid IGGIELGNC-1 dataset class for natural gas.
 
@@ -85,7 +85,7 @@ class SciGridIGGIELGNC1(Dataset[pd.DataFrame]):
         )
         return {"border_points": border_points, "storages": storages}
 
-    def get_capacity_existing_pipeline(self, element: Element) -> Attribute:
+    def get_capacity_existing_pipeline(self, element: Technology) -> Attribute:
         """
         Get the existing cross-border pipeline capacity of each edge.
 
@@ -192,35 +192,23 @@ class SciGridIGGIELGNC1(Dataset[pd.DataFrame]):
             import_gas_node = import_gas_node[import_gas_node["from_country"] != "XX"]
             export_gas_node = export_gas_node[export_gas_node["to_country"] != "XX"]
             if not import_gas_node.empty:
-                import_gas.loc[node, "import"] += (
-                    (
-                        import_gas_node["max_cap_from_to_M_m3_per_d"]
-                        * import_gas_node["GCV_mean_kWh_per_m3"]
-                    )
-                    .squeeze()
-                    .sum()
-                )
-                import_gas.loc[node, "export"] += (
-                    (
-                        import_gas_node["max_cap_to_from_M_m3_per_d"]
-                        * import_gas_node["GCV_mean_kWh_per_m3"]
-                    )
-                    .squeeze()
-                    .sum()
-                )
+                import_gas.loc[node, "import"] = (
+                    import_gas_node["max_cap_from_to_M_m3_per_d"]
+                    * import_gas_node["GCV_mean_kWh_per_m3"]
+                ).sum()
+                import_gas.loc[node, "export"] = (
+                    import_gas_node["max_cap_to_from_M_m3_per_d"]
+                    * import_gas_node["GCV_mean_kWh_per_m3"]
+                ).sum()
                 # import from "Russian" countries
                 if import_gas_node["from_country"].isin(nodes_RU).any():
                     import_gas_node_RU = import_gas_node[
                         import_gas_node["from_country"].isin(nodes_RU)
                     ]
-                    import_gas_RU.loc[node] += (
-                        (
-                            import_gas_node_RU["max_cap_from_to_M_m3_per_d"]
-                            * import_gas_node_RU["GCV_mean_kWh_per_m3"]
-                        )
-                        .squeeze()
-                        .sum()
-                    )
+                    import_gas_RU.loc[node] = (
+                        import_gas_node_RU["max_cap_from_to_M_m3_per_d"]
+                        * import_gas_node_RU["GCV_mean_kWh_per_m3"]
+                    ).sum()
                 # TurkStream
                 elif (
                     import_gas_node["from_country"] == nodes_turkstream["from"]
@@ -231,44 +219,28 @@ class SciGridIGGIELGNC1(Dataset[pd.DataFrame]):
                         (import_gas_node["from_country"] == nodes_turkstream["from"])
                         & (import_gas_node["to_country"] == nodes_turkstream["to"])
                     ]
-                    import_gas_RU.loc[node] += (
-                        (
-                            import_gas_node_RU["max_cap_from_to_M_m3_per_d"]
-                            * import_gas_node_RU["GCV_mean_kWh_per_m3"]
-                        )
-                        .squeeze()
-                        .sum()
-                    )
+                    import_gas_RU.loc[node] = (
+                        import_gas_node_RU["max_cap_from_to_M_m3_per_d"]
+                        * import_gas_node_RU["GCV_mean_kWh_per_m3"]
+                    ).sum()
             elif not export_gas_node.empty:
-                import_gas.loc[node, "export"] += (
-                    (
-                        export_gas_node["max_cap_from_to_M_m3_per_d"]
-                        * export_gas_node["GCV_mean_kWh_per_m3"]
-                    )
-                    .squeeze()
-                    .sum()
-                )
-                import_gas.loc[node, "import"] += (
-                    (
-                        export_gas_node["max_cap_to_from_M_m3_per_d"]
-                        * export_gas_node["GCV_mean_kWh_per_m3"]
-                    )
-                    .squeeze()
-                    .sum()
-                )
+                import_gas.loc[node, "export"] = (
+                    export_gas_node["max_cap_from_to_M_m3_per_d"]
+                    * export_gas_node["GCV_mean_kWh_per_m3"]
+                ).sum()
+                import_gas.loc[node, "import"] = (
+                    export_gas_node["max_cap_to_from_M_m3_per_d"]
+                    * export_gas_node["GCV_mean_kWh_per_m3"]
+                ).sum()
                 # export to "Russian" countries
                 if export_gas_node["to_country"].isin(nodes_RU).any():
                     export_gas_node_RU = export_gas_node[
                         export_gas_node["to_country"].isin(nodes_RU)
                     ]
-                    import_gas_RU.loc[node] += (
-                        (
-                            export_gas_node_RU["max_cap_to_from_M_m3_per_d"]
-                            * export_gas_node_RU["GCV_mean_kWh_per_m3"]
-                        )
-                        .squeeze()
-                        .sum()
-                    )
+                    import_gas_RU.loc[node] = (
+                        export_gas_node_RU["max_cap_to_from_M_m3_per_d"]
+                        * export_gas_node_RU["GCV_mean_kWh_per_m3"]
+                    ).sum()
                 # TurkStream
                 elif (
                     export_gas_node["to_country"] == nodes_turkstream["from"]
@@ -279,14 +251,10 @@ class SciGridIGGIELGNC1(Dataset[pd.DataFrame]):
                         (export_gas_node["to_country"] == nodes_turkstream["from"])
                         & (export_gas_node["from_country"] == nodes_turkstream["to"])
                     ]
-                    import_gas_RU.loc[node] += (
-                        (
-                            export_gas_node_RU["max_cap_to_from_M_m3_per_d"]
-                            * export_gas_node_RU["GCV_mean_kWh_per_m3"]
-                        )
-                        .squeeze()
-                        .sum()
-                    )
+                    import_gas_RU.loc[node] = (
+                        export_gas_node_RU["max_cap_to_from_M_m3_per_d"]
+                        * export_gas_node_RU["GCV_mean_kWh_per_m3"]
+                    ).sum()
         import_gas = import_gas[(import_gas != 0).any(axis=1)].sort_index()
         import_gas_RU = import_gas_RU[import_gas_RU != 0].sort_index()
         import_gas /= 24
@@ -305,7 +273,9 @@ class SciGridIGGIELGNC1(Dataset[pd.DataFrame]):
         border_points = self.data["border_points"]
         return border_points.groupby("to_country")["GCV_mean_kWh_per_m3"].mean()
 
-    def get_capacity_existing(self, element: Element, power: bool = True) -> Attribute:
+    def get_capacity_existing(
+        self, element: StorageTechnology, power: bool = True
+    ) -> Attribute:
         """
         Get the existing natural gas storage capacity per node and construction year.
 

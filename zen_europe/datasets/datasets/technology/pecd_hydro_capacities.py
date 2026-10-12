@@ -2,14 +2,14 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 import pandas as pd
 
 if TYPE_CHECKING:
     from zen_creator import Technology
 
-from zen_creator import Attribute
+from zen_creator import Attribute, StorageTechnology
 from zen_creator.datasets.datasets.dataset import Dataset
 from zen_creator.datasets.datasets.metadata import MetaData, SourceInformation
 
@@ -84,15 +84,16 @@ class PECDHydroCapacities(Dataset[pd.DataFrame]):
         capacities["power_pumping"] = capacities["power_pumping"].abs() / 1000
 
         pumped_open, reservoir_open = self._split_open_loop(
-            capacities.loc["Pump Storage - Open Loop"]
+            cast(pd.DataFrame, capacities.loc["Pump Storage - Open Loop"])
         )
+        run_of_river = cast(pd.DataFrame, capacities.loc["Run-of-River and pondage"])
+        reservoir = cast(pd.DataFrame, capacities.loc["Reservoir"])
+        closed_loop = cast(pd.DataFrame, capacities.loc["Pump Storage - Closed Loop"])
         data_agg = pd.concat(
             [
-                capacities.loc["Run-of-River and pondage"],
-                capacities.loc["Reservoir"].add(reservoir_open, fill_value=0),
-                capacities.loc["Pump Storage - Closed Loop"].add(
-                    pumped_open, fill_value=0
-                ),
+                run_of_river,
+                reservoir.add(reservoir_open, fill_value=0),
+                closed_loop.add(pumped_open, fill_value=0),
             ],
             keys=["run-of-river_hydro", "reservoir_hydro", "pumped_hydro"],
             names=["technology", "node"],
@@ -139,12 +140,15 @@ class PECDHydroCapacities(Dataset[pd.DataFrame]):
             "PECD hydro capacities dataset."
         )
         if power:
-            data = self.data.loc[element.name, "capacity_existing"]
+            data = cast(pd.Series, self.data.loc[element.name, "capacity_existing"])
             attr = element.capacity_existing
             unit = "GW"
         else:
-            data = self.data.loc[element.name, "capacity_existing_energy"]
-            attr = element.capacity_existing_energy
+            data = cast(
+                pd.Series, self.data.loc[element.name, "capacity_existing_energy"]
+            )
+            # only storage technologies have an energy capacity
+            attr = cast(StorageTechnology, element).capacity_existing_energy
             unit = "GWh"
 
         set_nodes = element.model.config.system.set_nodes

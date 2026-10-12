@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 import re
 from pathlib import Path
+from typing import Any, cast
 
 import pandas as pd
 from zen_creator import (
@@ -98,22 +99,22 @@ class IOGPCarbonStorageProjects(Dataset[pd.DataFrame]):
         return data
 
     # -------- methods ------------------------
-    def get_capacity_existing_data(self) -> pd.DataFrame:
+    def get_capacity_existing_data(self) -> pd.Series:
         """
         Returns the existing carbon storage capacity data from the IOGP report.
 
         Returns:
-            pd.DataFrame: A pandas DataFrame containing the existing carbon storage
-                capacity data.
+            pd.Series: The existing carbon storage capacity data.
         """
-        data = self.data.copy()
+        projects = self.data.copy()
         if not self.settings.investment.consider_carbon_storage_expansion:
-            data = data[data["entry_type"] != "expansion"]
-            data = data[data["status"].isin(["In operation", "FID"])]
-        data = data["co2_storage_injection_capacity_mtpa"]
+            projects = projects[projects["entry_type"] != "expansion"]
+            projects = projects[projects["status"].isin(["In operation", "FID"])]
+        data = projects["co2_storage_injection_capacity_mtpa"]
         data = data / Constants.HOURS_PER_YEAR * 1e6  # convert from Mtpa to tCO2/h
-        data.index = data.index.set_levels(
-            data.index.levels[data.index.names.index("year_construction")].astype(int),
+        index = cast(pd.MultiIndex, data.index)
+        data.index = index.set_levels(
+            index.levels[index.names.index("year_construction")].astype(int).tolist(),
             level="year_construction",
         )
         return data
@@ -155,9 +156,9 @@ class IOGPCarbonStorageProjects(Dataset[pd.DataFrame]):
         attr = element.capacity_existing
         data = self.data[self.data["is_capture"]]
         data = data[data.index.get_level_values("year_construction") != "no data"]
-        data.index = data.index.remove_unused_levels()
-        data.index = data.index.set_levels(
-            data.index.levels[data.index.names.index("year_construction")].astype(int),
+        index = cast(pd.MultiIndex, data.index).remove_unused_levels()
+        data.index = index.set_levels(
+            index.levels[index.names.index("year_construction")].astype(int).tolist(),
             level="year_construction",
         )
         data = data.sort_index()
@@ -167,7 +168,9 @@ class IOGPCarbonStorageProjects(Dataset[pd.DataFrame]):
         for idx, row in data[data["type_capture_project"].isna()].iterrows():
             project = re.sub(r" - Expansion( \d+)?", "", row["project"])
             if project in MAPPING_INDUSTRIAL_CLUSTERS:
-                mi = pd.MultiIndex.from_tuples([idx], names=data.index.names)
+                mi = pd.MultiIndex.from_tuples(
+                    [cast(tuple[Any, ...], idx)], names=data.index.names
+                )
                 for tech in MAPPING_INDUSTRIAL_CLUSTERS[project]:
                     ser = row.copy()
                     ser["type_capture_project"] = tech

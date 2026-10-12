@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 from zen_europe.datasets.dataset_collections.ccs_conversion_factor import (
     CCSConversionFactor,
@@ -22,6 +22,7 @@ if TYPE_CHECKING:
 from zen_creator import (
     AssumptionInformation,
     Attribute,
+    ConversionTechnology,
     RetrofittingTechnology,
     SourceInformation,
 )
@@ -170,7 +171,9 @@ class SMR_CCS(RetrofittingTechnology):
         ccs_cf = CCSConversionFactor(
             settings=self.settings, source_path=self.source_path
         )
-        base_tech = self.model.elements[self.base_technology_name]
+        base_tech = cast(
+            ConversionTechnology, self.model.elements[self.base_technology_name]
+        )
         return ccs_cf.get_retrofit_flow_coupling_factor_SMR_CCS(
             element=self, base_tech=base_tech
         )
@@ -183,7 +186,9 @@ class SMR_CCS(RetrofittingTechnology):
             Attribute: An Attribute object containing the existing capacity data.
         """
         if self.settings.investment.use_existing_capacities:
-            igop_projects = IOGPCarbonStorageProjects(source_path=self.source_path)
+            igop_projects = IOGPCarbonStorageProjects(
+                settings=self.settings, source_path=self.source_path
+            )
             return igop_projects.get_capacity_existing_capture(self)
         else:
             attr = self.capacity_existing

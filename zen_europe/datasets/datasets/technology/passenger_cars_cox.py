@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
+from typing import Any, cast
 
 import numpy as np
 import pandas as pd
@@ -275,7 +276,8 @@ class PassengerCarsCox(Dataset[pd.DataFrame]):
         base_values: dict[str, dict[str, dict[str, dict[str, float]]]] = {}
         for time in _TIMES:
             base_values[time] = {}
-            for (parameter, powertrain, size, _), value in data[(time, _BASE)].items():
+            for key, value in data[(time, _BASE)].items():
+                parameter, powertrain, size, _ = cast(tuple[str, str, str, Any], key)
                 # a parameter is reported once per distribution, and every
                 # distribution shares the same mode
                 base_values[time].setdefault(parameter, {}).setdefault(
@@ -319,7 +321,7 @@ class PassengerCarsCox(Dataset[pd.DataFrame]):
         return data
 
     @staticmethod
-    def _find_group(groups: dict[str, dict], member: str) -> str | None:
+    def _find_group(groups: dict[str, Any], member: str) -> str | None:
         """Return the group of vehicles that covers `member`, or None if the
         parameter does not apply to it."""
         if _GROUP_ALL in groups:
@@ -453,6 +455,7 @@ class PassengerCarsCox(Dataset[pd.DataFrame]):
             The energy demand in kJ/vkm.
         """
         cycle = self._driving_cycle
+        assert cycle is not None, "The driving cycle has not been read yet."
         velocity = cycle / 3.6  # km/h to m/s
 
         acceleration = np.zeros(cycle.shape)
@@ -639,11 +642,11 @@ class PassengerCarsCox(Dataset[pd.DataFrame]):
         cars = self._set_derived_parameters(self._build_cars())
         cars = self._add_average_phev(self._iterate_mass_and_energy(cars))
 
-        current = cars.loc["current"]
+        current = cast(pd.DataFrame, cars.loc["current"])
         parameters = pd.DataFrame(index=list(_TECHNOLOGIES), columns=_OUTPUT_COLUMNS)
         parameters.index.name = "tech"
         for technology, powertrain in _TECHNOLOGIES.items():
-            car = current.loc[powertrain]
+            car = cast(pd.Series, current.loc[powertrain])
             markup = car["markup factor"]
             # the capacity of a vehicle is its hourly mileage
             mileage = car["kilometers per year"] / _HOURS_PER_YEAR
@@ -661,7 +664,10 @@ class PassengerCarsCox(Dataset[pd.DataFrame]):
                 car["energy storage battery cost"] / mileage / markup
             )
             parameters.loc[technology, "capex_bat_fut"] = (
-                cars.loc[("future", powertrain), "energy storage battery cost"]
+                cast(
+                    float,
+                    cars.loc[("future", powertrain), "energy storage battery cost"],
+                )
                 / mileage
                 / markup
             )
@@ -734,7 +740,7 @@ class PassengerCarsCox(Dataset[pd.DataFrame]):
                 f"Unknown parameter '{parameter}', expected one of "
                 f"{_OUTPUT_COLUMNS}."
             )
-        return self.data.loc[technology, parameter]
+        return cast(float, self.data.loc[technology, parameter])
 
     def get_cost(self, element: ConversionTechnology, parameter: str) -> float:
         """One cost parameter of one passenger car, rebased to the reference
@@ -793,7 +799,7 @@ class PassengerCarsCox(Dataset[pd.DataFrame]):
             vehicle kilometre driven.
         """
         conversion_factors = []
-        for carrier in element.input_carrier.default_value:
+        for carrier in cast(list[str], element.input_carrier.default_value):
             if carrier not in _CARRIER_PARAMETER:
                 raise ValueError(
                     f"Cox et al. (2020) does not report the demand of "

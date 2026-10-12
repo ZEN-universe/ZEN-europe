@@ -13,7 +13,7 @@ from zen_creator.datasets.datasets.dataset import Dataset
 from zen_creator.datasets.datasets.metadata import MetaData
 
 
-class DEAEnergyStorage(Dataset[pd.DataFrame]):
+class DEAEnergyStorage(Dataset[dict[str, pd.DataFrame]]):
     """
     Energy storage dataset class from the technology catalogue for energy
     storage of the Danish Energy Agency.

@@ -15,7 +15,7 @@ from zen_creator.datasets.datasets.dataset import Dataset
 from zen_creator.datasets.datasets.metadata import MetaData
 
 
-class HydrogenPipelinesMiao(Dataset[pd.DataFrame]):
+class HydrogenPipelinesMiao(Dataset[dict[str, pd.DataFrame]]):
     """
     Hydrogen pipelines dataset class from Miao et al. (2021).
 
@@ -52,7 +52,7 @@ class HydrogenPipelinesMiao(Dataset[pd.DataFrame]):
 
     def _set_data(self) -> dict[str, pd.DataFrame]:
         # TODO there is no data to be implemented
-        data = {}
+        data: dict[str, pd.DataFrame] = {}
         return data
 
     # -------- methods ------------------------

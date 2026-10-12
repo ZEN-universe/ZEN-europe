@@ -14,7 +14,7 @@ from zen_creator.datasets.datasets.metadata import MetaData
 from zen_europe.datasets.datasets.financial.ECB import ECBDollar2Euro, ECBInflation
 
 
-class LNGRegasificationToledano(Dataset[pd.DataFrame]):
+class LNGRegasificationToledano(Dataset[dict[str, pd.DataFrame]]):
     """
     LNG regasification cost dataset class from Toledano et al. (2018).
 

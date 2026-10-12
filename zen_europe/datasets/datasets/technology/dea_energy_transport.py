@@ -14,7 +14,7 @@ from zen_creator.datasets.datasets.metadata import MetaData
 from zen_europe.datasets.datasets.financial.ECB import ECBInflation
 
 
-class DEAEnergyTransport(Dataset[pd.DataFrame]):
+class DEAEnergyTransport(Dataset[dict[str, pd.DataFrame]]):
     """
     Energy transport dataset class from the technology catalogue for energy
     transport of the Danish Energy Agency.

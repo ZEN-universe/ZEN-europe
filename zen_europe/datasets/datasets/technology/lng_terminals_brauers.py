@@ -15,7 +15,7 @@ from zen_europe.datasets.datasets.financial.ECB import ECBInflation
 from zen_europe.utils.constants import Constants
 
 
-class LNGTerminalsBrauers(Dataset[pd.DataFrame]):
+class LNGTerminalsBrauers(Dataset[dict[str, pd.DataFrame]]):
     """
     LNG terminal dataset class from Brauers et al. (2021).
 

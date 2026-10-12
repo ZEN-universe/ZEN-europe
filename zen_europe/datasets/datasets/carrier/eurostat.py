@@ -6,7 +6,7 @@ import logging
 import multiprocessing as mp
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Callable, Union
+from typing import Any, Callable, Union, cast
 
 import eurostat as es
 import pandas as pd
@@ -172,7 +172,7 @@ _URBANIZATION_DEGREE = {
 }
 
 
-class Eurostat(Dataset[dict[str, pd.DataFrame]]):
+class Eurostat(Dataset[pd.DataFrame]):
     """Dataset class for Eurostat energy-balance and vehicle-fleet data.
 
     This class implements the specific behavior for the Eurostat dataset.
@@ -201,7 +201,7 @@ class Eurostat(Dataset[dict[str, pd.DataFrame]]):
     def _set_path(self) -> Path | None:
         return None
 
-    def _set_data(self) -> dict[str, pd.DataFrame]:
+    def _set_data(self) -> pd.DataFrame:
         return pd.DataFrame()  # placeholder, actual data is queried on demand
 
     # -------- disk cache ------------------
@@ -258,7 +258,9 @@ class Eurostat(Dataset[dict[str, pd.DataFrame]]):
             frame = frame.set_index(list(frame.columns[: meta["n_index_levels"]]))
             if meta["columns_are_int"]:
                 frame.columns = frame.columns.astype(int)
-            return frame.squeeze("columns") if meta["is_series"] else frame
+            if meta["is_series"]:
+                return cast(pd.Series, frame.squeeze("columns"))
+            return frame
 
         logger.info(f"Querying Eurostat for '{name}' (this may take a while)...")
         data = query()
@@ -320,7 +322,7 @@ class Eurostat(Dataset[dict[str, pd.DataFrame]]):
         return self._query_heat_dh_technology()
 
     @instance_cache
-    def get_coal_availability(self) -> pd.Series:
+    def get_coal_availability(self) -> pd.DataFrame:
         """Coal availability per node."""
         return self._query_coal_availability()
 
@@ -330,7 +332,7 @@ class Eurostat(Dataset[dict[str, pd.DataFrame]]):
         return self._query_oil_availability()
 
     @instance_cache
-    def get_natural_gas_production(self) -> pd.Series:
+    def get_natural_gas_production(self) -> pd.DataFrame:
         """Natural gas production per node."""
         return self._query_natural_gas_production()
 
@@ -345,12 +347,12 @@ class Eurostat(Dataset[dict[str, pd.DataFrame]]):
         return self._query_waste_availability(include_industry=include_industry)
 
     @instance_cache
-    def get_naphtha_demand(self) -> pd.Series:
+    def get_naphtha_demand(self) -> pd.DataFrame:
         """Naphtha demand per node."""
         return self._query_naphtha_demand()
 
     @instance_cache
-    def get_kerosene_demand(self) -> pd.Series:
+    def get_kerosene_demand(self) -> pd.DataFrame:
         """Kerosene demand per node."""
         return self._query_kerosene_demand()
 
@@ -377,10 +379,11 @@ class Eurostat(Dataset[dict[str, pd.DataFrame]]):
             siec=_EFFICIENCY_SIEC,
             start_period=_EUROSTAT_START_YEAR,
         )
-        efficiencies = (
+        efficiencies = cast(
+            pd.DataFrame,
             efficiencies.drop(["freq", "unit"], axis=1)
             .set_index(["nrg_bal", "geo\\TIME_PERIOD", "siec"])
-            .squeeze()
+            .squeeze(),
         )
         efficiencies = efficiencies.ffill(axis=1)
         efficiencies.columns = efficiencies.columns.astype(int)
@@ -402,10 +405,11 @@ class Eurostat(Dataset[dict[str, pd.DataFrame]]):
             siec=siec,
             start_period=self.eurostat_year_time_series,
         )
-        generation = (
+        generation = cast(
+            pd.DataFrame,
             generation.drop(["freq", "unit", "nrg_bal", "siec"], axis=1)
             .set_index("geo\\TIME_PERIOD")
-            .squeeze()
+            .squeeze(),
         )
         generation = generation.astype(float)
         generation.columns = generation.columns.astype(int)
@@ -466,21 +470,21 @@ class Eurostat(Dataset[dict[str, pd.DataFrame]]):
         heat_data = heat_data.swaplevel(0, 1).sort_index()
         return heat_data / Constants.GJ_PER_MWH  # convert from TJ to GWh
 
-    def _query_coal_availability(self) -> pd.Series:
+    def _query_coal_availability(self) -> pd.DataFrame:
         """Calculate coal availability, scaled from imports and production
         by the ratio of total consumption to total availability."""
         data = self._query_siec_data(
             nrg_bal=_COAL_NRG_BAL, siec=_COAL_SIEC, start_period=self.eurostat_year
         )
         data = self._convert_availability(data, _COAL_SIEC)
-        imports = data.loc["IMP"]
-        production = data.loc["PPRD"]
+        imports = cast(pd.DataFrame, data.loc["IMP"])
+        production = cast(pd.DataFrame, data.loc["PPRD"])
         availability = imports + production
         availability = availability.fillna(0)
         availability.index.name = "node"
         return availability.sort_index()
 
-    def _query_natural_gas_production(self) -> pd.Series:
+    def _query_natural_gas_production(self) -> pd.DataFrame:
         """Calculate natural gas production."""
         data = self._query_siec_data(
             nrg_bal=_NATURAL_GAS_NRG_BAL,
@@ -500,9 +504,13 @@ class Eurostat(Dataset[dict[str, pd.DataFrame]]):
             start_period=self.eurostat_year,
         )
         data = self._convert_availability(data, _BIOMASS_SIEC)
-        transformation_input = data.loc["TI_EHG_E"].sum(axis=1)
-        final_consumption_households = data.loc["FC_OTH_HH_E"].sum(axis=1)
-        final_consumption_commercial = data.loc["FC_OTH_CP_E"].sum(axis=1)
+        transformation_input = cast(pd.DataFrame, data.loc["TI_EHG_E"]).sum(axis=1)
+        final_consumption_households = cast(pd.DataFrame, data.loc["FC_OTH_HH_E"]).sum(
+            axis=1
+        )
+        final_consumption_commercial = cast(pd.DataFrame, data.loc["FC_OTH_CP_E"]).sum(
+            axis=1
+        )
         availability = (
             transformation_input
             + final_consumption_commercial
@@ -533,7 +541,7 @@ class Eurostat(Dataset[dict[str, pd.DataFrame]]):
         availability = data.astype(float).groupby(level=1).sum().sum(axis=1)
         return availability.sort_index()
 
-    def _query_naphtha_demand(self) -> pd.Series:
+    def _query_naphtha_demand(self) -> pd.DataFrame:
         """Calculate naphtha demand from transformation output."""
         data = self._query_siec_data(
             nrg_bal=_NAPHTHA_NRG_BAL,
@@ -545,7 +553,7 @@ class Eurostat(Dataset[dict[str, pd.DataFrame]]):
         demand.columns = demand.columns.astype(int)
         return demand.sort_index()
 
-    def _query_kerosene_demand(self) -> pd.Series:
+    def _query_kerosene_demand(self) -> pd.DataFrame:
         """Calculate kerosene demand from international and domestic
         aviation consumption."""
         data = self._query_siec_data(
@@ -598,10 +606,11 @@ class Eurostat(Dataset[dict[str, pd.DataFrame]]):
         availability/consumption table, limited to the given cutoff year."""
         if cutoff_year is None:
             cutoff_year = self.eurostat_year
-        data = (
+        data = cast(
+            pd.DataFrame,
             data.drop(["freq", "unit"], axis=1)
             .set_index(["nrg_bal", "geo\\TIME_PERIOD", "siec"])
-            .squeeze()
+            .squeeze(),
         )
         data = data.loc[:, data.columns.astype(int) <= cutoff_year]
         data = data.ffill(axis=1)
@@ -650,9 +659,12 @@ class Eurostat(Dataset[dict[str, pd.DataFrame]]):
         assert common_bal, f"None of the nrg_bal {nrg_bal} are in Eurostat database"
         filter_pars["nrg_bal"] = common_bal
 
-        return self._cached_query(
-            self._query_cache_key(dataset, filter_pars),
-            lambda: self._query_in_parallel(filter_pars, common_geo, dataset),
+        return cast(
+            pd.DataFrame,
+            self._cached_query(
+                self._query_cache_key(dataset, filter_pars),
+                lambda: self._query_in_parallel(filter_pars, common_geo, dataset),
+            ),
         )
 
     def _query_non_siec_data(
@@ -688,9 +700,12 @@ class Eurostat(Dataset[dict[str, pd.DataFrame]]):
             ), f"None of the param {param} ({values}) are in Eurostat database"
             filter_pars[param] = common_param
 
-        return self._cached_query(
-            self._query_cache_key(dataset, filter_pars),
-            lambda: self._query_in_parallel(filter_pars, common_geo, dataset),
+        return cast(
+            pd.DataFrame,
+            self._cached_query(
+                self._query_cache_key(dataset, filter_pars),
+                lambda: self._query_in_parallel(filter_pars, common_geo, dataset),
+            ),
         )
 
     def _query_urbanization_data(
@@ -739,9 +754,12 @@ class Eurostat(Dataset[dict[str, pd.DataFrame]]):
         assert common_deg_urb, f"None of the deg_urb {deg_urb} are in Eurostat database"
         filter_pars["deg_urb"] = common_deg_urb
 
-        return self._cached_query(
-            self._query_cache_key(dataset, filter_pars),
-            lambda: self._query_in_parallel(filter_pars, common_geo, dataset),
+        return cast(
+            pd.DataFrame,
+            self._cached_query(
+                self._query_cache_key(dataset, filter_pars),
+                lambda: self._query_in_parallel(filter_pars, common_geo, dataset),
+            ),
         )
 
     def _query_in_parallel(

@@ -5,6 +5,7 @@ import logging
 import time
 from datetime import datetime
 from pathlib import Path
+from typing import cast
 
 import pandas as pd
 import requests
@@ -426,7 +427,10 @@ class UNECE(Dataset[dict[str, pd.DataFrame]]):
                 keys=[_PETROL_CAR, _DIESEL_CAR, _ELECTRIC_CAR],
             )
         # the drivetrains that are not modelled are excluded from the total
-        total = data.loc[_TOTAL] - data.loc[_OTHER].groupby(level=1).sum()
+        total = (
+            cast(pd.DataFrame, data.loc[_TOTAL])
+            - cast(pd.DataFrame, data.loc[_OTHER]).groupby(level=1).sum()
+        )
 
         aggregated = linearly_fill_missing_years(aggregated)
         total = linearly_fill_missing_years(total)
@@ -445,10 +449,10 @@ class UNECE(Dataset[dict[str, pd.DataFrame]]):
             A tuple of the trucks per technology and node, and of the reported
             total per node (both with the years as columns).
         """
-        data = self.get_raw_data(table).loc[_LORRIES[table]]
+        data = cast(pd.DataFrame, self.get_raw_data(table).loc[_LORRIES[table]])
         data = data.loc[:, data.notna().any(axis=0)]
 
-        total = data.loc[_TOTAL]
+        total = cast(pd.DataFrame, data.loc[_TOTAL])
         diesel = (
             pd.concat([total, data.loc[_DIESEL_INCLUDING_HYBRIDS]])
             .groupby(level=0)

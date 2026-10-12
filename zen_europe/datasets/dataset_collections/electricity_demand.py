@@ -34,7 +34,7 @@ class ElectricityDemand(DatasetCollection):
         self.set_nodes = set_nodes
         super().__init__(source_path=source_path)
 
-    def _get_data(self) -> Dict[str, Dataset[Any]]:
+    def _get_data(self) -> Dict[str, Dataset[Any] | DatasetCollection]:
         """Load all available data sources."""
 
         if self.source_path is None:
@@ -81,7 +81,7 @@ class ElectricityDemand(DatasetCollection):
         )  # assume 100% efficiency for electrode boilers
         when2heat_dataset = cast(When2Heat, self.data["when2heat"])
         cop_data = when2heat_dataset.get_COP()
-        cop_data = cop_data.xs("floor", level="category", axis=1)
+        cop_data = cast(pd.DataFrame, cop_data.xs("floor", level="category", axis=1))
         electricity_demand_hp = heat_demand_hp.div(cop_data, axis=0)
         # correct demand
         demand = demand - electricity_demand_eb - electricity_demand_hp

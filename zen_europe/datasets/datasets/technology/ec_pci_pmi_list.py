@@ -14,7 +14,7 @@ from zen_creator.datasets.datasets.metadata import MetaData
 from zen_europe.utils.constants import Constants
 
 
-class ECProjectsOfCommonInterest(Dataset[pd.DataFrame]):
+class ECProjectsOfCommonInterest(Dataset[dict[str, pd.DataFrame]]):
     """
     Dataset class for the first list of Projects of Common Interest and
     Projects of Mutual Interest of the European Commission.

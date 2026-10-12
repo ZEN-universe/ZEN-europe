@@ -12,7 +12,7 @@ from zen_europe.utils.utils import (
 if TYPE_CHECKING:
     from pathlib import Path
 
-    from zen_creator import Dataset, Element
+    from zen_creator import Carrier, Dataset
 
 
 from zen_creator import Attribute, ConversionTechnology, DatasetCollection
@@ -49,7 +49,9 @@ class SteelDemand(DatasetCollection):
             "material_economics": MaterialEconomics(self.source_path),
         }
 
-    def _calculate_steel_demand(self, element: Element) -> tuple[pd.Series, pd.Series]:
+    def _calculate_steel_demand(
+        self, element: Carrier
+    ) -> tuple[pd.DataFrame, pd.Series]:
         """
         Calculate the steel demand for the given element.
         """
@@ -114,7 +116,7 @@ class SteelDemand(DatasetCollection):
         d_yearly_variation.name = "demand_yearly_variation"
         return d, d_yearly_variation
 
-    def get_steel_demand(self, element: Element) -> Attribute:
+    def get_steel_demand(self, element: Carrier) -> Attribute:
         """
         Get the demand for steel.
 
@@ -144,7 +146,7 @@ class SteelDemand(DatasetCollection):
 
         This function retrieves the existing capacity data for the specified element.
         """
-        ref_carrier = element.reference_carrier.default_value[0]
+        ref_carrier = cast(list[str], element.reference_carrier.default_value)[0]
         if ref_carrier == "secondary_steel":
             assert element.name == "EAF", (
                 "The existing capacity for secondary steel production is assumed"
@@ -160,15 +162,16 @@ class SteelDemand(DatasetCollection):
                 f"Unexpected reference carrier '{ref_carrier}' for element "
                 f"'{element.name}'."
             )
-        ref_carrier = element.model.carriers[ref_carrier]
-        capacity_existing, _ = self._calculate_steel_demand(ref_carrier)
-        capacity_existing = capacity_existing.rename(
+        steel_demand, _ = self._calculate_steel_demand(
+            element.model.carriers[ref_carrier]
+        )
+        steel_demand = steel_demand.rename(
             {"demand": element.settings.time.reference_year - 1}, axis=1
         )
-        capacity_existing = calculate_capacity_addition_from_cumulative(
-            capacity_existing, element
+        capacity_addition = calculate_capacity_addition_from_cumulative(
+            steel_demand, element
         )
-        capacity_existing = format_capacity_existing(capacity_existing)
+        capacity_existing = format_capacity_existing(capacity_addition)
         source = SourceInformation(
             description=(
                 "It is assumed that all current primary steel demand is based on the "

@@ -14,7 +14,7 @@ from zen_europe.utils.utils import (
 if TYPE_CHECKING:
     from pathlib import Path
 
-    from zen_creator import Dataset, Element
+    from zen_creator import Carrier, Dataset
 
 
 from zen_creator import (
@@ -55,7 +55,7 @@ class ClinkerData(DatasetCollection):
             "ecra_technology_papers": ECRATechnologyPapers(self.source_path),
         }
 
-    def _calculate_clinker_demand(self, element: Element) -> Attribute:
+    def _calculate_clinker_demand(self, element: Carrier) -> pd.DataFrame:
         """
         Calculate the clinker demand for the given element.
 
@@ -65,10 +65,10 @@ class ClinkerData(DatasetCollection):
         British Geological Survey (BGS) dataset.
 
         Args:
-            element (Element): The element for which to calculate clinker demand.
+            element (Carrier): The carrier for which to calculate clinker demand.
 
         Returns:
-            Attribute: An Attribute object containing the clinker demand data.
+            pd.DataFrame: The clinker demand data.
         """
         aidres_dataset = cast(Aidres, self.data["aidres"])
         data = aidres_dataset.get_demand(element)
@@ -89,7 +89,7 @@ class ClinkerData(DatasetCollection):
         data.name = "demand"
         return data
 
-    def get_clinker_demand(self, element: Element) -> Attribute:
+    def get_clinker_demand(self, element: Carrier) -> Attribute:
         """
         Get the demand for clinker.
 
@@ -218,16 +218,16 @@ class ClinkerData(DatasetCollection):
             element.name in share
         ), f"Existing capacity share for {element.name} not found."
         clinker_element = element.model.carriers["clinker"]
-        capacity_existing = self._calculate_clinker_demand(clinker_element)
+        clinker_demand = self._calculate_clinker_demand(clinker_element)
         clinker2fuel = me_dataset.get_fuel_consumption_cement_kiln() / 3600  # GWh/t
-        capacity_existing = capacity_existing.rename(
+        clinker_demand = clinker_demand.rename(
             {"demand": element.settings.time.reference_year - 1}, axis=1
         )
-        capacity_existing *= clinker2fuel * share[element.name]
-        capacity_existing = calculate_capacity_addition_from_cumulative(
-            capacity_existing, element
+        clinker_demand *= clinker2fuel * share[element.name]
+        capacity_addition = calculate_capacity_addition_from_cumulative(
+            clinker_demand, element
         )
-        capacity_existing = format_capacity_existing(capacity_existing)
+        capacity_existing = format_capacity_existing(capacity_addition)
         attr.set_data(
             df=capacity_existing,
             unit="GW",

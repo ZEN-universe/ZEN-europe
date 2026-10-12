@@ -14,7 +14,7 @@ from zen_europe.utils.utils import (
 )
 
 
-class IRENASolarCapacity(Dataset[pd.DataFrame]):
+class IRENASolarCapacity(Dataset[pd.Series]):
     """
     IRENA solar capacity dataset class.
 

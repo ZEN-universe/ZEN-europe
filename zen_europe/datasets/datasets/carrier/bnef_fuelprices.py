@@ -1,15 +1,18 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 if TYPE_CHECKING:
     from pathlib import Path
 
     from zen_creator.elements.carriers.carrier import Carrier
+    from zen_creator.elements.element import Element
 import pandas as pd
 from zen_creator.datasets.datasets.dataset import Dataset
 from zen_creator.datasets.datasets.metadata import MetaData
 from zen_creator.utils.attribute import Attribute, SourceInformation
+
+from zen_europe.datasets.datasets.financial.ECB import ECBDollar2Euro, ECBInflation
 
 
 class BNEFFuelPrices(Dataset[pd.DataFrame]):
@@ -43,7 +46,7 @@ class BNEFFuelPrices(Dataset[pd.DataFrame]):
             raise ValueError("source_path must be set to load the dataset.")
         return self.source_path / "02-carrier" / "fuel_prices"
 
-    def _set_data(self) -> dict[str, pd.DataFrame]:
+    def _set_data(self) -> pd.DataFrame:
         df = pd.read_excel(
             self.path / "2022-10-06 - 1H 2022 LCOE Update.xlsx",
             sheet_name="Manual Values MWh",
@@ -53,7 +56,7 @@ class BNEFFuelPrices(Dataset[pd.DataFrame]):
 
     # -------- methods ------------------------
     def get_price_import(
-        self, element: Carrier, manual_carrier_name: str = None
+        self, element: Carrier, manual_carrier_name: str | None = None
     ) -> Attribute:
         """
         Get the import price of a carrier.
@@ -70,7 +73,7 @@ class BNEFFuelPrices(Dataset[pd.DataFrame]):
                 carrier.
         """
         data = self.get_price_import_data(element, manual_carrier_name)
-        df = data.loc[element.settings.time.reference_year]
+        df = cast(float, data.loc[element.settings.time.reference_year])
         yearly_variations_df = data / df
         yearly_variations_df.index.name = "year"
         yearly_variations_df.name = "price_import"
@@ -91,19 +94,18 @@ class BNEFFuelPrices(Dataset[pd.DataFrame]):
         )
 
     def get_price_import_data(
-        self, element: Carrier, manual_carrier_name: str = None
-    ) -> pd.DataFrame:
+        self, element: Element, manual_carrier_name: str | None = None
+    ) -> pd.Series:
         """
-        Get the import price data for all carriers.
+        Get the import price data of one carrier.
 
-        This function retrieves the import price data for all carriers from the dataset.
         Returns:
-            pd.DataFrame: A DataFrame containing the import price data for all carriers.
+            pd.Series: The import price per year in Euro/MWh.
         """
         if manual_carrier_name:
-            data = self.data.loc[manual_carrier_name]
+            data = cast(pd.Series, self.data.loc[manual_carrier_name])
         else:
-            data = self.data.loc[element.name]
+            data = cast(pd.Series, self.data.loc[element.name])
         unit = data.loc["Unit new"]
         assert unit == "$/MWh (2021 real)", (
             f"Unexpected unit for" f"BNEF carrier prices: {unit}"
@@ -111,8 +113,10 @@ class BNEFFuelPrices(Dataset[pd.DataFrame]):
         common_years = data.index.intersection(element.settings.time.years)
         data = data.loc[common_years]
         data.index = data.index.astype(int)
-        dollar_to_euro = element.get_dollar2euro(year=2021)
-        inflation = element.get_inflation_rate(
+        dollar_to_euro = ECBDollar2Euro(source_path=self.source_path).get_dollar2euro(
+            year=2021
+        )
+        inflation = ECBInflation(source_path=self.source_path).get_inflation_rate(
             base_year=2021, target_year=element.settings.time.reference_year
         )
         data = data * dollar_to_euro * inflation

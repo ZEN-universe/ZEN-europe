@@ -9,7 +9,7 @@ from zen_creator.datasets.datasets.metadata import MetaData
 from zen_creator.utils.settings import Settings
 
 
-class StatisticalPocketbookTransport(Dataset[pd.DataFrame]):
+class StatisticalPocketbookTransport(Dataset[dict[str, pd.Series]]):
     """
     Statistical pocketbook transport dataset class.
 
@@ -41,22 +41,22 @@ class StatisticalPocketbookTransport(Dataset[pd.DataFrame]):
             raise ValueError("source_path must be set to load the dataset.")
         return Path(self.source_path) / "02-carrier" / "transport" / "mileage_EU.xlsx"
 
-    def _set_data(self) -> dict[str, pd.DataFrame]:
+    def _set_data(self) -> dict[str, pd.Series]:
         types = ["passenger_mileage", "truck_mileage"]
         year_time_series = self.settings.time.year_time_series
-        data = {}
+        data: dict[str, pd.Series] = {}
         for t in types:
-            df = pd.read_excel(self.path, sheet_name=t).set_index("Column1")
-            df = df[str(year_time_series)].str.replace(" ", "").astype(float)
-            data[t] = df
+            sheet = pd.read_excel(self.path, sheet_name=t).set_index("Column1")
+            data[t] = sheet[str(year_time_series)].str.replace(" ", "").astype(float)
         return data
 
     # -------- methods ------------------------
-    def get_total_mileage(self, element: Element) -> pd.DataFrame:
+    def get_total_mileage(self, element: Element) -> pd.Series:
         """
         Get the total mileage.
+
         Returns:
-            A pandas DataFrame containing the total mileage.
+            A pandas Series containing the total mileage.
         """
         data = self.data[element.name]
         data = data.loc[element.model.config.system.set_nodes] * 1000  # million km/a

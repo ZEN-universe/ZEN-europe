@@ -12,7 +12,7 @@ from zen_creator.datasets.datasets.dataset import Dataset
 from zen_creator.datasets.datasets.metadata import MetaData
 
 
-class TYNDPScenarioBuildingGuidelines(Dataset[pd.DataFrame]):
+class TYNDPScenarioBuildingGuidelines(Dataset[dict[str, pd.DataFrame]]):
     """
     Pipeline cost dataset class from the TYNDP 2022 scenario building
     guidelines.

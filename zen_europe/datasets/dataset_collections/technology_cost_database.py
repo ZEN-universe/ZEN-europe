@@ -10,6 +10,7 @@ script this class replaces.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from typing import TYPE_CHECKING, Any, Dict, cast
 
 import numpy as np
@@ -26,6 +27,7 @@ from zen_creator import (
     DatasetCollection,
     RetrofittingTechnology,
     StorageTechnology,
+    Technology,
 )
 from zen_creator.utils.attribute import SourceInformation
 from zen_creator.utils.settings import Settings
@@ -52,7 +54,7 @@ from zen_europe.datasets.datasets.technology.storage_technologies_victoria impor
     StorageTechnologiesVictoria,
 )
 
-_AGENCY_DATASETS = {
+_AGENCY_DATASETS: dict[str, Callable[..., Dataset[Any]]] = {
     "dea": DEA,
     "tyndp": TYNDPTechnologyCost,
     "diw": DIW,
@@ -99,7 +101,7 @@ class TechnologyCostDatabase(DatasetCollection):
 
     def get_capex_specific_conversion(
         self,
-        element: Element,
+        element: ConversionTechnology,
         plant_size: str | None = None,
         metric: str = "mean",
         proxy_element_name: str | None = None,
@@ -118,7 +120,7 @@ class TechnologyCostDatabase(DatasetCollection):
 
     def get_opex_specific_fixed(
         self,
-        element: Element,
+        element: Technology,
         plant_size: str | None = None,
         metric: str = "mean",
         proxy_element_name: str | None = None,
@@ -137,7 +139,7 @@ class TechnologyCostDatabase(DatasetCollection):
 
     def get_opex_specific_variable(
         self,
-        element: Element,
+        element: Technology,
         plant_size: str | None = None,
         metric: str = "mean",
         proxy_element_name: str | None = None,
@@ -255,22 +257,25 @@ class TechnologyCostDatabase(DatasetCollection):
         carrier, so summing them and adding the reference carrier itself gives
         the factor that rebases the cost onto the reference carrier.
         """
-        reference_carrier = element.reference_carrier.default_value[0]
+        reference_carrier = cast(list[str], element.reference_carrier.default_value)[0]
+        conversion_factors = cast(
+            list[dict[str, dict[str, float]]], element.conversion_factor.default_value
+        )
         conversion_factor = {
             carrier: values["default_value"]
-            for entry in element.conversion_factor.default_value
+            for entry in conversion_factors
             for carrier, values in entry.items()
         }
         co_products = [
             carrier
-            for carrier in element.output_carrier.default_value
+            for carrier in cast(list[str], element.output_carrier.default_value)
             if carrier != reference_carrier
         ]
         return 1.0 + sum(conversion_factor[carrier] for carrier in co_products)
 
     def get_lifetime(
         self,
-        element: Element,
+        element: Technology,
         plant_size: str | None = None,
         metric: str = "median",
         proxy_element_name: str | None = None,
@@ -290,7 +295,7 @@ class TechnologyCostDatabase(DatasetCollection):
 
     def get_construction_time(
         self,
-        element: Element,
+        element: Technology,
         plant_size: str | None = None,
         metric: str = "median",
         proxy_element_name: str | None = None,
@@ -399,7 +404,7 @@ class TechnologyCostDatabase(DatasetCollection):
         description: str,
         annual_values: bool = True,
         proxy_element_name: str | None = None,
-    ) -> tuple[pd.Series, float, pd.Series, list[str]]:
+    ) -> tuple[pd.Series | None, float, pd.Series | None, list[str]]:
         """Get the data for a given attribute of a technology."""
         reference_year = element.settings.time.reference_year
         if proxy_element_name is not None:
@@ -425,6 +430,8 @@ class TechnologyCostDatabase(DatasetCollection):
                 ]
             )
             return None, default_value, None, agencies
+        df: pd.Series | None
+        yearly_variations: pd.Series | None
         if annual_values:
             df = self._reindex_to_years(series, optimization_years)
             default_value = float(df.loc[reference_year])
@@ -518,7 +525,7 @@ class TechnologyCostDatabase(DatasetCollection):
         self,
         technology: str,
         variable: str,
-        plant_size: str,
+        plant_size: str | None,
         metric: str,
         reference_year: int,
     ) -> pd.Series:
@@ -564,7 +571,7 @@ class TechnologyCostDatabase(DatasetCollection):
         )
         if metric == "min":
             candidate = (
-                pivoted.xs("min", level="scenario", axis=1)
+                cast(pd.DataFrame, pivoted.xs("min", level="scenario", axis=1))
                 if "min" in pivoted.columns.get_level_values("scenario")
                 else pivoted[ref_columns]
             )
@@ -573,7 +580,7 @@ class TechnologyCostDatabase(DatasetCollection):
             result = result.where(result <= reference, reference)
         elif metric == "max":
             candidate = (
-                pivoted.xs("max", level="scenario", axis=1)
+                cast(pd.DataFrame, pivoted.xs("max", level="scenario", axis=1))
                 if "max" in pivoted.columns.get_level_values("scenario")
                 else pivoted[ref_columns]
             )
@@ -587,7 +594,7 @@ class TechnologyCostDatabase(DatasetCollection):
         return result
 
     def _extract_agencies(
-        self, technology: str, variable: str, plant_size: str
+        self, technology: str, variable: str, plant_size: str | None
     ) -> list[str]:
         """Return the agencies reporting data for `technology`/`variable`.
 
@@ -616,10 +623,8 @@ class TechnologyCostDatabase(DatasetCollection):
         frames = []
         for agency, dataset in self.data.items():
             df = cast(Any, dataset).get_costs()
-            if plant_size is None:
-                key = (technology, slice(None), slice(None), variable, slice(None))
-            else:
-                key = (technology, plant_size, slice(None), variable, slice(None))
+            size: str | slice = slice(None) if plant_size is None else plant_size
+            key = (technology, size, slice(None), variable, slice(None))
             try:
                 sel = df.loc[key]
             except KeyError:
@@ -635,7 +640,7 @@ class TechnologyCostDatabase(DatasetCollection):
             )
         return pd.concat(frames, ignore_index=True)
 
-    def _unit_for(self, technology: str, variable: str, plant_size: str) -> str:
+    def _unit_for(self, technology: str, variable: str, plant_size: str | None) -> str:
         """The unit actually reported for `technology`/`variable`.
 
         Most technologies use `STANDARD_UNITS[variable]`, but a few (DEA's
@@ -732,7 +737,7 @@ class TechnologyCostDatabase(DatasetCollection):
         plant_size: str,
         metric: str,
         description: str,
-    ) -> tuple[pd.Series, set[str]]:
+    ) -> tuple[pd.Series, list[str]]:
         """Aggregated `variable` for `element`, on the optimization-year grid."""
         reference_year = element.settings.time.reference_year
         series = self._aggregate(
@@ -811,7 +816,7 @@ class TechnologyCostDatabase(DatasetCollection):
                 f"as '{reported_unit}' (technology '{element.name}')."
             )
         multiplier, unit = _RETROFIT_UNIT_CONVERSION[(variable, reported_unit)]
-        delta = delta / coupling_factor.default_value * multiplier
+        delta = delta / cast(float, coupling_factor.default_value) * multiplier
 
         reference_year = element.settings.time.reference_year
         at_reference_year = self._reindex_to_years(delta, pd.Index([reference_year]))

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -57,7 +57,10 @@ class SwissEnergyBalance(Dataset[pd.DataFrame]):
         url = "https://www.uvek-gis.admin.ch/BFE/ogd/115/ogd115_gest_bilanz.csv"
         df = pd.read_csv(url)
 
-        data = df.set_index(["Energietraeger", "Rubrik", "Jahr"]).squeeze().unstack()
+        values = cast(
+            pd.Series, df.set_index(["Energietraeger", "Rubrik", "Jahr"]).squeeze()
+        )
+        data = values.unstack()
 
         data = data / Constants.GJ_PER_MWH  # from TJ to GWh
 
@@ -78,7 +81,7 @@ class SwissEnergyBalance(Dataset[pd.DataFrame]):
                 f"Element '{element.name}' not found in the"
                 f"Swiss Energy Balance dataset."
             )
-        return self.data.loc[element.name, year]
+        return cast(pd.Series, self.data.loc[element.name, year])
 
     def get_coal_availability(self, year: int, element: Carrier) -> float:
         """Get the availability for coal."""
@@ -132,7 +135,10 @@ class SwissOilBalance(Dataset[pd.DataFrame]):
         url = "https://www.uvek-gis.admin.ch/BFE/ogd/124/ogd124_erd%C3%B6lbilanz.csv"
         df = pd.read_csv(url)
 
-        data = df.set_index(["Energietraeger", "Rubrik", "Jahr"]).squeeze().unstack()
+        values = cast(
+            pd.Series, df.set_index(["Energietraeger", "Rubrik", "Jahr"]).squeeze()
+        )
+        data = values.unstack()
         data.index.names = ["element", "category"]
 
         return data
@@ -140,7 +146,7 @@ class SwissOilBalance(Dataset[pd.DataFrame]):
     # ------ Outward facing functions ------
     def get_kerosene_demand(self, year: int) -> float:
         """Get the demand for kerosene."""
-        data = self.data.loc[("Flugpetrol", "Endverbrauch - Total"), year]
+        data = cast(float, self.data.loc[("Flugpetrol", "Endverbrauch - Total"), year])
         energy_density = 43.2 / (
             Constants.GJ_PER_MWH * 1000
         )  # [GWh/t] https://www.bfe.admin.ch/bfe/de/home/versorgung/statistik-und-geodaten/energiestatistiken/gesamtenergiestatistik.exturl.html/aHR0cHM6Ly9wdWJkYi5iZmUuYWRtaW4uY2gvZGUvcHVibGljYX/Rpb24vZG93bmxvYWQvNzQ0Mg==.html

@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
+
+import pandas as pd
 
 from zen_europe.datasets.dataset_collections.hydro_existing_capacity import (
     HydroExistingCapacity,
@@ -183,7 +185,7 @@ class PumpedHydro(StorageTechnology):
             Attribute: An Attribute object containing the capacity limit data.
         """
         attr = self.capacity_limit
-        data = self.capacity_existing.df
+        data = cast(pd.Series, self.capacity_existing.df)
         unit = self.capacity_existing.unit
         capacity_limit = data.groupby(level=0).sum()
         capacity_limit.name = "capacity_limit"
@@ -194,7 +196,9 @@ class PumpedHydro(StorageTechnology):
                     "The capacity limit is set to the sum of the"
                     "historical capacity additions across all years."
                 ),
-                metadata=self.capacity_existing.sources[-1].metadata,
+                metadata=cast(
+                    SourceInformation, self.capacity_existing.sources[-1]
+                ).metadata,
             ),
             unit=unit,
         )
@@ -208,7 +212,7 @@ class PumpedHydro(StorageTechnology):
             Attribute: An Attribute object containing the capacity limit data.
         """
         attr = self.capacity_limit_energy
-        data = self.capacity_existing_energy.df
+        data = cast(pd.Series, self.capacity_existing_energy.df)
         unit = self.capacity_existing_energy.unit
         capacity_limit = data.groupby(level=0).sum()
         capacity_limit.name = "capacity_limit_energy"
@@ -219,7 +223,9 @@ class PumpedHydro(StorageTechnology):
                     "The energy capacity limit is set to the sum of the"
                     "historical capacity additions across all years."
                 ),
-                metadata=self.capacity_existing_energy.sources[-1].metadata,
+                metadata=cast(
+                    SourceInformation, self.capacity_existing_energy.sources[-1]
+                ).metadata,
             ),
             unit=unit,
         )

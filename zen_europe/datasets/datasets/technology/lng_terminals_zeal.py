@@ -12,7 +12,7 @@ from zen_creator.datasets.datasets.dataset import Dataset
 from zen_creator.datasets.datasets.metadata import MetaData
 
 
-class LNGTerminalsZeal(Dataset[pd.DataFrame]):
+class LNGTerminalsZeal(Dataset[dict[str, pd.DataFrame]]):
     """
     LNG terminal construction dataset class from Zeal (2019).
 

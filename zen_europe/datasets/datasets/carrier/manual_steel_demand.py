@@ -10,7 +10,7 @@ from zen_creator.datasets.datasets.dataset import Dataset
 from zen_creator.datasets.datasets.metadata import MetaData
 
 
-class Eurofer(Dataset[pd.DataFrame]):
+class Eurofer(Dataset[pd.Series]):
     """
     Eurofer dataset class.
 
@@ -67,7 +67,7 @@ class Eurofer(Dataset[pd.DataFrame]):
             )
 
 
-class WorldSteel(Dataset[pd.DataFrame]):
+class WorldSteel(Dataset[pd.Series]):
     """
     World Steel dataset class.
 
@@ -121,7 +121,7 @@ class WorldSteel(Dataset[pd.DataFrame]):
             )
 
 
-class TradeEconomics(Dataset[pd.DataFrame]):
+class TradeEconomics(Dataset[pd.Series]):
     """
     Trade Economics dataset class.
 

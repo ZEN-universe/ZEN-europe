@@ -7,7 +7,7 @@ import pandas as pd
 if TYPE_CHECKING:
     from pathlib import Path
 
-    from zen_creator import Dataset, Element
+    from zen_creator import Carrier, Dataset
 
 import numpy as np
 from zen_creator import Attribute, DatasetCollection
@@ -40,7 +40,7 @@ class LNGAvailability(DatasetCollection):
             "import_increase_gas": ImportIncreaseGas(self.source_path),
         }
 
-    def get_availability_import(self, element: Element) -> Attribute:
+    def get_availability_import(self, element: Carrier) -> Attribute:
         """
         Get the import availability for LNG.
 
@@ -56,9 +56,12 @@ class LNGAvailability(DatasetCollection):
         availability = availability.droplevel(0)
         availability.index = availability.index.astype(int)
         availability = interpolate_missing_years(availability)
-        import_increase = cast(ImportIncreaseGas, self.data["import_increase_gas"])
-        import_increase = import_increase.get_import_increase(region="lng")
-        import_increase = import_increase * 1000 / entsog._TWh2bcm  # convert to GWh
+        import_increase_gas = cast(ImportIncreaseGas, self.data["import_increase_gas"])
+        import_increase = (
+            import_increase_gas.get_import_increase(region="lng")
+            * 1000
+            / entsog._TWh2bcm
+        )  # convert to GWh
         availability = availability + import_increase
 
         fraction_lng = (

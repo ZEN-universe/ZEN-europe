@@ -108,7 +108,7 @@ class TruckMileageDemand(DatasetCollection):
         total_demand = spt_dataset.get_total_mileage(element)
         return total_demand
 
-    def _get_peak_demand_share(self, element: Carrier) -> float:
+    def _get_peak_demand_share(self, element: Carrier) -> pd.Series:
         """
         Get the peak demand share for the specified element.
 

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, cast
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -120,17 +120,17 @@ class EUREF(Dataset[pd.DataFrame]):
             header=1,
         )
         raw.columns = raw.columns.astype(str).str.replace("\n", "")
-        segment_starts = np.where(~raw.iloc[0].isna())[0]
+        segment_starts = np.where(~raw.iloc[0].isna())[0].tolist()
         techs = raw.iloc[2:, 0].reset_index(drop=True)
 
-        rows = []
+        rows: list[tuple[Any, int | None, str, float, str, float]] = []
         for segment_idx, segment_start in enumerate(segment_starts):
             segment_end = (
                 segment_starts[segment_idx + 1]
                 if segment_idx + 1 < len(segment_starts)
                 else len(raw.columns) + 1
             )
-            unit_src = raw.iloc[0, segment_start]
+            unit_src = cast(str, raw.iloc[0, segment_start])
 
             if segment_idx in _COST_VARIABLE_SEGMENTS:
                 variable = _COST_VARIABLE_SEGMENTS[segment_idx]
@@ -180,9 +180,9 @@ class EUREF(Dataset[pd.DataFrame]):
                     )
 
         by_euref_tech: dict[tuple, list] = {}
-        for tech_row, year, variable, value, unit, value_src in rows:
+        for tech_row, row_year, variable, value, unit, value_src in rows:
             by_euref_tech.setdefault((tech_row, variable), []).append(
-                (year, value, unit, value_src)
+                (row_year, value, unit, value_src)
             )
 
         cost_years = sorted(
@@ -194,7 +194,7 @@ class EUREF(Dataset[pd.DataFrame]):
             }
         )
 
-        out_rows = []
+        out_rows: list[tuple[Any, ...]] = []
         for technology in {t for t, _ in _TECHS}:
             for scenario in _SCENARIOS:
                 euref_tech = _lookup_euref_technology(technology, scenario)

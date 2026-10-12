@@ -15,7 +15,7 @@ from zen_creator.datasets.datasets.metadata import MetaData
 from zen_europe.utils.constants import Constants
 
 
-class ShippingTechnologiesKorberg(Dataset[pd.DataFrame]):
+class ShippingTechnologiesKorberg(Dataset[dict[str, pd.DataFrame]]):
     """
     Shipping technologies dataset class from Korberg et al. (2021).
 
@@ -49,7 +49,7 @@ class ShippingTechnologiesKorberg(Dataset[pd.DataFrame]):
 
     def _set_data(self) -> dict[str, pd.DataFrame]:
         # TODO there is no data to be implemented
-        data = {}
+        data: dict[str, pd.DataFrame] = {}
         return data
 
     # -------- methods ------------------------

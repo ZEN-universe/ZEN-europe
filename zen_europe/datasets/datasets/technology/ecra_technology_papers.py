@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from pathlib import Path
 
@@ -11,7 +11,7 @@ from zen_creator.utils.attribute import Attribute
 from zen_europe.utils.constants import Constants
 
 
-class ECRATechnologyPapers(Dataset[pd.DataFrame]):
+class ECRATechnologyPapers(Dataset[pd.Series]):
     """
     Dataset class for the state of the art cement manufacturing technology data from
     ECRA (European Cement Research Academy) technology papers.
@@ -62,14 +62,12 @@ class ECRATechnologyPapers(Dataset[pd.DataFrame]):
             raise ValueError("source_path must be set to load the dataset.")
         return self.source_path
 
-    def _set_data(self) -> dict[str, pd.Series]:
+    def _set_data(self) -> pd.Series:
         """
         No data to be set.
         """
-        data = {}
-
-        data = pd.Series(data)
-        return data
+        data: dict[str, float] = {}
+        return pd.Series(data)
 
     # -------- methods ------------------------
     def get_substitution_potential(self, name: str) -> float:

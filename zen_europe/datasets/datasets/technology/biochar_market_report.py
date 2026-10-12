@@ -16,7 +16,7 @@ from zen_europe.utils.utils import (
 )
 
 
-class BiocharMarketReport(Dataset[pd.DataFrame]):
+class BiocharMarketReport(Dataset[dict[str, pd.Series]]):
     """
     Dataset class for the biochar market report.
 

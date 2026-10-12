@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Dict
+from typing import TYPE_CHECKING, Any, Dict, cast
 
 from zen_europe.datasets.dataset_collections.technology_cost_database import (
     TechnologyCostDatabase,
@@ -12,7 +12,7 @@ from zen_europe.datasets.datasets.technology.powerplantmatching import (
 if TYPE_CHECKING:
     from pathlib import Path
 
-    from zen_creator import Dataset, Element
+    from zen_creator import Dataset, Technology
 
 
 from zen_creator import Attribute, DatasetCollection
@@ -33,7 +33,7 @@ class LifetimeExpectation(DatasetCollection):
         self.settings = settings
         super().__init__(source_path=source_path)
 
-    def _get_data(self) -> Dict[str, Dataset[Any]]:
+    def _get_data(self) -> Dict[str, Dataset[Any] | DatasetCollection]:
         """Load all available data sources."""
 
         if self.source_path is None:
@@ -44,7 +44,7 @@ class LifetimeExpectation(DatasetCollection):
             "powerplantmatching": PowerPlantMatching(self.source_path),
         }
 
-    def get_lifetime(self, element: Element) -> Attribute:
+    def get_lifetime(self, element: Technology) -> Attribute:
         """
         Get the lifetime for a given technology.
 
@@ -56,11 +56,11 @@ class LifetimeExpectation(DatasetCollection):
         If less than 25% of the plants are decommissioned, we fall back to the
         technology database.
         """
-        powerplantmatching = self.data["powerplantmatching"]
-        tech_db = self.data["tech_db"]
+        powerplantmatching = cast(PowerPlantMatching, self.data["powerplantmatching"])
+        tech_db = cast(TechnologyCostDatabase, self.data["tech_db"])
         lifetime = powerplantmatching.estimate_lifetime(element, threshold=0.25)
         def_attr = tech_db.get_lifetime(element)
-        if lifetime is None or lifetime < def_attr.default_value:
+        if lifetime is None or lifetime < cast(float, def_attr.default_value):
             return def_attr
         else:
             attr = element.lifetime

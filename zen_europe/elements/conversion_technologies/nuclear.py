@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
+
+import pandas as pd
 
 from zen_europe.datasets.dataset_collections.lifetime_expectation import (
     LifetimeExpectation,
@@ -195,7 +197,7 @@ class Nuclear(ConversionTechnology):
                 ),
             )
         elif self.settings.investment.cap_nuclear_capacity_to_past_investments:
-            cap_ex = self.capacity_existing.df
+            cap_ex = cast(pd.Series, self.capacity_existing.df)
             cap_lim = cap_ex.groupby("node").sum()
             cap_lim.name = "capacity_limit"
             attr.set_data(
@@ -205,7 +207,9 @@ class Nuclear(ConversionTechnology):
                         "The capacity limit is set to the sum of the"
                         "historical capacity additions across all years."
                     ),
-                    metadata=self.capacity_existing.sources[-1].metadata,
+                    metadata=cast(
+                        SourceInformation, self.capacity_existing.sources[-1]
+                    ).metadata,
                 ),
                 unit="GW",
             )
@@ -227,6 +231,7 @@ class Nuclear(ConversionTechnology):
                 source_path=self.source_path,
             )
             nodal_ml_df, total_ml_df = nuclear_max_load.get_max_load(self)
+            data: pd.DataFrame | pd.Series
             if self.settings.max_load.use_nodal_nuclear_max_load:
                 data = nodal_ml_df
             else:

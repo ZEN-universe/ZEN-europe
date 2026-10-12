@@ -30,7 +30,7 @@ class DistrictHeatingData(DatasetCollection):
         self.settings = settings
         super().__init__(source_path=source_path)
 
-    def _get_data(self) -> Dict[str, Dataset[Any]]:
+    def _get_data(self) -> Dict[str, Dataset[Any] | DatasetCollection]:
         """Load all available data sources."""
 
         if self.source_path is None:
@@ -53,13 +53,14 @@ class DistrictHeatingData(DatasetCollection):
         dea = cast(DEA, self.data["dea"])
         hd = heat_demand_dataset._calculate_demand(element)
         flh = (hd.sum() / hd.max()).median()  # GWh / GW
-        cost = dea.get_dh_distribution_data()
-
-        cost = cost.loc[("suburban", "capex", "ref")]  # in M€/km2
-        money_year_src = cost["money_year_src"].iloc[0]
-        unit = cost["unit"].iloc[0]
+        rows = cast(
+            pd.DataFrame,
+            dea.get_dh_distribution_data().loc[("suburban", "capex", "ref"), :],
+        )
+        money_year_src = rows["money_year_src"].iloc[0]
+        unit = rows["unit"].iloc[0]
         assert unit == "M€/km2", f"Unexpected unit for district heating cost: {unit}"
-        cost = cost["value"]  # in M€/km2
+        cost = rows["value"]  # in M€/km2
         heat_density = 10  # GWh/(year*km2) - provided heat density for suburban areas
         capex_GWh = cost / heat_density  # in M€/(GWh / year)
         capex = capex_GWh * flh  # in M€/(GWh / year) -> M€ / GW -> € / kW
@@ -96,12 +97,14 @@ class DistrictHeatingData(DatasetCollection):
 
         """
         dea = cast(DEA, self.data["dea"])
-        cost = dea.get_dh_distribution_data()
-        cost = cost.loc[("suburban", "fopex", "ref")]
-        money_year_src = cost["money_year_src"].iloc[0]
-        unit = cost["unit"].iloc[0]
+        rows = cast(
+            pd.DataFrame,
+            dea.get_dh_distribution_data().loc[("suburban", "fopex", "ref"), :],
+        )
+        money_year_src = rows["money_year_src"].iloc[0]
+        unit = rows["unit"].iloc[0]
         assert unit == "€/MW/year", f"Unexpected unit for district heating cost: {unit}"
-        cost = cost["value"]  # in €/MW/year
+        cost = rows["value"]  # in €/MW/year
         cost = cost / 1000  # in €/kW/year
         cost = interpolate_missing_years(cost)
         cost = cost.loc[element.settings.time.years]
@@ -130,12 +133,14 @@ class DistrictHeatingData(DatasetCollection):
 
         """
         dea = cast(DEA, self.data["dea"])
-        cost = dea.get_dh_distribution_data()
-        cost = cost.loc[("suburban", "vopex", "ref")]
-        money_year_src = cost["money_year_src"].iloc[0]
-        unit = cost["unit"].iloc[0]
+        rows = cast(
+            pd.DataFrame,
+            dea.get_dh_distribution_data().loc[("suburban", "vopex", "ref"), :],
+        )
+        money_year_src = rows["money_year_src"].iloc[0]
+        unit = rows["unit"].iloc[0]
         assert unit == "€/MWh", f"Unexpected unit for district heating cost: {unit}"
-        cost = cost["value"]  # in €/MWh
+        cost = rows["value"]  # in €/MWh
         cost = interpolate_missing_years(cost)
         cost = cost.loc[element.settings.time.years]
         ecb_dataset = cast(ECBInflation, self.data["ecb"])
@@ -167,7 +172,7 @@ class DistrictHeatingData(DatasetCollection):
         share_regions = eurostat_dataset.get_population_by_urbanization()
         share_regions = share_regions[element.settings.time.reference_year].unstack()
         hre = cast(HRE, self.data["hre"])
-        potential = hre.get_district_heating_potential().squeeze()
+        potential = cast(pd.Series, hre.get_district_heating_potential().squeeze())
         missing_countries = pd.Index(element.model.config.system.set_nodes).difference(
             potential.index
         )

@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any, Dict, cast
 if TYPE_CHECKING:
     from pathlib import Path
 
-    from zen_creator import Dataset, Element
+    from zen_creator import Carrier, Dataset
 
 
 from zen_creator import Attribute, DatasetCollection
@@ -39,7 +39,7 @@ class GasolineDieselPrice(DatasetCollection):
             "gasoline_diesel_spread": GasolineDieselSpread(self.source_path),
         }
 
-    def get_price_import(self, element: Element) -> Attribute:
+    def get_price_import(self, element: Carrier) -> Attribute:
         """
         Get the import price for gasoline and diesel.
 

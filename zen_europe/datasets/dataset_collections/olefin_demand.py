@@ -12,7 +12,7 @@ from zen_europe.utils.utils import (
 if TYPE_CHECKING:
     from pathlib import Path
 
-    from zen_creator import Dataset, Element
+    from zen_creator import Carrier, ConversionTechnology, Dataset
 
 
 from zen_creator import Attribute, DatasetCollection
@@ -44,7 +44,7 @@ class OlefinDemand(DatasetCollection):
             "eurostat": Eurostat(source_path=self.source_path, settings=self.settings),
         }
 
-    def get_olefin_demand(self, element: Element) -> Attribute:
+    def get_olefin_demand(self, element: Carrier) -> Attribute:
         """
         Get the demand for olefin.
 
@@ -95,14 +95,15 @@ class OlefinDemand(DatasetCollection):
             unit="tproduct/h",
         )
 
-    def get_capacity_existing_olefin(self, element: Element) -> Attribute:
+    def get_capacity_existing_olefin(self, element: ConversionTechnology) -> Attribute:
         """
         Get the existing olefin production capacity.
 
         We assume that currently all olefin production is based on naphtha.
 
         Args:
-            element (Element): The element for which to get the existing capacity.
+            element (ConversionTechnology): The element for which to get the
+                existing capacity.
 
         Returns:
             Attribute: An Attribute object containing the existing capacity data.
@@ -113,7 +114,9 @@ class OlefinDemand(DatasetCollection):
             eurostat_data / Constants.HOURS_PER_YEAR
         )  # convert from GWh/a to GWh/h
 
-        cf = element.conversion_factor.default_value
+        cf = cast(
+            list[dict[str, dict[str, Any]]], element.conversion_factor.default_value
+        )
         cf_n = next((item for item in cf if "naphtha" in item), None)
         if cf_n is None:
             raise ValueError(
@@ -124,10 +127,10 @@ class OlefinDemand(DatasetCollection):
 
         olefin_demand = eurostat_data / naphtha2olefin  # [GWh/h/[GWh/t]] = [t/h]
 
-        existing_capacity = calculate_capacity_addition_from_cumulative(
+        capacity_addition = calculate_capacity_addition_from_cumulative(
             olefin_demand, element
         )
-        existing_capacity = format_capacity_existing(existing_capacity)
+        existing_capacity = format_capacity_existing(capacity_addition)
         common_nodes = existing_capacity.index.get_level_values(0).intersection(
             element.model.config.system.set_nodes
         )

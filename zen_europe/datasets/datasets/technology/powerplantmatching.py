@@ -3,9 +3,11 @@ from __future__ import annotations
 import logging
 import os
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 import pandas as pd
+from zen_creator import Attribute, Technology
 from zen_creator.datasets.datasets.dataset import Dataset
 from zen_creator.datasets.datasets.metadata import MetaData, SourceInformation
 
@@ -27,7 +29,7 @@ class PowerPlantMatching(Dataset[pd.DataFrame]):
         "Financing secured / under construction",
     ]
 
-    TECHNOLOGY_MAPPING = {
+    TECHNOLOGY_MAPPING: dict[str, dict[str, list[Any]]] = {
         "lignite_coal_plant": {"Fueltype": ["Lignite"]},
         "hard_coal_plant": {
             "Fueltype": [
@@ -58,7 +60,7 @@ class PowerPlantMatching(Dataset[pd.DataFrame]):
 
     @staticmethod
     def _assign_technology(
-        df: pd.DataFrame, mapping: dict[str, dict[str, list]]
+        df: pd.DataFrame, mapping: dict[str, dict[str, list[Any]]]
     ) -> pd.Series:
         """Assign each row of `df` the technology whose mapping criteria it matches.
 
@@ -69,7 +71,7 @@ class PowerPlantMatching(Dataset[pd.DataFrame]):
         technology get NaN; if a row matches more than one technology (mappings are
         expected to be mutually exclusive), the first one wins.
         """
-        technology = pd.Series(np.nan, index=df.index, dtype="object")
+        technology: pd.Series = pd.Series(np.nan, index=df.index, dtype="object")
         for tech, criteria in mapping.items():
             mask = pd.Series(True, index=df.index)
             for column, allowed_values in criteria.items():
@@ -77,7 +79,7 @@ class PowerPlantMatching(Dataset[pd.DataFrame]):
                 if np.nan in allowed_values:
                     crit_mask |= df[column].isna()
                 mask &= crit_mask
-            technology[mask & technology.isna()] = tech
+            technology.loc[mask & technology.isna()] = tech
         return technology
 
     def _set_metadata(self) -> MetaData:
@@ -104,7 +106,7 @@ class PowerPlantMatching(Dataset[pd.DataFrame]):
             raise ValueError("source_path must be set to load the dataset.")
         return Path(self.source_path) / "03-technology" / "capacity_existing"
 
-    def _set_data(self) -> dict[str, pd.Series | pd.DataFrame]:
+    def _set_data(self) -> pd.DataFrame:
         if not os.path.exists(
             self.path / "processed_powerplantmatching_data_raw.feather"
         ):
@@ -150,7 +152,7 @@ class PowerPlantMatching(Dataset[pd.DataFrame]):
         return data
 
     # -------- methods ------------------------
-    def get_capacity_existing(self, element) -> pd.Series:
+    def get_capacity_existing(self, element: Technology) -> Attribute:
         """
         Get the existing capacity for a technology.
 
@@ -158,7 +160,7 @@ class PowerPlantMatching(Dataset[pd.DataFrame]):
             element: The element for which to get the existing capacity.
 
         Returns:
-            pd.Series: A pandas Series containing the existing capacity data.
+            Attribute: The existing capacity attribute of the element.
         """
         data_raw = self.data.copy()
         data_raw = data_raw[

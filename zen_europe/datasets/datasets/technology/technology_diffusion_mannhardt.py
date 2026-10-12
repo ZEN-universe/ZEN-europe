@@ -11,7 +11,7 @@ from zen_creator.datasets.datasets.dataset import Dataset
 from zen_creator.datasets.datasets.metadata import MetaData
 
 
-class TechnologyDiffusionMannhardt(Dataset[pd.DataFrame]):
+class TechnologyDiffusionMannhardt(Dataset[dict[str, pd.DataFrame]]):
     """
     Maximum technology diffusion rates, based on Mannhardt et al. (2024).
 
@@ -168,7 +168,7 @@ class TechnologyDiffusionMannhardt(Dataset[pd.DataFrame]):
         """
         No data to be set.
         """
-        data = {}
+        data: dict[str, pd.DataFrame] = {}
         return data
 
     # -------- methods ------------------------

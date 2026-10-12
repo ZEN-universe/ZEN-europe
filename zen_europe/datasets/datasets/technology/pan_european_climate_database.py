@@ -4,7 +4,7 @@ import logging
 import urllib.request
 import zipfile
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 from urllib.error import HTTPError
 
 import cdsapi
@@ -20,7 +20,7 @@ from zen_creator.datasets.datasets.metadata import MetaData, SourceInformation
 from zen_europe.utils.constants import Constants
 
 
-class PanEuropeanClimateDatabase(Dataset[pd.DataFrame]):
+class PanEuropeanClimateDatabase(Dataset[dict[str, pd.DataFrame]]):
     """
     Pan-European Climate Database (PECD 4.2) dataset class.
 
@@ -195,7 +195,7 @@ class PanEuropeanClimateDatabase(Dataset[pd.DataFrame]):
 
     def _download(self, request: dict[str, str | None], year: int, dest: Path) -> None:
         """Retrieve one technology's PECD series from the CDS API as a raw zip file."""
-        cds_request: dict[str, list[str]] = {
+        cds_request: dict[str, Any] = {
             "pecd_version": "pecd4_2",
             "temporal_period": ["historical"],
             "origin": ["era5_reanalysis"],
@@ -223,7 +223,7 @@ class PanEuropeanClimateDatabase(Dataset[pd.DataFrame]):
             )
             client.retrieve(self.CDS_DATASET, cds_request, str(dest))
         except HTTPError as e:
-            raise HTTPError(
+            raise RuntimeError(
                 f"Failed to download PECD data for {request['variable']} in {year}: {e}"
             ) from e
 

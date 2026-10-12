@@ -15,7 +15,7 @@ from zen_europe.utils.utils import (
 )
 
 
-class EnergyInstituteWorldEnergyReview(Dataset[pd.DataFrame]):
+class EnergyInstituteWorldEnergyReview(Dataset[dict[str, pd.Series]]):
     """
     Dataset class to calculate the capacity limit for carbon storage based on the
     extraction of oil and gas. The idea is that the injection capacity of CO2 storage

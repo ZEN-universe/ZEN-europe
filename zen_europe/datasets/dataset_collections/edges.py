@@ -7,7 +7,7 @@ import pandas as pd
 if TYPE_CHECKING:
     from pathlib import Path
 
-    from zen_creator import Dataset, Element, TransportTechnology
+    from zen_creator import Dataset, Element, EnergySystem, TransportTechnology
 
 
 from zen_creator import Attribute, DatasetCollection
@@ -22,7 +22,7 @@ class Edges(DatasetCollection):
 
     name = "edges"
 
-    def __init__(self, source_path: Path | str):
+    def __init__(self, source_path: Path | str | None):
         super().__init__(source_path=source_path)
 
     def _get_data(self) -> Dict[str, Dataset[Any]]:
@@ -36,7 +36,7 @@ class Edges(DatasetCollection):
             "tyndp_2020_edges": TYNDP_2020_edges(self.source_path),
         }
 
-    def get_set_edges(self, element: Element) -> Attribute:
+    def get_set_edges(self, element: EnergySystem) -> Attribute:
         """
         Creates edges.
 

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import cast
 
 import pandas as pd
 from zen_creator.datasets.datasets.dataset import Dataset
@@ -37,7 +38,7 @@ class IPCCAR6(Dataset[pd.DataFrame]):
             raise ValueError("source_path must be set to load the dataset.")
         return self.source_path
 
-    def _set_data(self) -> dict[str, pd.Series]:
+    def _set_data(self) -> pd.DataFrame:
         """
         Set data for the remaining carbon budget for different temperature targets and
         probabilities.
@@ -82,5 +83,5 @@ class IPCCAR6(Dataset[pd.DataFrame]):
                 f"Probability {probability} is not available. "
                 f"Available probabilities: {list(self.data.index)}"
             )
-        remaining_budget = self.data.loc[probability, temperature_target]
+        remaining_budget = cast(float, self.data.at[probability, temperature_target])
         return remaining_budget

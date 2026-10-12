@@ -16,7 +16,7 @@ from zen_creator.datasets.datasets.metadata import MetaData, SourceInformation
 from zen_europe.utils.constants import Constants
 
 
-class Aidres(Dataset[pd.DataFrame]):
+class Aidres(Dataset[dict[str, pd.DataFrame]]):
     """
     Aidres dataset class.
 
@@ -54,12 +54,12 @@ class Aidres(Dataset[pd.DataFrame]):
         ).set_index("NUTS ID")
         cement_demand = prod_flow["Cement (kt/y)"]
         steel_demand = prod_flow["Steel (kt/y)"]
-        methanol_demand = pd.read_excel(
+        methanol_sheet = pd.read_excel(
             self.path / "AIDRES_demand_database.xlsx",
             sheet_name="Methanol (PJ per y)",
             header=12,
         ).set_index("NUTS ID")
-        methanol_demand = methanol_demand["All sectors (PJ/y).1"]
+        methanol_demand = methanol_sheet["All sectors (PJ/y).1"]
 
         data = {
             "clinker": cement_demand.to_frame(name="demand"),
@@ -210,7 +210,7 @@ class Aidres(Dataset[pd.DataFrame]):
         """
         attr = element.conversion_factor
         consumption_hard_coal = 2.13  # GJ/ton,
-        cf = {
+        cf: dict[str, dict[str, float]] = {
             "hydrogen_to_cement_fuel": {
                 "hydrogen": 2.46 / consumption_hard_coal
             },  # alternative fuel mix
@@ -222,10 +222,9 @@ class Aidres(Dataset[pd.DataFrame]):
         }
         assert element.name in cf, f"Conversion factor for {element.name} not found."
 
-        cf_car = cf[element.name]
         cf_car = [
             {cf_car_key: {"default_value": cf_car_value, "unit": "GW/GW"}}
-            for cf_car_key, cf_car_value in cf_car.items()
+            for cf_car_key, cf_car_value in cf[element.name].items()
         ]
 
         attr.set_data(
@@ -240,20 +239,19 @@ class Aidres(Dataset[pd.DataFrame]):
         )
         return attr
 
-    def get_share_capacity_existing_cement_fuel(self) -> float:
+    def get_share_capacity_existing_cement_fuel(self) -> dict[str, float]:
         """
         Get the share of existing capacity for cement fuel technologies from the Aidres
         dataset.
 
         This method retrieves the share of existing capacity for cement fuel
         technologies
-        from the Aidres dataset and returns it as a float.
+        from the Aidres dataset.
 
         p. 47
 
         Returns:
-            A float representing the share of existing capacity for cement fuel
-            technologies.
+            The share of existing capacity of each cement fuel technology.
         """
         existing_capacity_share = {
             "hydrogen_to_cement_fuel": 0.0,  # no existing capacity

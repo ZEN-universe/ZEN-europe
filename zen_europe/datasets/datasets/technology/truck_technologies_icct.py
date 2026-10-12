@@ -16,7 +16,7 @@ from zen_creator.datasets.datasets.metadata import MetaData
 from zen_europe.utils.constants import Constants
 
 
-class TruckTechnologiesICCT(Dataset[pd.DataFrame]):
+class TruckTechnologiesICCT(Dataset[dict[str, pd.DataFrame]]):
     """
     Truck technologies dataset class from ICCT (2023).
 
@@ -56,7 +56,7 @@ class TruckTechnologiesICCT(Dataset[pd.DataFrame]):
 
     def _set_data(self) -> dict[str, pd.DataFrame]:
         # TODO there is no data to be implemented
-        data = {}
+        data: dict[str, pd.DataFrame] = {}
         return data
 
     # -------- methods ------------------------

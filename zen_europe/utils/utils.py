@@ -1,7 +1,7 @@
 import functools
 import logging
 from collections.abc import Callable
-from typing import Any, TypeVar, Union, cast
+from typing import Any, TypeVar, Union, cast, overload
 
 import numpy as np
 import pandas as pd
@@ -136,14 +136,20 @@ def link_natural_gas_countries() -> dict:
     return natural_gas_link
 
 
-def interpolate_missing_years(df: pd.DataFrame) -> pd.DataFrame:
-    """Interpolate missing years in a DataFrame.
+@overload
+def interpolate_missing_years(df: pd.DataFrame) -> pd.DataFrame: ...
+@overload
+def interpolate_missing_years(df: pd.Series) -> pd.Series: ...
+def interpolate_missing_years(
+    df: pd.DataFrame | pd.Series,
+) -> pd.DataFrame | pd.Series:
+    """Interpolate missing years in a DataFrame or Series.
 
     Args:
-        df (pd.DataFrame): DataFrame with years as columns.
+        df: DataFrame with years as columns, or Series with years as index.
 
     Returns:
-        pd.DataFrame: DataFrame with missing years interpolated.
+        The input with missing years interpolated.
     """
     if isinstance(df, pd.DataFrame):
         assert (
@@ -151,15 +157,17 @@ def interpolate_missing_years(df: pd.DataFrame) -> pd.DataFrame:
             and df.columns.dtype == "int64"
         ), "All columns must be numeric (years)."
         # Reindex the columns to include all years from min to max
-        df = df.reindex(
-            range(df.columns.min(), df.columns.max() + 1), axis=1
-        ).interpolate(axis=1)
+        first_year = cast(int, df.columns.min())
+        last_year = cast(int, df.columns.max())
+        df = df.reindex(range(first_year, last_year + 1), axis=1).interpolate(axis=1)
     elif isinstance(df, pd.Series):
         assert (
             all(isinstance(idx, int) for idx in df.index) and df.index.dtype == "int64"
         ), "All index values must be numeric (years)."
         # Reindex the index to include all years from min to max
-        df = df.reindex(range(df.index.min(), df.index.max() + 1)).interpolate()
+        first_index = cast(int, df.index.min())
+        last_index = cast(int, df.index.max())
+        df = df.reindex(range(first_index, last_index + 1)).interpolate()
     else:
         raise TypeError(
             "Input must be a pandas DataFrame or Series,"
@@ -188,14 +196,14 @@ def linearly_fill_missing_years(
         pd.DataFrame: DataFrame with missing years filled.
     """
     df_filled = df.copy()
-    fit_params = df.apply(
-        lambda row: (
-            np.polyfit(row.dropna().index, row.dropna(), deg=deg)
-            if len(row.dropna()) > 1
-            else None
-        ),
-        axis=1,
-    )
+
+    def fit_row(row: pd.Series) -> Any:
+        """Polynomial coefficients of a row, or None if it has too few values."""
+        if len(row.dropna()) > 1:
+            return np.polyfit(row.dropna().index, row.dropna(), deg=deg)
+        return None
+
+    fit_params = df.apply(fit_row, axis=1)
     df_fit = df.apply(
         lambda row: (
             np.polyval(fit_params.loc[row.name], row.index)
@@ -263,7 +271,7 @@ def divide_evolution_of_cumulative_capacity(df: pd.DataFrame) -> pd.DataFrame:
             neg_col = df[col].clip(upper=0)
             if (neg_col.dropna() == 0).all():
                 break
-            df[col + 1] += neg_col
+            df[cast(int, col) + 1] += neg_col
             df[col] = pos_col
 
     return df
@@ -298,15 +306,15 @@ def account_for_decommissioned_capacity(
         )
     df = df.sort_index(axis=1)
     # get years
-    start_year = df.columns.min()
+    start_year = cast(int, df.columns.min())
     reference_year = element.settings.time.reference_year
-    lifetime = element.lifetime.default_value
-    assert int(lifetime) == lifetime, "Lifetime must be an integer"
-    lifetime = int(lifetime)
+    lifetime_value = cast(float, element.lifetime.default_value)
+    assert int(lifetime_value) == lifetime_value, "Lifetime must be an integer"
+    lifetime = int(lifetime_value)
     relevant_lifetime = (
         lifetime
         - element.settings.time.interval_between_years
-        - int(element.construction_time.default_value)
+        - int(cast(float, element.construction_time.default_value))
     )
     lifetime_years = list(range((reference_year) - relevant_lifetime, reference_year))
     earlier_years = list(range((start_year + 1) - relevant_lifetime, start_year + 1))
@@ -321,11 +329,11 @@ def account_for_decommissioned_capacity(
     df_ext = df_ext.bfill(axis=1)
     # decommissioned capacity
     df_decom = df_ext.copy()
-    df_decom.columns = df_ext.columns + lifetime
+    df_decom.columns = cast(pd.Index, df_ext.columns) + lifetime
     # add decommissioned capacity
     df_tot = df_ext.add(df_decom, fill_value=0)
     # only choose lifetime years
-    common_years = df_tot.columns.intersection(lifetime_years)
+    common_years = cast(pd.Index, df_tot.columns).intersection(lifetime_years)
     df_tot = df_tot[common_years]
     # scale to match total capacity again
     df_tot = df_tot[df_tot.sum(axis=1) != 0]
@@ -345,7 +353,7 @@ def format_capacity_existing(df: Union[pd.DataFrame, pd.Series]) -> pd.Series:
         pd.Series: Formatted Series with existing capacity data.
     """
     if isinstance(df, pd.DataFrame):
-        df = df.stack()
+        df = cast(pd.Series, df.stack())
     df = df[df >= MIN_CAPACITY_ADDITION]
     df.index.names = ["node", "year_construction"]
     df.name = "capacity_existing"

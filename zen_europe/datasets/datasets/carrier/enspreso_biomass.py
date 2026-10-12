@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -13,6 +13,7 @@ from zen_creator.datasets.datasets.dataset import Dataset
 from zen_creator.datasets.datasets.metadata import MetaData
 from zen_creator.utils.attribute import Attribute, SourceInformation
 
+from zen_europe.datasets.datasets.financial.ECB import ECBInflation
 from zen_europe.utils.constants import Constants
 from zen_europe.utils.utils import interpolate_missing_years
 
@@ -25,7 +26,7 @@ class EnspresoBiomass(Dataset[pd.DataFrame]):
 
     name = "enspreso_biomass"
 
-    def __init__(self, source_path: Path | str):
+    def __init__(self, source_path: Path | str | None):
         super().__init__(source_path=source_path)
 
     def _set_metadata(self) -> MetaData:
@@ -53,7 +54,7 @@ class EnspresoBiomassAvailability(EnspresoBiomass):
 
     name = "enspreso_biomass_availability"
 
-    def __init__(self, source_path: Path | str):
+    def __init__(self, source_path: Path | str | None):
         super().__init__(source_path=source_path)
 
     def _set_data(self) -> pd.DataFrame:
@@ -255,7 +256,7 @@ class EnspresoBiomassPrice(EnspresoBiomass):
 
     name = "enspreso_biomass_price"
 
-    def __init__(self, source_path: Path | str):
+    def __init__(self, source_path: Path | str | None):
         super().__init__(source_path=source_path)
 
     def _set_data(self) -> pd.DataFrame:
@@ -291,34 +292,35 @@ class EnspresoBiomassPrice(EnspresoBiomass):
             Attribute: the element's `price_import` attribute, updated
                 with the computed data.
         """
-        data = self.data[
+        table = self.data[
             (self.data["Scenario"] == scenario)
             & (self.data["Energy Commodity"].isin(biomass_types))
         ]
-        data = data.set_index(["NUTS0", "Year", "Energy Commodity"])
-        unit = data["Units"].unique()
+        table = table.set_index(["NUTS0", "Year", "Energy Commodity"])
+        unit = table["Units"].unique()
         assert (
             len(unit) == 1
         ), f"Multiple units found in ENSPRESO biomass price data: {unit}"
         assert (
             unit[0] == "Euro2010/GJ"
         ), f"Unexpected unit in ENSPRESO biomass price data: {unit[0]}"
-        data = data["NUTS0 Energy Commodity Cost "]
+        data = table["NUTS0 Energy Commodity Cost "]
 
         nodes = pd.Index(element.model.config.system.set_nodes)
         common_nodes = nodes.intersection(data.index.get_level_values("NUTS0").unique())
 
         enspreso_availability = EnspresoBiomassAvailability(self.source_path)
-        availability = enspreso_availability._get_availability_import(
+        availability_table = enspreso_availability._get_availability_import(
             biomass_types=biomass_types, scenario=scenario
         )
-        availability = availability.set_index(["NUTS0", "Year", "Energy Commodity"])[
-            "Value"
-        ]
+        availability = availability_table.set_index(
+            ["NUTS0", "Year", "Energy Commodity"]
+        )["Value"]
         data = data.loc[common_nodes].sort_index()
         availability = availability.loc[common_nodes].sort_index()
         data_availability = data * availability
 
+        price: pd.Series | pd.DataFrame
         if not regional_prices:
             price = (
                 data_availability.groupby(["Year"]).sum()
@@ -333,7 +335,7 @@ class EnspresoBiomassPrice(EnspresoBiomass):
 
         # convert from 2010 Euro/GJ to Euro/MWh in reference year
         price = price * Constants.GJ_PER_MWH
-        inflation_rate = element.get_inflation_rate(
+        inflation_rate = ECBInflation(source_path=self.source_path).get_inflation_rate(
             base_year=2010, target_year=element.settings.time.reference_year
         )
         price = price * inflation_rate
@@ -343,18 +345,24 @@ class EnspresoBiomassPrice(EnspresoBiomass):
 
         reference_year = element.settings.time.reference_year
 
+        df: pd.Series | None
+        yearly_variation: pd.Series | pd.DataFrame
         if regional_prices:
-            price = price.loc[common_nodes].sort_index()
-            price.index.name = "node"
-            price = price.loc[:, reference_year:]
-            yearly_variation = price.div(price[reference_year], axis=0)
-            df = price[reference_year]
+            # national prices: one row per node, one column per year
+            regional_price = cast(pd.DataFrame, price).loc[common_nodes].sort_index()
+            regional_price.index.name = "node"
+            regional_price = regional_price.loc[:, reference_year:]
+            yearly_variation = regional_price.div(
+                regional_price[reference_year], axis=0
+            )
+            df = regional_price[reference_year]
             df.name = "price_import"
             default_value = None
         else:
-            price = price.loc[reference_year:]
-            yearly_variation = price.div(price[reference_year])
-            default_value = price[reference_year]
+            # average price: one value per year
+            average_price = cast(pd.Series, price).loc[reference_year:]
+            default_value = cast(float, average_price[reference_year])
+            yearly_variation = average_price.div(default_value)
             df = None
             yearly_variation.name = "price_import_yearly_variation"
             yearly_variation.index.name = "year"

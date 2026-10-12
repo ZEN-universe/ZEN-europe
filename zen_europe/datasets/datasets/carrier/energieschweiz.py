@@ -20,7 +20,7 @@ _MAP_TECHNOLOGY = {
 }
 
 
-class EnergieSchweiz(Dataset[pd.DataFrame]):
+class EnergieSchweiz(Dataset[pd.Series]):
     """
     EnergieSchweiz dataset class.
 

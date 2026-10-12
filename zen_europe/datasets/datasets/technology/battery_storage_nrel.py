@@ -12,7 +12,7 @@ from zen_creator.datasets.datasets.dataset import Dataset
 from zen_creator.datasets.datasets.metadata import MetaData
 
 
-class BatteryStorageNREL(Dataset[pd.DataFrame]):
+class BatteryStorageNREL(Dataset[dict[str, pd.DataFrame]]):
     """
     Utility-scale battery storage dataset class from the NREL Annual
     Technology Baseline (2023).

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, cast
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -159,10 +159,10 @@ class LUW(Dataset[pd.DataFrame]):
         raw["Unit"] = raw["Unit"].apply(_clean_unit)
         raw = raw.drop(columns=["Sources"]).rename(columns={"Column1": "Variable"})
         raw = raw.set_index(["Technologies", "Variable", "Unit"])
-        year_columns = [col for col in raw.columns if str(col).isdigit()]
+        year_columns = [int(col) for col in raw.columns if str(col).isdigit()]
         raw.columns = [int(col) if str(col).isdigit() else col for col in raw.columns]
 
-        rows = []
+        rows: list[tuple[Any, ...]] = []
         for technology, luw_tech in _TECHS.items():
             if luw_tech not in raw.index.get_level_values("Technologies"):
                 continue
@@ -171,7 +171,9 @@ class LUW(Dataset[pd.DataFrame]):
                 if luw_variable not in tech_rows.index.get_level_values("Variable"):
                     continue
                 sel = tech_rows.loc[luw_variable]
-                unit_src = sel.index[0] if isinstance(sel, pd.DataFrame) else sel.name
+                unit_src = cast(
+                    str, sel.index[0] if isinstance(sel, pd.DataFrame) else sel.name
+                )
                 values = sel.iloc[0] if isinstance(sel, pd.DataFrame) else sel
                 if technology == "DAC":
                     multiplier = _convert_dac_unit(unit_src, variable)
@@ -184,7 +186,6 @@ class LUW(Dataset[pd.DataFrame]):
                         else ("Euro/kW" if variable == "capex" else "Euro/kW")
                     )
                 for year in year_columns:
-                    year = int(year)
                     value_src = values[year]
                     if pd.isna(value_src):
                         continue
@@ -211,7 +212,6 @@ class LUW(Dataset[pd.DataFrame]):
                     lt_sel.iloc[0] if isinstance(lt_sel, pd.DataFrame) else lt_sel
                 )
                 for year in year_columns:
-                    year = int(year)
                     value_src = lt_values[year]
                     if pd.isna(value_src):
                         continue

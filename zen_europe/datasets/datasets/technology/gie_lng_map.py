@@ -13,7 +13,7 @@ from zen_creator.elements import Element
 from zen_europe.utils.constants import Constants
 
 
-class GIELNGMap(Dataset[pd.DataFrame]):
+class GIELNGMap(Dataset[pd.Series]):
     """
     GIE LNG Map dataset class for LNG.
 
@@ -52,7 +52,7 @@ class GIELNGMap(Dataset[pd.DataFrame]):
             raise ValueError("source_path must be set to load the dataset.")
         return self.source_path / "03-technology" / "lng"
 
-    def _set_data(self) -> pd.DataFrame:
+    def _set_data(self) -> pd.Series:
         lng_terminals_raw = pd.read_csv(
             self.path / "lng_capacity_existing.csv", delimiter=";"
         )

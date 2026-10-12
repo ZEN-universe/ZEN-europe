@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -21,7 +21,7 @@ from zen_europe.utils.utils import (
 )
 
 
-class IFA(Dataset[pd.DataFrame]):
+class IFA(Dataset[dict[str, pd.DataFrame]]):
     """
     International Fertilizer Association dataset class.
 
@@ -83,12 +83,11 @@ class IFA(Dataset[pd.DataFrame]):
         Returns:
             pd.DataFrame: A pandas DataFrame containing the prepared data.
         """
-        ds = {}
+        ds: dict[int, pd.Series] = {}
         for y, df in self.data.items():
             d = df[["Country", f"Ammonia production in {y} [1,000 tNH3]"]]
             d.loc[:, "Country"] = convert_country_names(d["Country"])
-            d = d.dropna().set_index("Country").squeeze()
-            ds[int(y)] = d
+            ds[int(y)] = cast(pd.Series, d.dropna().set_index("Country").squeeze())
         d = pd.concat(ds, axis=1)
         d = interpolate_missing_years(d)
         d = d / Constants.HOURS_PER_YEAR * 1000 * Constants.AMMONIA_GWH_PER_TON
@@ -147,8 +146,8 @@ class IFA(Dataset[pd.DataFrame]):
         d = self._prepare_data()
         reference_year = element.settings.time.reference_year
         d = d[reference_year].to_frame(name=reference_year - 1)
-        capacity_existing = calculate_capacity_addition_from_cumulative(d, element)
-        capacity_existing = format_capacity_existing(capacity_existing)
+        capacity_addition = calculate_capacity_addition_from_cumulative(d, element)
+        capacity_existing = format_capacity_existing(capacity_addition)
         source = SourceInformation(
             description=(
                 "Existing ammonia production capacity derived from the IFA dataset. "

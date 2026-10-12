@@ -14,7 +14,7 @@ from zen_creator.utils.settings import Settings
 logger = logging.getLogger(__name__)
 
 
-class When2Heat(Dataset[pd.DataFrame]):
+class When2Heat(Dataset[dict[str, pd.DataFrame]]):
     """
     When2Heat dataset class.
 
@@ -47,7 +47,7 @@ class When2Heat(Dataset[pd.DataFrame]):
             raise ValueError("source_path must be set to load the dataset.")
         return self.source_path / "02-carrier" / "heat" / "when2heat_filtered.csv"
 
-    def _set_data(self) -> pd.DataFrame:
+    def _set_data(self) -> dict[str, pd.DataFrame]:
         data = pd.read_csv(self.path)
         year_time_series = self.settings.time.year_time_series
         years = pd.to_datetime(data["utc_timestamp"]).dt.year

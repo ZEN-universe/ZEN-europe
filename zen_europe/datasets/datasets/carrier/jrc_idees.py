@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from pathlib import Path
 
-    from zen_creator.elements.carriers.carrier import Carrier
+    from zen_creator.elements.element import Element
 import pandas as pd
 import requests
 from zen_creator.datasets.datasets.dataset import Dataset
@@ -188,15 +188,15 @@ class JRCIDEES(Dataset[pd.DataFrame]):
         return data.set_index("category")[year_cols] * _KTOE2GWH
 
     # -------- methods ------------------------
-    def get_demand(self, element: Carrier) -> pd.DataFrame:
+    def get_demand(self, element: Element) -> pd.Series:
         """
         Get the demand of heat from the JRC-IDEES dataset.
 
         Args:
-            element (Carrier): The carrier element for which to get the demand.
+            element (Element): The element for which to get the demand.
 
         Returns:
-            A pandas DataFrame containing the demand data for the specified carrier.
+            A pandas Series containing the demand data for the specified carrier.
         """
         data = self.data.copy()
         common_countries = data.index.get_level_values("node").isin(

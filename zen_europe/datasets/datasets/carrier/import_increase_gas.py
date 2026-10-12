@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -10,7 +10,7 @@ from zen_creator.datasets.datasets.dataset import Dataset
 from zen_creator.datasets.datasets.metadata import MetaData
 
 
-class ImportIncreaseGas(Dataset[pd.DataFrame]):
+class ImportIncreaseGas(Dataset[pd.Series]):
     """
     Import increase dataset class for natural gas.
 
@@ -38,10 +38,10 @@ class ImportIncreaseGas(Dataset[pd.DataFrame]):
     def _set_path(self) -> Path | None:
         return None
 
-    def _set_data(self) -> pd.S:
+    def _set_data(self) -> pd.Series:
         return pd.Series({"lng": 55, "norway": 2, "azerbaijan": 2.85, "algeria": 2})
 
-    def get_import_increase(self, region: str) -> pd.DataFrame:
+    def get_import_increase(self, region: str) -> float:
         """
         Get the import increase data for natural gas.
 
@@ -51,4 +51,4 @@ class ImportIncreaseGas(Dataset[pd.DataFrame]):
             raise ValueError(
                 f"Region '{region}' not found in the import increase data."
             )
-        return self.data[region]
+        return cast(float, self.data[region])

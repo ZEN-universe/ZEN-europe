@@ -10,7 +10,7 @@ from zen_creator.datasets.datasets.metadata import MetaData
 from zen_europe.datasets.datasets.financial.ECB import ECBInflation
 
 
-class CO2StorageCostsZEP(Dataset[pd.DataFrame]):
+class CO2StorageCostsZEP(Dataset[pd.Series]):
     """
     Dataset class for the costs of carbon storage based on the ZEP
     (Zero Emissions Platform) report.
@@ -36,14 +36,12 @@ class CO2StorageCostsZEP(Dataset[pd.DataFrame]):
     def _set_path(self) -> Path | None:
         return None
 
-    def _set_data(self) -> dict[str, pd.Series]:
+    def _set_data(self) -> pd.Series:
         """
         No data to be set.
         """
-        data = {}
-
-        data = pd.Series(data)
-        return data
+        data: dict[str, float] = {}
+        return pd.Series(data)
 
     # -------- methods ------------------------
     def get_lifetime(self, element: ConversionTechnology) -> Attribute:

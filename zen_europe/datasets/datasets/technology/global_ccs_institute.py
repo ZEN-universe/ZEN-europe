@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any
 
 import pandas as pd
 from zen_creator.datasets.datasets.dataset import Dataset
@@ -10,7 +11,7 @@ from zen_europe.utils.constants import Constants
 from zen_europe.utils.utils import convert_country_names
 
 
-class GlobalCCSInstitute(Dataset[pd.DataFrame]):
+class GlobalCCSInstitute(Dataset[pd.Series]):
     """
     Dataset class for the near-term infrastructure rollout and investment strategies
     for net-zero hydrogen supply chains, based on the work of Alissa Ganter et al.
@@ -42,23 +43,21 @@ class GlobalCCSInstitute(Dataset[pd.DataFrame]):
             raise ValueError("source_path must be set to load the dataset.")
         return self.source_path
 
-    def _set_data(self) -> dict[str, pd.Series]:
+    def _set_data(self) -> pd.Series:
         """
         No data to be set.
         """
-        data = {}
-
-        data = pd.Series(data)
-        return data
+        data: dict[str, float] = {}
+        return pd.Series(data)
 
     # -------- methods ------------------------
-    def get_conversion_factor_SMR(self) -> dict[str, dict[str, float]]:
+    def get_conversion_factor_SMR(self) -> list[dict[str, dict[str, Any]]]:
         """Get the conversion factor for SMR technologies.
 
         The data is obtained from the Supplementary Information, Table S2, p. 8.
 
         Returns:
-            pd.Series: A pandas Series containing the conversion factor data.
+            The conversion factor per input carrier.
         """
         conversion_factor = [
             {
@@ -68,7 +67,7 @@ class GlobalCCSInstitute(Dataset[pd.DataFrame]):
         ]
         return conversion_factor
 
-    def get_capacity_existing_SMR(self) -> dict[str, dict[str, float]]:
+    def get_capacity_existing_SMR(self) -> pd.Series:
         """
         Get the existing capacity for SMR technologies.
         We assume that all current ammonia plants and refineries use H2 from SMR.
@@ -76,23 +75,17 @@ class GlobalCCSInstitute(Dataset[pd.DataFrame]):
         Returns:
             pd.Series: A pandas Series containing the existing capacity data.
         """
-        path_capa_ex = self.source_path / "03-technology" / "capacity_existing" / "SMR"
-        capacity_existing_ref = pd.read_excel(path_capa_ex / "Refinery_plants_OV.xlsx")
-        capacity_existing_amm = pd.read_excel(path_capa_ex / "Ammonia_plants_OV.xlsx")
-        capacity_existing_ref["Country"] = convert_country_names(
-            capacity_existing_ref["Country"]
-        )
-        capacity_existing_amm["Country"] = convert_country_names(
-            capacity_existing_amm["Country"]
-        )
+        path_capa_ex = self.path / "03-technology" / "capacity_existing" / "SMR"
+        refineries = pd.read_excel(path_capa_ex / "Refinery_plants_OV.xlsx")
+        ammonia_plants = pd.read_excel(path_capa_ex / "Ammonia_plants_OV.xlsx")
+        refineries["Country"] = convert_country_names(refineries["Country"])
+        ammonia_plants["Country"] = convert_country_names(ammonia_plants["Country"])
         capacity_existing_ref = (
-            capacity_existing_ref.set_index("Country").groupby("Country").sum()
-        )
+            refineries.set_index("Country").groupby("Country").sum()
+        )["H2 capacity (kg/h)"]
         capacity_existing_amm = (
-            capacity_existing_amm.set_index("Country").groupby("Country").sum()
-        )
-        capacity_existing_ref = capacity_existing_ref["H2 capacity (kg/h)"]
-        capacity_existing_amm = capacity_existing_amm["Capacity (kg/h)"]
+            ammonia_plants.set_index("Country").groupby("Country").sum()
+        )["Capacity (kg/h)"]
         # sum capacities
         capacity_existing = capacity_existing_ref.add(
             capacity_existing_amm, fill_value=0

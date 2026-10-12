@@ -11,7 +11,7 @@ from zen_europe.datasets.datasets.financial.ECB import ECBDollar2Euro, ECBInflat
 from zen_europe.utils.constants import Constants
 
 
-class EconomicsOfOilRefining(Dataset[pd.DataFrame]):
+class EconomicsOfOilRefining(Dataset[pd.Series]):
     """
     Dataset class for the economics of oil refining.
 
@@ -39,14 +39,12 @@ class EconomicsOfOilRefining(Dataset[pd.DataFrame]):
             raise ValueError("source_path must be set to load the dataset.")
         return self.source_path
 
-    def _set_data(self) -> dict[str, pd.Series]:
+    def _set_data(self) -> pd.Series:
         """
         No data to be set.
         """
-        data = {}
-
-        data = pd.Series(data)
-        return data
+        data: dict[str, float] = {}
+        return pd.Series(data)
 
     # -------- methods ------------------------
     def get_capex_specific(self, element: ConversionTechnology) -> Attribute:

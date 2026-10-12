@@ -59,8 +59,7 @@ class CarrierAvailability(DatasetCollection):
         swiss_energy_balance_dataset = cast(
             SwissEnergyBalance, self.data["swiss_energy_balance"]
         )
-        data = eurostat_dataset.get_coal_availability()
-        data = data[element.name]
+        data = eurostat_dataset.get_coal_availability()[element.name]
         assert not data.empty, "Coal availability data from Eurostat is empty."
         common_countries = data.index.intersection(
             element.model.config.system.set_nodes

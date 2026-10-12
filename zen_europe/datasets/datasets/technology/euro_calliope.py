@@ -3,11 +3,12 @@ from __future__ import annotations
 from pathlib import Path
 
 import pandas as pd
+from zen_creator import Technology
 from zen_creator.datasets.datasets.dataset import Dataset
 from zen_creator.datasets.datasets.metadata import MetaData
 
 
-class EuroCalliope(Dataset[pd.DataFrame]):
+class EuroCalliope(Dataset[pd.Series]):
     """
     EuroCalliope dataset class for potential capacity.
 
@@ -40,7 +41,7 @@ class EuroCalliope(Dataset[pd.DataFrame]):
     def _set_path(self) -> Path | None:
         return None
 
-    def _set_data(self) -> dict[str, pd.Series]:
+    def _set_data(self) -> pd.Series:
         """
         Set the data for the EuroCalliope dataset.
         Note: The PV is roof-top PV, not ground-mounted PV.
@@ -48,18 +49,17 @@ class EuroCalliope(Dataset[pd.DataFrame]):
         Onshore wind is "wind_onshore_monopoly".
 
         """
-        data = {}
+        data: dict[tuple[str, str], float] = {}
         data[("wind_onshore", "NO")] = 11.045267511637062 * 100
         data[("wind_offshore", "NO")] = 8.202832823416685 * 100
         data[("photovoltaics", "NO")] = 0.28532725082404814 * 100
         data[("wind_onshore", "CH")] = 0.4275919580817223 * 100
         data[("wind_offshore", "CH")] = 0.0
         data[("photovoltaics", "CH")] = 0.5971794910850416 * 100
-        data = pd.Series(data, name="potential_capacity_gw")
-        return data
+        return pd.Series(data, name="potential_capacity_gw")
 
     # -------- methods ------------------------
-    def get_capacity_limit(self, element, node) -> pd.Series:
+    def get_capacity_limit(self, element: Technology, node: str) -> float:
         """
         Get the potential capacity for renewable technologies.
 
@@ -67,7 +67,7 @@ class EuroCalliope(Dataset[pd.DataFrame]):
             element: The element for which to get the potential capacity.
 
         Returns:
-            pd.Series: A pandas Series containing the potential capacity data.
+            float: The potential capacity of the element at the node in GW.
         """
         if (element.name, node) not in self.data.index:
             raise ValueError(

@@ -8,7 +8,7 @@ from zen_creator.datasets.datasets.dataset import Dataset
 from zen_creator.datasets.datasets.metadata import MetaData
 
 
-class LCARefining(Dataset[pd.DataFrame]):
+class LCARefining(Dataset[pd.Series]):
     """
     Dataset class for the life cycle costing and eeco-efficiency assessment of oil
     refining.
@@ -38,14 +38,12 @@ class LCARefining(Dataset[pd.DataFrame]):
             raise ValueError("source_path must be set to load the dataset.")
         return self.source_path
 
-    def _set_data(self) -> dict[str, pd.Series]:
+    def _set_data(self) -> pd.Series:
         """
         No data to be set.
         """
-        data = {}
-
-        data = pd.Series(data)
-        return data
+        data: dict[str, float] = {}
+        return pd.Series(data)
 
     # -------- methods ------------------------
     def get_lifetime(self, element: ConversionTechnology) -> Attribute:

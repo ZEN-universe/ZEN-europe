@@ -3,6 +3,7 @@ from __future__ import annotations
 import io
 from datetime import datetime
 from pathlib import Path
+from typing import cast
 
 import pandas as pd
 import requests
@@ -76,14 +77,14 @@ def _read_sheet(workbook: pd.ExcelFile, sheet: str, first_column: str) -> pd.Dat
     The number of explanatory rows above the table changes between editions,
     so the header row is searched for rather than hard coded.
     """
-    raw = workbook.parse(sheet_name=sheet, header=None)
+    raw = pd.read_excel(workbook, sheet_name=sheet, header=None)
     labels = raw[0].astype(str).str.strip().str.casefold()
     matches = labels[labels == first_column.casefold()]
     if matches.empty:
         raise ValueError(
             f"Sheet '{sheet}' has no header row starting with '{first_column}'."
         )
-    return workbook.parse(sheet_name=sheet, header=int(matches.index[0]))
+    return pd.read_excel(workbook, sheet_name=sheet, header=int(matches.index[0]))
 
 
 class DESNZGreenhouseGasInventory(Dataset[pd.DataFrame]):
@@ -285,7 +286,7 @@ class DESNZGreenhouseGasInventory(Dataset[pd.DataFrame]):
             sectors (list[str]): Modeled sectors, as in the model settings.
             start_year (int): First year of the time series.
         """
-        emissions = self.data.loc[GRAND_TOTAL]
+        emissions = cast(pd.Series, self.data.loc[GRAND_TOTAL, :])
         international = self.get_international_categories(sectors)
         if international:
             bunkers = self._select(international)

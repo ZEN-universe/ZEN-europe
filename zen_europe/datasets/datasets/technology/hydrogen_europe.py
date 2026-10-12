@@ -7,7 +7,7 @@ from zen_creator.datasets.datasets.dataset import Dataset
 from zen_creator.datasets.datasets.metadata import MetaData
 
 
-class HydrogenEurope(Dataset[pd.DataFrame]):
+class HydrogenEurope(Dataset[dict[str, pd.Series]]):
     """
     EuroCalliope dataset class for potential capacity.
 

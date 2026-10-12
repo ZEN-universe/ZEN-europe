@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from pathlib import Path
 
@@ -12,7 +12,7 @@ from zen_europe.datasets.datasets.financial.ECB import ECBInflation
 from zen_europe.utils.constants import Constants
 
 
-class SteelTechnologiesWoertler(Dataset[pd.DataFrame]):
+class SteelTechnologiesWoertler(Dataset[pd.Series]):
     """
     Dataset class for the steel production technology from Woertler et al.
 
@@ -55,10 +55,8 @@ class SteelTechnologiesWoertler(Dataset[pd.DataFrame]):
         """
         No data to be set.
         """
-        data = {}
-
-        data = pd.Series(data)
-        return data
+        data: dict[str, float] = {}
+        return pd.Series(data)
 
     # -------- methods ------------------------
     def get_capex_specific(self, element: ConversionTechnology) -> Attribute:

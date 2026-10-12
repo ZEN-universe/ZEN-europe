@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -54,8 +54,7 @@ class ENTSOG(Dataset[pd.DataFrame]):
         # sums Min + Range -> maximum available supply potential
         agg_data = data.groupby(level=["Supply source", "Year"]).sum()
         agg_data = agg_data * 1000 / self._TWh2bcm  # convert to GWh
-        agg_data = agg_data.unstack()
-        return agg_data
+        return cast(pd.DataFrame, agg_data.unstack())
 
     def get_availability_natural_gas(self) -> pd.DataFrame:
         """
@@ -113,8 +112,8 @@ class ENTSOGTransmissionCapacityMap(Dataset[pd.DataFrame]):
         return manual_gas_limit, is_russian
 
     def adjust_by_additional_gas_import(
-        self, import_gas, import_gas_RU
-    ) -> tuple[pd.DataFrame, pd.DataFrame]:
+        self, import_gas: pd.DataFrame, import_gas_RU: pd.Series
+    ) -> tuple[pd.DataFrame, pd.Series]:
         """
         Adjust the import gas data by additional gas import capacity.
 

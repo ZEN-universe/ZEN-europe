@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -10,6 +10,7 @@ import pandas as pd
 from zen_creator.datasets.datasets.dataset import Dataset
 from zen_creator.datasets.datasets.metadata import MetaData, SourceInformation
 from zen_creator.elements.technology import Technology
+from zen_creator.utils.attribute import Attribute
 
 from zen_europe.datasets.datasets.financial._cost_schema import (
     INDEX_NAMES,
@@ -221,7 +222,7 @@ class Potencia(Dataset[pd.DataFrame]):
         for variable, block in cost_blocks.items():
             if key not in block.index:
                 continue
-            for year, value_src in block.loc[key].items():
+            for year, value_src in cast(pd.Series, block.loc[key, :]).items():
                 if pd.isna(value_src):
                     continue
                 rows.append(
@@ -230,7 +231,7 @@ class Potencia(Dataset[pd.DataFrame]):
                         plant_size,
                         "ref",
                         variable,
-                        int(year),
+                        int(cast(int, year)),
                         float(value_src),
                         _SCHEMA_UNITS[variable],
                         _MONEY_YEAR_SRC,
@@ -239,7 +240,9 @@ class Potencia(Dataset[pd.DataFrame]):
                     )
                 )
         if key in efficiency_block.index:
-            for year, value_src in efficiency_block.loc[key].items():
+            for year, value_src in cast(
+                pd.Series, efficiency_block.loc[key, :]
+            ).items():
                 if pd.isna(value_src):
                     continue
                 rows.append(
@@ -248,7 +251,7 @@ class Potencia(Dataset[pd.DataFrame]):
                         plant_size,
                         "ref",
                         "efficiency",
-                        int(year),
+                        int(cast(int, year)),
                         float(value_src),
                         "-",
                         None,
@@ -310,9 +313,10 @@ class Potencia(Dataset[pd.DataFrame]):
         }
 
         def _extract_block(start: int) -> pd.DataFrame:
-            pos = header_idx.get_loc(start)
-            end = (
-                header_idx[pos + 1] - 1 if pos + 1 < len(header_idx) else raw.index[-1]
+            pos = cast(int, header_idx.get_loc(start))
+            end = cast(
+                int,
+                header_idx[pos + 1] - 1 if pos + 1 < len(header_idx) else raw.index[-1],
             )
             block = raw.loc[start + 2 : end].copy()
             block = block.rename(
@@ -370,7 +374,7 @@ class Potencia(Dataset[pd.DataFrame]):
         `_cost_schema`)."""
         return self.data.copy()
 
-    def get_max_load(self, element: Technology) -> pd.Series:
+    def get_max_load(self, element: Technology) -> Attribute:
         """Return the technical availability."""
         availability = self.data.loc[element.name].xs("availability", level="variable")
         availability = availability["value"]

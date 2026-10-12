@@ -8,10 +8,9 @@ if TYPE_CHECKING:
 import pandas as pd
 from zen_creator.datasets.datasets.dataset import Dataset
 from zen_creator.datasets.datasets.metadata import MetaData
-from zen_creator.utils.attribute import Attribute
 
 
-class Energifaktanorge(Dataset[pd.DataFrame]):
+class Energifaktanorge(Dataset[pd.Series]):
     """
     Energifaktanorge dataset class.
 
@@ -36,16 +35,13 @@ class Energifaktanorge(Dataset[pd.DataFrame]):
     def _set_path(self) -> Path | None:
         return None
 
-    def _set_data(self) -> dict[str, pd.DataFrame]:
+    def _set_data(self) -> pd.Series:
         return pd.Series()
 
     # -------- methods ------------------------
-    def get_service_demand(self) -> Attribute:
+    def get_service_demand(self) -> pd.Series:
         """
         Get the NO heat demand for the Service sector.
-
-        Args:
-            element (Carrier): The carrier element for which to get the demand.
         """
         total_energy_service = 36 * 1000  # GWh
         share_space_heating = 0.4

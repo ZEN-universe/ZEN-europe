@@ -7,7 +7,7 @@ import pandas as pd
 if TYPE_CHECKING:
     from pathlib import Path
 
-    from zen_creator import Dataset, Element
+    from zen_creator import Carrier, Dataset
 
 
 from zen_creator import Attribute, DatasetCollection
@@ -48,7 +48,7 @@ class NaturalGasAvailability(DatasetCollection):
             "eurostat": Eurostat(source_path=self.source_path, settings=self.settings),
         }
 
-    def get_availability_import(self, element: Element) -> Attribute:
+    def get_availability_import(self, element: Carrier) -> Attribute:
         """
         Get the import availability for natural gas.
 
@@ -59,16 +59,16 @@ class NaturalGasAvailability(DatasetCollection):
         entsogTCM = cast(ENTSOGTransmissionCapacityMap, self.data["entsogTCM"])
         entsog = cast(ENTSOG, self.data["entsog"])
         entsog_data = entsog.get_availability_natural_gas()
-        import_gas, import_gas_RU = scigrid_dataset.get_pipeline_availability(
+        import_export, import_gas_RU = scigrid_dataset.get_pipeline_availability(
             element=element
         )
-        import_gas, import_gas_RU = entsogTCM.adjust_by_additional_gas_import(
-            import_gas=import_gas, import_gas_RU=import_gas_RU
+        import_export, import_gas_RU = entsogTCM.adjust_by_additional_gas_import(
+            import_gas=import_export, import_gas_RU=import_gas_RU
         )
-        import_gas = import_gas.rename(
+        import_export = import_export.rename(
             {"import": "availability_import", "export": "availability_export"}, axis=1
         )
-        import_gas = import_gas["availability_import"]
+        import_gas = import_export["availability_import"]
 
         # adjust by ENTSOG potentials
         entsog_gas_availability = entsog_data / 365 / 24
@@ -106,7 +106,7 @@ class NaturalGasAvailability(DatasetCollection):
                 )
         # add norway gas availability
         availability_norway_years = interpolate_missing_years(
-            entsog_gas_availability.loc["Norway", :]
+            cast(pd.Series, entsog_gas_availability.loc["Norway", :])
         )
         availability_norway = pd.Series(
             availability_norway_years[element.settings.time.reference_year],

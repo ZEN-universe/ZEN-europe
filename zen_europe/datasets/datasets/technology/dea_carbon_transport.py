@@ -14,7 +14,7 @@ from zen_creator.datasets.datasets.metadata import MetaData
 from zen_europe.datasets.datasets.financial.ECB import ECBInflation
 
 
-class DEACarbonTransport(Dataset[pd.DataFrame]):
+class DEACarbonTransport(Dataset[dict[str, pd.DataFrame]]):
     """
     CO2 transport dataset class from the technology catalogue for carbon
     capture, transport and storage of the Danish Energy Agency.

@@ -161,7 +161,9 @@ class BF_BOF_CCS(RetrofittingTechnology):
             Attribute: An Attribute object containing the existing capacity data.
         """
         if self.settings.investment.use_existing_capacities:
-            igop_projects = IOGPCarbonStorageProjects(source_path=self.source_path)
+            igop_projects = IOGPCarbonStorageProjects(
+                settings=self.settings, source_path=self.source_path
+            )
             return igop_projects.get_capacity_existing_capture(self)
         else:
             attr = self.capacity_existing

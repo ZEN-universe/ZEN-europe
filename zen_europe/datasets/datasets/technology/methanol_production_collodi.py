@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from pathlib import Path
 
@@ -12,7 +12,7 @@ from zen_europe.datasets.datasets.financial.ECB import ECBInflation
 from zen_europe.utils.constants import Constants
 
 
-class MethanolProductionCollodi(Dataset[pd.DataFrame]):
+class MethanolProductionCollodi(Dataset[pd.Series]):
     """
     Dataset class for methanol production data from Collodi et al. (2017).
 
@@ -48,14 +48,12 @@ class MethanolProductionCollodi(Dataset[pd.DataFrame]):
             raise ValueError("source_path must be set to load the dataset.")
         return self.source_path
 
-    def _set_data(self) -> dict[str, pd.Series]:
+    def _set_data(self) -> pd.Series:
         """
         No data to be set.
         """
-        data = {}
-
-        data = pd.Series(data)
-        return data
+        data: dict[str, float] = {}
+        return pd.Series(data)
 
     # -------- methods ------------------------
     def get_lifetime(self, element: ConversionTechnology) -> Attribute:

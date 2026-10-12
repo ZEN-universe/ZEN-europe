@@ -7,7 +7,7 @@ import pandas as pd
 if TYPE_CHECKING:
     from pathlib import Path
 
-    from zen_creator import Dataset, Element
+    from zen_creator import Dataset, Technology
 
 
 from zen_creator import Attribute, DatasetCollection
@@ -36,7 +36,7 @@ class PotentialCapacityRenewables(DatasetCollection):
             "euro_calliope": EuroCalliope(self.source_path),
         }
 
-    def get_capacity_limit(self, element: Element) -> Attribute:
+    def get_capacity_limit(self, element: Technology) -> Attribute:
         """
         Get the potential capacity for renewable technologies.
 

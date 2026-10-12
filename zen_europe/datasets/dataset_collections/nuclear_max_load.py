@@ -7,7 +7,9 @@ import pandas as pd
 if TYPE_CHECKING:
     from pathlib import Path
 
-    from zen_creator import Dataset, Element
+    from zen_creator import Dataset
+
+    from zen_europe.elements.conversion_technologies.nuclear import Nuclear
 
 
 import calendar
@@ -53,7 +55,7 @@ class NuclearMaxLoad(DatasetCollection):
             ),
         }
 
-    def get_max_load(self, element: Element) -> tuple[pd.DataFrame, pd.DataFrame]:
+    def get_max_load(self, element: Nuclear) -> tuple[pd.DataFrame, pd.Series]:
         """
         Calculate the maximum load for nuclear power plants based on historical
         generation data.

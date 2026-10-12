@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from pathlib import Path
 
@@ -11,7 +11,7 @@ from zen_creator.utils.attribute import Attribute
 from zen_europe.datasets.datasets.financial.ECB import ECBInflation
 
 
-class CementProductionGardarsdottir(Dataset[pd.DataFrame]):
+class CementProductionGardarsdottir(Dataset[pd.Series]):
     """
     Dataset class for the cement production technology from Gardarsdottir et al. (2021).
 
@@ -56,22 +56,20 @@ class CementProductionGardarsdottir(Dataset[pd.DataFrame]):
             raise ValueError("source_path must be set to load the dataset.")
         return self.source_path
 
-    def _set_data(self) -> dict[str, pd.Series]:
+    def _set_data(self) -> pd.Series:
         """
         No data to be set.
         """
-        data = {}
-
-        data = pd.Series(data)
-        return data
+        data: dict[str, float] = {}
+        return pd.Series(data)
 
     # -------- methods ------------------------
-    def _get_capex_production_value(self) -> float:
+    def _get_capex_production_value(self) -> tuple[float, float]:
         """
-        Get the specific capital expenditure (CAPEX) for cement production.
+        Get the total CAPEX and the hourly production of cement production.
 
         Returns:
-            float: The specific CAPEX value.
+            The total CAPEX in Euro and the hourly production in t/h.
         """
         capex_total = 204 * 1e6  # Euro, Table 6
         hourly_production = 120.65  # t/h, Table 1

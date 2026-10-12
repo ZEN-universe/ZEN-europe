@@ -17,7 +17,7 @@ from zen_creator.datasets.datasets.dataset import Dataset
 from zen_creator.datasets.datasets.metadata import MetaData
 
 
-class AmmoniaPipelinesGalimova(Dataset[pd.DataFrame]):
+class AmmoniaPipelinesGalimova(Dataset[dict[str, pd.DataFrame]]):
     """
     Ammonia pipelines dataset class from Galimova et al. (2023).
 
@@ -59,7 +59,7 @@ class AmmoniaPipelinesGalimova(Dataset[pd.DataFrame]):
 
     def _set_data(self) -> dict[str, pd.DataFrame]:
         # TODO there is no data to be implemented
-        data = {}
+        data: dict[str, pd.DataFrame] = {}
         return data
 
     # -------- methods ------------------------

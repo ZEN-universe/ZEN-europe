@@ -12,7 +12,7 @@ from zen_europe.utils.utils import (
 if TYPE_CHECKING:
     from pathlib import Path
 
-    from zen_creator import Dataset, Element
+    from zen_creator import Carrier, ConversionTechnology, Dataset
 
 
 from zen_creator import Attribute, DatasetCollection
@@ -48,12 +48,12 @@ class MethanolDemand(DatasetCollection):
             "chem_analyst": ChemAnalyst(self.source_path),
         }
 
-    def _calculate_methanol_demand(self, element: Element) -> Attribute:
+    def _calculate_methanol_demand(self, element: Carrier) -> pd.DataFrame:
         """
         Calculate the methanol demand for the specified element.
 
         This function retrieves the methanol demand data for the specified element
-        and returns it as an Attribute object.
+        and returns it as a DataFrame.
         """
         aidres_dataset = cast(Aidres, self.data["aidres"])
         data = aidres_dataset.get_demand(element)
@@ -101,7 +101,7 @@ class MethanolDemand(DatasetCollection):
         data = data / data.sum() * total_european_demand
         return data
 
-    def get_methanol_demand(self, element: Element) -> Attribute:
+    def get_methanol_demand(self, element: Carrier) -> Attribute:
         """
         Get the demand for methanol.
 
@@ -127,7 +127,7 @@ class MethanolDemand(DatasetCollection):
             unit="GW",
         )
 
-    def get_capacity_existing(self, element: Element) -> Attribute:
+    def get_capacity_existing(self, element: ConversionTechnology) -> Attribute:
         """
         Get the existing capacity for methanol from natural gas. We assume that all
         current methanol plants use natural gas as feedstock.
@@ -135,10 +135,12 @@ class MethanolDemand(DatasetCollection):
         This function retrieves the existing capacity data for the specified element.
         """
         methanol_element = element.model.carriers["methanol"]
-        data = self._calculate_methanol_demand(methanol_element).squeeze()
-        data = data.to_frame(name=element.settings.time.reference_year - 1) * 1000
-        capacity_existing = calculate_capacity_addition_from_cumulative(data, element)
-        capacity_existing = format_capacity_existing(capacity_existing)
+        demand = cast(
+            pd.Series, self._calculate_methanol_demand(methanol_element).squeeze()
+        )
+        data = demand.to_frame(name=element.settings.time.reference_year - 1) * 1000
+        capacity_addition = calculate_capacity_addition_from_cumulative(data, element)
+        capacity_existing = format_capacity_existing(capacity_addition)
 
         source = SourceInformation(
             description=(

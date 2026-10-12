@@ -5,11 +5,10 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from pathlib import Path
 
-    from zen_creator.elements.carriers.carrier import Carrier
+    from zen_creator.elements.element import Element
 import pandas as pd
 from zen_creator.datasets.datasets.dataset import Dataset
 from zen_creator.datasets.datasets.metadata import MetaData
-from zen_creator.utils.attribute import Attribute
 
 from zen_europe.utils.constants import Constants
 
@@ -23,7 +22,7 @@ _MAP_TECHNOLOGY = {
 }
 
 
-class BFE(Dataset[pd.DataFrame]):
+class BFE(Dataset[dict[str, pd.DataFrame]]):
     """
     Bundesamt für Energie (BFE) dataset class.
 
@@ -89,12 +88,12 @@ class BFE(Dataset[pd.DataFrame]):
         }
 
     # -------- methods ------------------------
-    def get_demand(self, element: Carrier) -> Attribute:
+    def get_demand(self, element: Element) -> pd.Series:
         """
         Get the CH heat demand.
 
         Args:
-            element (Carrier): The carrier element for which to get the demand.
+            element (Element): The element for which to get the demand.
         """
         year_time_series = element.model.settings.time.year_time_series
         data_res = self.data["residential"].loc[
@@ -112,7 +111,7 @@ class BFE(Dataset[pd.DataFrame]):
         data = pd.concat({"residential": data_res, "tertiary": data_ser})
         return data
 
-    def get_share_household(self) -> Attribute:
+    def get_share_household(self) -> pd.DataFrame:
         """
         Get the split of household heat demand into technology categories.
         """

@@ -37,7 +37,7 @@ class CCSConversionFactor(DatasetCollection):
         self.settings = settings
         super().__init__(source_path=source_path)
 
-    def _get_data(self) -> Dict[str, Dataset[Any]]:
+    def _get_data(self) -> Dict[str, Dataset[Any] | DatasetCollection]:
         """Load all available data sources."""
 
         if self.source_path is None:
@@ -88,11 +88,11 @@ class CCSConversionFactor(DatasetCollection):
         else:
             raise ValueError(f"Unexpected unit for carbon intensity: {unit}")
         attr = element.conversion_factor
-        conversion_factor = [
+        conversion_factors = [
             {"electricity": {"default_value": conversion_factor, "unit": inverted_unit}}
         ]
         return attr.set_data(
-            default_value=conversion_factor,
+            default_value=conversion_factors,
             source=SourceInformation(
                 description=(
                     "The conversion factor for CCS technologies is calculated as the "
@@ -119,11 +119,11 @@ class CCSConversionFactor(DatasetCollection):
             IPCCEmissionFactors, self.data["ipcc_emission_factors"]
         )
 
-        assert len(element.input_carrier.default_value) == 1, (
+        input_carriers = cast(list[str], element.input_carrier.default_value)
+        assert len(input_carriers) == 1, (
             "For now, " "CCS technology must have exactly one input carrier."
         )
-        fuel = element.input_carrier.default_value[0]
-        fuel = element.model.carriers[fuel]
+        fuel = element.model.carriers[input_carriers[0]]
         carbon_intensity = ipcc_emission_factors._get_raw_carbon_intensity(fuel)
         capture_rate = dea.get_capture_rate_CCS()
         carbon_removal_factor = carbon_intensity * capture_rate * conversion_factor
@@ -175,9 +175,10 @@ class CCSConversionFactor(DatasetCollection):
         """
         Get the retrofit flow coupling factor for SMR CCS technology.
         """
-        conversion_factor = base_tech.conversion_factor.default_value[0]["natural_gas"][
-            "default_value"
-        ]
+        conversion_factors = cast(
+            list[dict[str, dict[str, float]]], base_tech.conversion_factor.default_value
+        )
+        conversion_factor = conversion_factors[0]["natural_gas"]["default_value"]
         carbon_removal_factor = self.get_carbon_removal_factor(
             element=base_tech, conversion_factor=conversion_factor
         )

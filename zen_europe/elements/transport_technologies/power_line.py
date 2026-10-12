@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 import numpy as np
+import pandas as pd
 
 from zen_europe.datasets.dataset_collections.power_line_capacity_limit import (
     PowerLineCapacityLimit,
@@ -125,7 +126,7 @@ class PowerLine(TransportTechnology):
         capacity_existing = entsoe.get_transmission_capacity()
         # the cached queries of the platform can cover more countries than the
         # model, so only the edges of the model are kept
-        set_edges = self.model.energy_system.set_edges.df
+        set_edges = cast(pd.DataFrame, self.model.energy_system.set_edges.df)
         capacity_existing = capacity_existing[
             capacity_existing.index.get_level_values("edge").isin(set_edges.index)
         ]

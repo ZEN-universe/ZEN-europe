@@ -9,7 +9,7 @@ if TYPE_CHECKING:
 
 from zen_creator.datasets.datasets.dataset import Dataset
 from zen_creator.datasets.datasets.metadata import MetaData, SourceInformation
-from zen_creator.elements import Element
+from zen_creator.elements import Technology
 from zen_creator.utils.attribute import Attribute
 
 from zen_europe.utils.constants import Constants
@@ -78,7 +78,7 @@ class ENTSOGCapacityMap(Dataset[pd.DataFrame]):
                 points[column]
                 .astype(str)
                 .str.strip()
-                .replace({"nan": None})
+                .replace({"nan": None})  # type: ignore[dict-item]
                 .replace(self.COUNTRY_CODES)
             )
 
@@ -94,7 +94,7 @@ class ENTSOGCapacityMap(Dataset[pd.DataFrame]):
         )
 
     # -------- methods ------------------------
-    def get_capacity_existing_pipeline(self, element: Element) -> Attribute:
+    def get_capacity_existing_pipeline(self, element: Technology) -> Attribute:
         """
         Get the existing cross-border pipeline capacity of each edge.
 

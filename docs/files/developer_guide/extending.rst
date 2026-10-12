@@ -369,13 +369,13 @@ This keeps a variation next to the value it varies.
 What a scenario changes
 -----------------------
 
-A ``Scenario`` needs a name and at least one payload:
+A ``Scenario`` needs a name and at least one entry type:
 
 .. list-table::
    :header-rows: 1
    :widths: 32 38 30
 
-   * - Payload
+   * - Entry type
      - Effect
      - Written to
    * - ``default_value`` (with ``unit``)

@@ -10,7 +10,7 @@ from zen_creator.datasets.datasets.dataset import Dataset
 from zen_creator.datasets.datasets.metadata import MetaData
 
 
-class GasolineDieselSpread(Dataset[pd.DataFrame]):
+class GasolineDieselSpread(Dataset[pd.Series]):
     """
     Assumption regarding the gasoline-diesel spread compared to the crude oil price.
 
@@ -39,7 +39,7 @@ class GasolineDieselSpread(Dataset[pd.DataFrame]):
         return pd.Series()
 
     # -------- methods ------------------------
-    def get_crack_spread(self) -> int:
+    def get_crack_spread(self) -> float:
         """sets the manual data for the gasoline-diesel spread.
 
         We assume that the relative gasoline-diesel spread is stationary and

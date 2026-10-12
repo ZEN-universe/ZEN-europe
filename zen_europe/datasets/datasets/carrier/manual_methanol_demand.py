@@ -10,7 +10,7 @@ from zen_creator.datasets.datasets.dataset import Dataset
 from zen_creator.datasets.datasets.metadata import MetaData
 
 
-class WITS(Dataset[pd.DataFrame]):
+class WITS(Dataset[pd.Series]):
     """
     WITS (World Integrated Trade Solution) dataset class by the World Bank.
 
@@ -67,7 +67,7 @@ class WITS(Dataset[pd.DataFrame]):
             )
 
 
-class Equinor(Dataset[pd.DataFrame]):
+class Equinor(Dataset[pd.Series]):
     """
     Equinor dataset class.
 
@@ -122,7 +122,7 @@ class Equinor(Dataset[pd.DataFrame]):
             )
 
 
-class ChemAnalyst(Dataset[pd.DataFrame]):
+class ChemAnalyst(Dataset[pd.Series]):
     """
     ChemAnalyst dataset class.
 

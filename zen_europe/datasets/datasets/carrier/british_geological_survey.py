@@ -10,7 +10,7 @@ from zen_creator.datasets.datasets.dataset import Dataset
 from zen_creator.datasets.datasets.metadata import MetaData
 
 
-class BritishGeologicalSurvey(Dataset[pd.DataFrame]):
+class BritishGeologicalSurvey(Dataset[pd.Series]):
     """
     British Geological Survey dataset class.
 
