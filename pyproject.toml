@@ -4,7 +4,7 @@ build-backend = "flit_core.buildapi"
 
 [project]
 name = "zen_europe"
-version = "0.2.0"
+version = "0.3.0"
 description="ZEN-europe hosts the european, sector-coupled dataset for ZEN-garden."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -14,7 +14,7 @@ authors = [
 ]
 
 dependencies = [
-    "zen-creator>=1.2.0",
+    "zen-creator>=1.3.0",
     "eurostat",
     "requests",
     "scikit-learn",
@@ -45,7 +45,7 @@ dev = [
     "coverage",
     "pytest-xdist",
     "pytest-cov",
-    "black==25.12.0",
+    "black==26.5.1",
     "ruff==0.14.13",
     "mypy==1.19.1",
     "types-PyYAML",
