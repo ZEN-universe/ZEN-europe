@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
+
+import pandas as pd
 
 from zen_europe.datasets.dataset_collections.technology_cost_database import (
     TechnologyCostDatabase,
@@ -79,7 +81,7 @@ class HeatPumpDH(ConversionTechnology):
             settings=self.settings, source_path=self.source_path
         )
         cop_data = when2heat_dataset.get_COP()
-        cop = cop_data.xs("radiator", level=1, axis=1)
+        cop = cast(pd.DataFrame, cop_data.xs("radiator", level=1, axis=1))
         cop.index.name = "time"
         cf = [
             {"electricity": {"default_value": 1 / cop.mean().mean(), "unit": "GW/GW"}}

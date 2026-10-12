@@ -7,7 +7,7 @@ from zen_creator.datasets.datasets.dataset import Dataset
 from zen_creator.datasets.datasets.metadata import MetaData
 
 
-class HRE(Dataset[pd.Series]):
+class HRE(Dataset[pd.DataFrame]):
     """
     Heat Roadmap Europe (HRE) 5 dataset.
 
@@ -46,17 +46,17 @@ class HRE(Dataset[pd.Series]):
             / "HRE_5_DH_potential.csv"
         )
 
-    def _set_data(self) -> pd.Series:
+    def _set_data(self) -> pd.DataFrame:
         data = pd.read_csv(self.path).set_index("node")
         return data
 
     # -------- methods ------------------------
-    def get_district_heating_potential(self) -> pd.Series:
+    def get_district_heating_potential(self) -> pd.DataFrame:
         """
         Get the district heating potential from the HRE5 dataset.
 
         Returns:
-            pd.Series: District heating potential indexed by node.
+            pd.DataFrame: District heating potential indexed by node.
 
         """
         return self.data

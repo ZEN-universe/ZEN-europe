@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Mapping
 from functools import cached_property
 from pathlib import Path
 
@@ -232,7 +233,7 @@ class StorageTechnologiesSchmidt(Dataset[pd.DataFrame]):
 
     @staticmethod
     def _get_value(
-        values: dict[str, float],
+        values: Mapping[str, float],
         technology: StorageTechnology,
         variable: str,
     ) -> float:

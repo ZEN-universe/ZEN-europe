@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import cast
 
 import pandas as pd
 from zen_creator import Attribute
@@ -14,7 +15,7 @@ from zen_europe.utils.utils import (
 )
 
 
-class IRENASolarCapacity(Dataset[pd.Series]):
+class IRENASolarCapacity(Dataset[pd.DataFrame]):
     """
     IRENA solar capacity dataset class.
 
@@ -44,7 +45,7 @@ class IRENASolarCapacity(Dataset[pd.Series]):
             raise ValueError("source_path must be set to load the dataset.")
         return Path(self.source_path) / "03-technology" / "capacity_existing"
 
-    def _set_data(self) -> pd.Series:
+    def _set_data(self) -> pd.DataFrame:
         data = pd.read_csv(self.path / "IRENA_solar_pv_capacity_MW_2006-2025.csv")
         data["Country"] = convert_country_names(data["Country"])
         data = data[data["Country"].notna()]
@@ -68,8 +69,8 @@ class IRENASolarCapacity(Dataset[pd.Series]):
             f"Existing capacity data for {element.name} is not available in the "
             "IRENASolarCapacity dataset."
         )
-        data_add = calculate_capacity_addition_from_cumulative(self.data, element)
-        data_add = data_add.stack().rename("capacity_existing")
+        addition = calculate_capacity_addition_from_cumulative(self.data, element)
+        data_add = cast(pd.Series, addition.stack()).rename("capacity_existing")
         data_add.index.names = ["node", "year"]
         data_add = data_add[data_add != 0]
         reference_year = element.settings.time.reference_year

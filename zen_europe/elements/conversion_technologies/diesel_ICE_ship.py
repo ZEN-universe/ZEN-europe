@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 from zen_europe.datasets.datasets.carrier.eurostat import Eurostat
 from zen_europe.datasets.datasets.technology.shipping_technologies_korberg import (
@@ -162,8 +162,10 @@ class DieselICEShip(ConversionTechnology):
                 self.model.config.system.set_nodes
             )
             demand = shipping_fuel_demand.loc[common_nodes] / Constants.HOURS_PER_YEAR
-            max_load = self.max_load.default_value
-            cf_dict = self.conversion_factor.default_value
+            max_load = cast(float, self.max_load.default_value)
+            cf_dict = cast(
+                list[dict[str, dict[str, float]]], self.conversion_factor.default_value
+            )
             diesel_cf = next(
                 entry["diesel"]["default_value"]
                 for entry in cf_dict
@@ -173,10 +175,10 @@ class DieselICEShip(ConversionTechnology):
 
             capacity_existing.index.name = "node"
             capacity_existing.name = self.settings.time.reference_year - 1
-            capacity_existing = account_for_decommissioned_capacity(
+            capacity_frame = account_for_decommissioned_capacity(
                 capacity_existing.to_frame(), self
             )
-            capacity_existing = format_capacity_existing(capacity_existing)
+            capacity_existing = format_capacity_existing(capacity_frame)
             attr = self.capacity_existing
             source = SourceInformation(
                 description=(

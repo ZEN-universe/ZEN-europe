@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import pandas as pd
-from zen_creator import ConversionTechnology
+from zen_creator import Attribute, ConversionTechnology
 from zen_creator.datasets.datasets.dataset import Dataset
 from zen_creator.datasets.datasets.metadata import MetaData, SourceInformation
 
@@ -55,12 +55,12 @@ class MethanationGoetz(Dataset[pd.Series]):
     # -------- methods ------------------------
     def get_conversion_factor_methanation(
         self, element: ConversionTechnology
-    ) -> dict[str, dict[str, float]]:
+    ) -> Attribute:
         """
         Get the conversion factor for methanation technologies.
 
         Returns:
-            pd.Series: A pandas Series containing the conversion factor data.
+            Attribute: The conversion factor attribute of the element.
         """
         attr = element.conversion_factor
         efficiency = 0.78

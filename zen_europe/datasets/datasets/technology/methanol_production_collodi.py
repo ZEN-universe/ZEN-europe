@@ -129,7 +129,7 @@ class MethanolProductionCollodi(Dataset[pd.Series]):
         Returns:
             float: Methanol production in kW.
         """
-        methanol_production = 5000  # t/d
+        methanol_production: float = 5000  # t/d
         methanol_production = (
             methanol_production
             / Constants.HOURS_PER_DAY

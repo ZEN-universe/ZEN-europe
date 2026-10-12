@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from pathlib import Path
+from typing import cast
 
 import pandas as pd
 import requests
@@ -114,5 +115,5 @@ class WorldBankCO2Emissions(Dataset[pd.DataFrame]):
         Args:
             years (list[int] | None): Years to return, all years if None.
         """
-        emissions = self.data.loc[WORLD] / _MT_PER_GT
+        emissions = cast(pd.Series, self.data.loc[WORLD]) / _MT_PER_GT
         return emissions if years is None else emissions[years]

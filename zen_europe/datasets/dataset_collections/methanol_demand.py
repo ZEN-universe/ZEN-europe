@@ -90,7 +90,6 @@ class MethanolDemand(DatasetCollection):
         data = data.sort_index()
 
         data.index.name = "node"
-        data.name = "demand"
 
         total_european_demand = (
             chem_analyst_dataset.get_total_european_demand()

@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
+
+import pandas as pd
 
 from zen_europe.datasets.dataset_collections.technology_cost_database import (
     TechnologyCostDatabase,
@@ -166,7 +168,7 @@ class Battery(StorageTechnology):
                     description="We do not consider existing capacities.",
                 ),
             )
-        capacity_existing = self.capacity_existing.df
+        capacity_existing = cast(pd.Series, self.capacity_existing.df)
         battery_storage = BatteryStorageNREL(source_path=self.source_path)
         e2p_ratio = battery_storage._get_e2p_ratio(self)
         capacity_existing_energy = capacity_existing * e2p_ratio

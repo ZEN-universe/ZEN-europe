@@ -15,7 +15,7 @@ from zen_europe.utils.utils import (
 )
 
 
-class EnergyInstituteWorldEnergyReview(Dataset[dict[str, pd.Series]]):
+class EnergyInstituteWorldEnergyReview(Dataset[dict[str, pd.DataFrame]]):
     """
     Dataset class to calculate the capacity limit for carbon storage based on the
     extraction of oil and gas. The idea is that the injection capacity of CO2 storage
@@ -51,7 +51,7 @@ class EnergyInstituteWorldEnergyReview(Dataset[dict[str, pd.Series]]):
             / "Statistical Review of World Energy Data.xlsx"
         )
 
-    def _set_data(self) -> dict[str, pd.Series]:
+    def _set_data(self) -> dict[str, pd.DataFrame]:
         """
         The data is extracted from the IOGP CO2 storage projects database,
         which is a CSV file containing information about
@@ -86,7 +86,7 @@ class EnergyInstituteWorldEnergyReview(Dataset[dict[str, pd.Series]]):
         gas_refining = gas_refining[
             [c for c in gas_refining.columns if isinstance(c, int)]
         ]
-        data = {}
+        data: dict[str, pd.DataFrame] = {}
         data["oil_extraction"] = oil_extr
         data["gas_extraction"] = gas_extr
         data["gas_refining"] = gas_refining
@@ -155,10 +155,10 @@ class EnergyInstituteWorldEnergyReview(Dataset[dict[str, pd.Series]]):
             / Constants.HOURS_PER_DAY
         )
         refining_capacity = refining_capacity * conversion_tb_daily_to_GW
-        data = calculate_capacity_addition_from_cumulative(
+        addition = calculate_capacity_addition_from_cumulative(
             refining_capacity, element=element
         )
-        data = format_capacity_existing(data)
+        data = format_capacity_existing(addition)
         attr = element.capacity_existing
         attr.set_data(
             default_value=0,

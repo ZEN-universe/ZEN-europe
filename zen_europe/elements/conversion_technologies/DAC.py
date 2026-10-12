@@ -180,12 +180,10 @@ class DAC(ConversionTechnology):
         dac_db = DACCapacitiesZurbriggen(
             settings=self.settings, source_path=self.source_path
         )
-        data = dac_db.data.copy()
         data = (
-            data[["node", "year_construction", "Capacity"]]
-            .groupby(["node", "year_construction"])
+            dac_db.data[["node", "year_construction", "Capacity"]]
+            .groupby(["node", "year_construction"])["Capacity"]
             .sum()
-            .squeeze()
         )
         median_add = data.median()
         n_nodes = len(data.index.get_level_values("node").unique())

@@ -6,7 +6,7 @@ if TYPE_CHECKING:
     from pathlib import Path
 
 import pandas as pd
-from zen_creator import Attribute, Element, SourceInformation, Technology
+from zen_creator import Attribute, EnergySystem, SourceInformation, Technology
 from zen_creator.datasets.datasets.dataset import Dataset
 from zen_creator.datasets.datasets.metadata import MetaData
 
@@ -203,7 +203,7 @@ class TechnologyDiffusionMannhardt(Dataset[dict[str, pd.DataFrame]]):
         )
         return attr
 
-    def get_knowledge_depreciation_rate(self, element: Element) -> Attribute:
+    def get_knowledge_depreciation_rate(self, element: EnergySystem) -> Attribute:
         """
         Get the knowledge depreciation rate of the energy system.
 
@@ -226,7 +226,7 @@ class TechnologyDiffusionMannhardt(Dataset[dict[str, pd.DataFrame]]):
             ),
         )
 
-    def get_knowledge_spillover_rate(self, element: Element) -> Attribute:
+    def get_knowledge_spillover_rate(self, element: EnergySystem) -> Attribute:
         """
         Get the knowledge spillover rate between the nodes.
 
@@ -249,7 +249,7 @@ class TechnologyDiffusionMannhardt(Dataset[dict[str, pd.DataFrame]]):
             ),
         )
 
-    def _get_depreciation_rate(self, element: Element) -> float:
+    def _get_depreciation_rate(self, element: EnergySystem) -> float:
         """
         Get the knowledge depreciation rate the study is evaluated for.
         """
@@ -261,7 +261,7 @@ class TechnologyDiffusionMannhardt(Dataset[dict[str, pd.DataFrame]]):
             )
         return depreciation_rate
 
-    def get_market_share_unbounded(self, element: Element) -> Attribute:
+    def get_market_share_unbounded(self, element: EnergySystem) -> Attribute:
         """
         Get the market share that is exempt from the diffusion limit.
         """

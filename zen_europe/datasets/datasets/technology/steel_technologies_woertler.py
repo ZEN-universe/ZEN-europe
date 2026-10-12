@@ -73,7 +73,7 @@ class SteelTechnologiesWoertler(Dataset[pd.Series]):
             "EAF": 184,
         }  # Euro/(tproduct/a), Exhibit 8
         assert element.name in capex, f"CAPEX data not available for {element.name}"
-        specific_capex = capex[element.name]
+        specific_capex: float = capex[element.name]
         specific_capex *= Constants.HOURS_PER_YEAR  # Euro/(tproduct/h)
         inflation = ECBInflation(source_path=self.source_path).get_inflation_rate(
             base_year=self.MONEY_YEAR, target_year=element.settings.time.reference_year

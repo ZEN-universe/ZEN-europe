@@ -108,16 +108,19 @@ class NaturalGasAvailability(DatasetCollection):
         availability_norway_years = interpolate_missing_years(
             cast(pd.Series, entsog_gas_availability.loc["Norway", :])
         )
+        if element.settings.time.reference_year in availability_norway_years.index:
+            year_NO = element.settings.time.reference_year
+        else:
+            year_NO = availability_norway_years.index[-1]
         availability_norway = pd.Series(
-            availability_norway_years[element.settings.time.reference_year],
+            availability_norway_years[year_NO],
             index=["NO"],
         )
         import_gas = pd.concat([import_gas, availability_norway]).sort_index()
         import_gas.name = "availability_import"
         import_gas.index.name = "node"
         availability_norway_yearly_variation = (
-            availability_norway_years
-            / availability_norway_years[element.settings.time.reference_year]
+            availability_norway_years / availability_norway_years[year_NO]
         )
         availability_norway_yearly_variation = (
             availability_norway_yearly_variation.reindex(

@@ -8,7 +8,6 @@ if TYPE_CHECKING:
 import pandas as pd
 from zen_creator.datasets.datasets.dataset import Dataset
 from zen_creator.datasets.datasets.metadata import MetaData
-from zen_creator.utils.attribute import Attribute
 
 _MAP_TECHNOLOGY = {
     "Heizöl": "oil_boiler",
@@ -51,19 +50,19 @@ class EnergieSchweiz(Dataset[pd.Series]):
 
         Table 1, p.5.
         """
-        data = {
+        shares = {
             "waste_boiler_DH": 0.45,
             "biomass_boiler_DH": 0.30 + 0.01,
             "natural_gas_boiler_DH": 0.02 + 0.04,
             "heat_pump_DH": 0.04 + 0.02 + 0.02 + 0.04,
         }
-        data = pd.Series(data, name="share")
+        data = pd.Series(shares, name="share")
         data.index.name = "technology"
         data = data / data.sum()
         return data
 
     # -------- methods ------------------------
-    def get_share_DH(self) -> Attribute:
+    def get_share_DH(self) -> pd.Series:
         """
         Get the split of district heating heat demand into technology categories.
         """

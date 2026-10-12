@@ -165,15 +165,13 @@ class SMR(ConversionTechnology):
         """
         if self.settings.investment.use_existing_capacities:
             ganter_dataset = HydrogenRolloutGanter(source_path=self.source_path)
-            capacity_existing = ganter_dataset.get_capacity_existing_SMR()
-            capacity_existing = capacity_existing.to_frame(
+            raw_capacity = ganter_dataset.get_capacity_existing_SMR()
+            capacity_frame = raw_capacity.to_frame(
                 name=self.settings.time.reference_year - 1
             )
-            capacity_existing = account_for_decommissioned_capacity(
-                capacity_existing, self
-            )
-            capacity_existing.index.name = "node"
-            capacity_existing = format_capacity_existing(capacity_existing)
+            capacity_frame = account_for_decommissioned_capacity(capacity_frame, self)
+            capacity_frame.index.name = "node"
+            capacity_existing = format_capacity_existing(capacity_frame)
             attr = self.capacity_existing
             source = SourceInformation(
                 description=(

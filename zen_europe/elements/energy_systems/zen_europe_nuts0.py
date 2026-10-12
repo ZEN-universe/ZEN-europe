@@ -184,7 +184,7 @@ class EnergySystemNuts0(EnergySystem):
         if not self.settings.emissions.use_carbon_budget:
             return attr.set_data(
                 default_value=np.inf,
-                unit="tCO2",
+                unit="gigatons",
                 source=AssumptionInformation(
                     description=(
                         "The remaining carbon budget is infinite, because the "

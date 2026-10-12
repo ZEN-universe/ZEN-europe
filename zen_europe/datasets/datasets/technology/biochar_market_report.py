@@ -16,7 +16,7 @@ from zen_europe.utils.utils import (
 )
 
 
-class BiocharMarketReport(Dataset[dict[str, pd.Series]]):
+class BiocharMarketReport(Dataset[pd.DataFrame]):
     """
     Dataset class for the biochar market report.
 
@@ -40,7 +40,7 @@ class BiocharMarketReport(Dataset[dict[str, pd.Series]]):
     def _set_path(self) -> Path | None:
         return None
 
-    def _set_data(self) -> dict[str, pd.Series]:
+    def _set_data(self) -> pd.DataFrame:
         """
         Biochar production by regions/country, p. 46.
 
@@ -128,13 +128,13 @@ class BiocharMarketReport(Dataset[dict[str, pd.Series]]):
         The
         """
         attr = element.capacity_existing
-        data = self.data
-        data = calculate_capacity_addition_from_cumulative(data, element)
-        data = data * Constants.BIOCHAR_GWH_PER_TON / 8760  # GW
+        addition = calculate_capacity_addition_from_cumulative(self.data, element)
+        data = addition * Constants.BIOCHAR_GWH_PER_TON / 8760  # GW
         dea_dataset = DEA(source_path=self.source_path)
         cf = dea_dataset.get_conversion_factor_pyrolysis()
-        biochar_per_oil = next((item for item in cf if "hard_coal" in item), None)
-        biochar_per_oil = biochar_per_oil["hard_coal"]["default_value"]
+        biochar_per_oil = next(item for item in cf if "hard_coal" in item)["hard_coal"][
+            "default_value"
+        ]
 
         capacity_existing = data / biochar_per_oil
         capacity_existing = capacity_existing.stack()

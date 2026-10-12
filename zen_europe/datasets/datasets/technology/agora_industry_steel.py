@@ -3,7 +3,11 @@ from __future__ import annotations
 from pathlib import Path
 
 import pandas as pd
-from zen_creator import ConversionTechnology, SourceInformation
+from zen_creator import (
+    ConversionTechnology,
+    RetrofittingTechnology,
+    SourceInformation,
+)
 from zen_creator.datasets.datasets.dataset import Dataset
 from zen_creator.datasets.datasets.metadata import MetaData
 from zen_creator.utils.attribute import Attribute
@@ -232,7 +236,9 @@ class AgoraIndustrySteel(Dataset[pd.Series]):
             )
         return self.CARBON_CAPTURE_RATE[element.name]
 
-    def retrofit_flow_coupling_factor(self, element: ConversionTechnology) -> Attribute:
+    def retrofit_flow_coupling_factor(
+        self, element: RetrofittingTechnology
+    ) -> Attribute:
         """
         Return the retrofit flow coupling factor of a steel CCS retrofit.
 

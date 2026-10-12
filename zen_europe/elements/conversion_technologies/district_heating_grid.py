@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
+
+import pandas as pd
 
 from zen_europe.datasets.datasets.technology.technology_diffusion_mannhardt import (
     TechnologyDiffusionMannhardt,
@@ -63,7 +65,8 @@ class DistrictHeatingGrid(ConversionTechnology):
         attr = self.lifetime
         dea = DEA(source_path=self.source_path)
         data = dea.get_dh_distribution_data()
-        lifetime = int(data.loc[("suburban", "lifetime", "ref"), "value"].iloc[0])
+        rows = cast(pd.DataFrame, data.loc[("suburban", "lifetime", "ref"), :])
+        lifetime = int(rows["value"].iloc[0])
         source = SourceInformation(
             description=(
                 "The lifetime of district heating grids is based on data from the DEA "
@@ -105,9 +108,10 @@ class DistrictHeatingGrid(ConversionTechnology):
             attr = self.construction_time
             dea = DEA(source_path=self.source_path)
             data = dea.get_dh_distribution_data()
-            construction_time = int(
-                data.loc[("suburban", "construction_time", "ref"), "value"].iloc[0]
+            rows = cast(
+                pd.DataFrame, data.loc[("suburban", "construction_time", "ref"), :]
             )
+            construction_time = int(rows["value"].iloc[0])
             source = SourceInformation(
                 description=(
                     "The construction time of district heating grids is based on data "

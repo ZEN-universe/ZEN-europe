@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
+
+import pandas as pd
 
 from zen_europe.datasets.dataset_collections.technology_cost_database import (
     TechnologyCostDatabase,
@@ -100,6 +102,13 @@ class Electrolysis(ConversionTechnology):
         else:
             return self.construction_time
 
+    def _electricity_conversion_factor(self) -> float:
+        """Return the electricity input per unit of hydrogen output."""
+        cf = cast(
+            list[dict[str, dict[str, float]]], self.conversion_factor.default_value
+        )
+        return cf[0]["electricity"]["default_value"]
+
     def _set_capex_specific_conversion(self) -> Attribute:
         """
         Sets the specific capital expenditure (capex) for electrolysis.
@@ -110,10 +119,14 @@ class Electrolysis(ConversionTechnology):
         tech_db = TechnologyCostDatabase(
             settings=self.settings, source_path=self.source_path
         )
-        cf = self.conversion_factor.default_value[0]["electricity"]["default_value"]
+        cf = self._electricity_conversion_factor()
         attr = tech_db.get_capex_specific_conversion(self)
-        data = attr.df * cf
-        attr.set_data(df=data, source=attr.sources[-1])
+        if attr.df is not None:
+            data = cast(pd.Series, attr.df) * cf
+            attr.set_data(df=data, source=attr.sources[-1])
+        else:
+            value = cast(float, attr.default_value) * cf
+            attr.set_data(default_value=value, source=attr.sources[-1])
         return attr
 
     def _set_opex_specific_fixed(self) -> Attribute:
@@ -126,10 +139,14 @@ class Electrolysis(ConversionTechnology):
         tech_db = TechnologyCostDatabase(
             settings=self.settings, source_path=self.source_path
         )
-        cf = self.conversion_factor.default_value[0]["electricity"]["default_value"]
+        cf = self._electricity_conversion_factor()
         attr = tech_db.get_opex_specific_fixed(self)
-        data = attr.df * cf
-        attr.set_data(df=data, source=attr.sources[-1])
+        if attr.df is not None:
+            data = cast(pd.Series, attr.df) * cf
+            attr.set_data(df=data, source=attr.sources[-1])
+        else:
+            value = cast(float, attr.default_value) * cf
+            attr.set_data(default_value=value, source=attr.sources[-1])
         return attr
 
     def _set_opex_specific_variable(self) -> Attribute:
@@ -142,10 +159,14 @@ class Electrolysis(ConversionTechnology):
         tech_db = TechnologyCostDatabase(
             settings=self.settings, source_path=self.source_path
         )
-        cf = self.conversion_factor.default_value[0]["electricity"]["default_value"]
+        cf = self._electricity_conversion_factor()
         attr = tech_db.get_opex_specific_variable(self)
-        data = attr.default_value * cf
-        attr.set_data(default_value=data, source=attr.sources[-1])
+        if attr.df is not None:
+            data = cast(pd.Series, attr.df) * cf
+            attr.set_data(df=data, source=attr.sources[-1])
+        else:
+            value = cast(float, attr.default_value) * cf
+            attr.set_data(default_value=value, source=attr.sources[-1])
         return attr
 
     def _set_capacity_existing(self) -> Attribute:
@@ -157,10 +178,11 @@ class Electrolysis(ConversionTechnology):
         """
         if self.settings.investment.use_existing_capacities:
             hydrogen_europe_dataset = HydrogenEurope(source_path=self.source_path)
-            capacity_existing = hydrogen_europe_dataset.get_capacity_existing()
-            cf = self.conversion_factor.default_value[0]["electricity"]["default_value"]
-            capacity_existing = capacity_existing.squeeze() / cf
-            capacity_existing = format_capacity_existing(capacity_existing)
+            raw_capacity = hydrogen_europe_dataset.get_capacity_existing()
+            cf = self._electricity_conversion_factor()
+            capacity_existing = format_capacity_existing(
+                cast(pd.Series, raw_capacity.squeeze()) / cf
+            )
             attr = self.capacity_existing
             source = SourceInformation(
                 description=(

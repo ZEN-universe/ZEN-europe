@@ -255,7 +255,6 @@ class CarrierAvailability(DatasetCollection):
         data = data.sort_index() / Constants.HOURS_PER_YEAR  # from GWh/year to GW
 
         data.index.name = "node"
-        data.name = "demand"
         return data
 
     def get_kerosene_demand(self, element: Carrier) -> Attribute:

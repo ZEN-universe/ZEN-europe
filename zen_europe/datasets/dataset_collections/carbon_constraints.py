@@ -220,7 +220,9 @@ class CarbonConstraints(DatasetCollection):
         """
         sector_emissions = self.calculate_sector_emissions(energy_system)
         emissions_1990 = sector_emissions.loc[EU_1990_REFERENCE_YEAR]
-        anchor_year = self.settings.time.reference_year - 1
+        anchor_year = min(
+            self.settings.time.reference_year - 1, max(sector_emissions.index)
+        )
         last_year = self.settings.time.last_year
         target_years = pd.Index(
             [anchor_year, EU_2030_TARGET_YEAR, EU_2040_TARGET_YEAR, last_year],

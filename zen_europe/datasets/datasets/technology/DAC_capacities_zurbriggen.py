@@ -94,9 +94,8 @@ class DACCapacitiesZurbriggen(Dataset[pd.DataFrame]):
         attr = element.capacity_existing
         data = (
             self.data[["node", "year_construction", "Capacity"]]
-            .groupby(["node", "year_construction"])
+            .groupby(["node", "year_construction"])["Capacity"]
             .sum()
-            .squeeze()
         )
         if not self.settings.investment.set_future_CCS_investments:
             reference_year = self.settings.time.reference_year

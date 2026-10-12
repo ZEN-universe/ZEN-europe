@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from typing import TYPE_CHECKING, Any, Dict
 
 import pandas as pd
@@ -73,6 +74,14 @@ class NuclearMaxLoad(DatasetCollection):
         )
 
         ref_year = element.settings.time.reference_year
+        last_entsoe_year = entsoe_db.last_entsoe_year
+        if ref_year > last_entsoe_year:
+            logging.info(
+                f"Reference year {ref_year} is after the last "
+                f"available ENTSO-E year {last_entsoe_year}. "
+                f"Using {last_entsoe_year} instead."
+            )
+            ref_year = last_entsoe_year
         years = range(ref_year - self.NUM_PAST_YEARS, ref_year + 1)
         nodal_ml_by_year = {}
         total_ml_by_year = {}

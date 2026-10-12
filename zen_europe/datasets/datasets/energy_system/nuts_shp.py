@@ -11,7 +11,7 @@ from zen_creator.datasets.datasets.metadata import MetaData
 from zen_creator.utils.attribute import Attribute, SourceInformation
 
 if TYPE_CHECKING:
-    from zen_creator.elements.element import Element
+    from zen_creator.elements.energy_systems.energy_system import EnergySystem
 
 
 class NUTSshp(Dataset[pd.DataFrame]):
@@ -73,7 +73,7 @@ class NUTSshp(Dataset[pd.DataFrame]):
         set_edges = nodes_in_edges.drop(columns=0)
         return set_edges.reset_index().set_index("edge")
 
-    def get_set_edges(self, element: Element) -> Attribute:
+    def get_set_edges(self, element: EnergySystem) -> Attribute:
         """
         Creates edges between adjacent NUTS regions.
 
@@ -101,7 +101,7 @@ class NUTSshp(Dataset[pd.DataFrame]):
             ),
         )
 
-    def get_set_nodes(self, element: Element) -> Attribute:
+    def get_set_nodes(self, element: EnergySystem) -> Attribute:
         """
         Extract the centroid of all nodes specified in the config.
 

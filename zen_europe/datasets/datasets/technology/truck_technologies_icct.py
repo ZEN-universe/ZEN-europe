@@ -194,7 +194,9 @@ class TruckTechnologiesICCT(Dataset[dict[str, pd.DataFrame]]):
             unit="Euro/tkm",
         )
 
-    def get_capex_specific_conversion(self, element: ConversionTechnology) -> pd.Series:
+    def get_capex_specific_conversion(
+        self, element: ConversionTechnology
+    ) -> tuple[pd.Series, str]:
         """
         Get the specific conversion capital expenditure (CAPEX) of the specified
         conversion technology element.
@@ -221,7 +223,7 @@ class TruckTechnologiesICCT(Dataset[dict[str, pd.DataFrame]]):
             raise ValueError(
                 f"Specific conversion CAPEX for {element.name} is not defined."
             )
-        data = pd.Series(capex_specific_conversion[element.name])
+        data = pd.Series(capex_specific_conversion[element.name], dtype=float)
         data = interpolate_missing_years(data)
         data = data / self.HOURLY_TONNE_MILEAGE
         inflation = self.get_inflation_rate(

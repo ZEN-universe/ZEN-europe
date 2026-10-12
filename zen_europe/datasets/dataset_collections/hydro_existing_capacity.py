@@ -74,7 +74,8 @@ class HydroExistingCapacity(DatasetCollection):
         """
         entsoe_dataset = cast(ENTSOE, self.data["entsoe"])
         data_entsoe = entsoe_dataset.get_capacity_existing(
-            psr_type=element.ENTSOE_PSR, year=element.settings.time.year_time_series
+            psr_type=element.ENTSOE_PSR,  # type: ignore[attr-defined]
+            year=element.settings.time.year_time_series,
         )
         data_entsoe = data_entsoe.droplevel(1)
         data_entsoe.name = "capacity_existing"
@@ -173,7 +174,8 @@ class HydroExistingCapacity(DatasetCollection):
         data_ppm = cast(pd.Series, ppm_dataset.get_capacity_existing(element).df)
         total_capacity_ppm = data_ppm.groupby(level=0).sum()
         data_entsoe = entsoe_dataset.get_capacity_existing(
-            psr_type=element.ENTSOE_PSR, year=element.settings.time.year_time_series
+            psr_type=element.ENTSOE_PSR,  # type: ignore[attr-defined]
+            year=element.settings.time.year_time_series,
         )
         data_entsoe = data_entsoe.droplevel(1)
         data_glohydrores = glohydrores_dataset.get_capacity_existing(element)

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 from zen_europe.datasets.datasets.technology.gie_lng_map import GIELNGMap
 from zen_europe.datasets.datasets.technology.lng_regasification_toledano import (
@@ -18,6 +18,7 @@ if TYPE_CHECKING:
     from zen_creator.model import Model
 
 import numpy as np
+import pandas as pd
 from zen_creator import (
     AssumptionInformation,
     Attribute,
@@ -162,7 +163,10 @@ class LNGTerminal(ConversionTechnology):
             Attribute: An Attribute object containing the capacity limit data.
         """
         attr = self.capacity_limit
-        data = self.capacity_existing.df
+        data = cast(pd.Series, self.capacity_existing.df)
+        if data is None:
+            gie_lng_map = GIELNGMap(source_path=self.source_path)
+            data = gie_lng_map._calculate_capacity_existing_lng(self)
         capacity_limit = data.groupby(level=0).sum()
         capacity_limit.loc[:] = np.inf
         capacity_limit.name = "capacity_limit"

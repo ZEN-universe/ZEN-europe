@@ -104,7 +104,6 @@ class SteelDemand(DatasetCollection):
 
         d = d * rat_start
         d.index.name = "node"
-        d.name = "demand"
 
         years = element.settings.time.years
 

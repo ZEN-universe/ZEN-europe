@@ -7,7 +7,7 @@ from zen_creator.datasets.datasets.dataset import Dataset
 from zen_creator.datasets.datasets.metadata import MetaData
 
 
-class HydrogenEurope(Dataset[dict[str, pd.Series]]):
+class HydrogenEurope(Dataset[pd.DataFrame]):
     """
     EuroCalliope dataset class for potential capacity.
 
@@ -33,21 +33,18 @@ class HydrogenEurope(Dataset[dict[str, pd.Series]]):
             raise ValueError("source_path must be set to load the dataset.")
         return self.source_path / "03-technology" / "capacity_existing" / "electrolysis"
 
-    def _set_data(self) -> dict[str, pd.Series]:
+    def _set_data(self) -> pd.DataFrame:
         data = pd.read_excel(
             self.path / "extracted_capacity_additions.xlsx", sheet_name="final"
         )
         return data
 
     # -------- methods ------------------------
-    def get_capacity_existing(self) -> pd.Series:
+    def get_capacity_existing(self) -> pd.DataFrame:
         """
         Get the existing capacity for electrolysis technologies.
 
         Returns:
-            pd.Series: A pandas Series containing the existing capacity data.
+            pd.DataFrame: A single-column DataFrame with the existing capacity data.
         """
-        capacity_existing = self.data
-        capacity_existing = capacity_existing.set_index(["node", "year_construction"])
-        capacity_existing.name = "capacity_existing"
-        return capacity_existing
+        return self.data.set_index(["node", "year_construction"])

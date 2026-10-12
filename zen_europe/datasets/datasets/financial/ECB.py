@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from datetime import datetime
 from pathlib import Path
 
@@ -123,6 +124,12 @@ class ECBInflation(Dataset[pd.DataFrame]):
             by = base_year
             ty = target_year
             exp = 1
+        if ty - 1 not in self.data.index:
+            logging.info(
+                f"Target year {ty} is after the last available ECB year "
+                f"{self.data.index[-1]}. Using {self.data.index[-1]} instead."
+            )
+            ty = self.data.index[-1] + 1
         inflation_rates = pd.to_numeric(
             self.data.loc[by : ty - 1, "inflation_rate"],
             errors="raise",

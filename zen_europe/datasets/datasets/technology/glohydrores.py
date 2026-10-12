@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 import os
 from pathlib import Path
+from typing import cast
 
 import pandas as pd
 from zen_creator.datasets.datasets.dataset import Dataset
@@ -11,7 +12,7 @@ from zen_creator.datasets.datasets.metadata import MetaData
 from zen_europe.utils.utils import convert_country_names
 
 
-class GloHydroRes(Dataset[pd.DataFrame]):
+class GloHydroRes(Dataset[pd.Series]):
     """
     GloHydroRes Database dataset class.
 
@@ -52,7 +53,7 @@ class GloHydroRes(Dataset[pd.DataFrame]):
             raise ValueError("source_path must be set to load the dataset.")
         return Path(self.source_path) / "03-technology" / "capacity_existing"
 
-    def _set_data(self) -> pd.DataFrame:
+    def _set_data(self) -> pd.Series:
         if not (
             os.path.exists(self.path / "glohydrores_data.feather")
             and os.path.exists(self.path / "glohydrores_data_raw.feather")
@@ -77,7 +78,10 @@ class GloHydroRes(Dataset[pd.DataFrame]):
             )
             data.to_feather(self.path / "glohydrores_data_raw.feather")
         else:
-            data_agg = pd.read_feather(self.path / "glohydrores_data.feather").squeeze()
+            data_agg = cast(
+                pd.Series,
+                pd.read_feather(self.path / "glohydrores_data.feather").squeeze(),
+            )
 
         return data_agg / 1000
 

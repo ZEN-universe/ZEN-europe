@@ -107,8 +107,8 @@ class StorageTechnologiesVictoria(Dataset[pd.DataFrame]):
     def _set_data(self) -> pd.DataFrame:
         rows = []
         for technology, (power, energy) in self.COMPONENTS.items():
-            power_cost = self.OVERNIGHT_COST.get(power, {})
-            opex_share = self.FIXED_OPEX_SHARE.get(power, 0.0)
+            power_cost = self.OVERNIGHT_COST.get(power, {}) if power else {}
+            opex_share = self.FIXED_OPEX_SHARE.get(power, 0.0) if power else 0.0
             for year, cost_energy in self.OVERNIGHT_COST[energy].items():
                 cost_power = power_cost.get(year, 0.0)
                 rows.append(

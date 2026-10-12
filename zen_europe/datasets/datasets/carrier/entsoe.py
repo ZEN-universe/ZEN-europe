@@ -176,6 +176,7 @@ class ENTSOE(Dataset[pd.DataFrame]):
     ):
         self.settings = settings
         self.set_nodes = set_nodes
+        self.last_entsoe_year = datetime.now().year - 1
         self._client: EntsoeRawClient | None = None
         super().__init__(source_path=source_path)
 
@@ -287,7 +288,7 @@ class ENTSOE(Dataset[pd.DataFrame]):
             psr_type: ENTSO-E production-type code, e.g. "B14" for nuclear.
             year: Year to query; defaults to `settings.time.reference_year`.
         """
-        year = year if year is not None else self.settings.time.reference_year
+        year = year if year is not None else self.last_entsoe_year
         generation = self._cached_query(
             f"generation_{psr_type}_{year}",
             lambda: self._query_generation(psr_type, year),
@@ -308,7 +309,7 @@ class ENTSOE(Dataset[pd.DataFrame]):
             psr_type: ENTSO-E production-type code, e.g. "B14" for nuclear.
             year: Year to query; defaults to `settings.time.reference_year`.
         """
-        year = year if year is not None else self.settings.time.reference_year
+        year = year if year is not None else self.last_entsoe_year
         capacity = self._cached_query(
             f"capacity_{psr_type}_{year}",
             lambda: self._query_capacity_existing(psr_type, year),
@@ -326,6 +327,14 @@ class ENTSOE(Dataset[pd.DataFrame]):
         need to substitute their own assumption.
         """
         year = self.settings.time.reference_year - 1
+        last_entsoe_year = self.last_entsoe_year
+        if year > last_entsoe_year:
+            logging.info(
+                f"Reference year {year} is after the last "
+                f"available ENTSO-E year {last_entsoe_year}. "
+                f"Using {last_entsoe_year} instead."
+            )
+            year = last_entsoe_year
         monthly = self.settings.data_source.use_monthly_entsoe_ntc
         cache_name = (
             f"transmission_capacity_{'monthly' if monthly else 'yearly'}_{year}"
@@ -344,6 +353,13 @@ class ENTSOE(Dataset[pd.DataFrame]):
 
     def _query_demand(self) -> pd.DataFrame:
         year = self.settings.time.year_time_series
+        year_entsoe = self.last_entsoe_year
+        if year > year_entsoe:
+            logging.info(
+                f"Year {year} is after the last available ENTSO-E year "
+                f"{year_entsoe}. Using {year_entsoe} instead."
+            )
+            year = year_entsoe
         start, end = self._year_bounds(year)
         demand = pd.DataFrame(
             index=pd.date_range(start, end, freq="1h", inclusive="left")
@@ -380,6 +396,13 @@ class ENTSOE(Dataset[pd.DataFrame]):
         return demand
 
     def _query_generation(self, psr_type: str, year: int) -> pd.DataFrame:
+        year_entsoe = self.last_entsoe_year
+        if year > year_entsoe:
+            logging.info(
+                f"Year {year} is after the last available ENTSO-E year "
+                f"{year_entsoe}. Using {year_entsoe} instead."
+            )
+            year = year_entsoe
         start, end = self._year_bounds(year)
         generation = pd.DataFrame(
             index=pd.date_range(start, end, freq="1h", inclusive="left")
@@ -412,6 +435,13 @@ class ENTSOE(Dataset[pd.DataFrame]):
         return generation
 
     def _query_capacity_existing(self, psr_type: str, year: int) -> pd.Series:
+        year_entsoe = self.last_entsoe_year
+        if year > year_entsoe:
+            logging.info(
+                f"Year {year} is after the last available ENTSO-E year "
+                f"{year_entsoe}. Using {year_entsoe} instead."
+            )
+            year = year_entsoe
         start, end = self._year_bounds(year)
         capacity: dict[str, float] = {}
         for idx, node in enumerate(self.set_nodes):
@@ -450,6 +480,14 @@ class ENTSOE(Dataset[pd.DataFrame]):
         )
 
     def _query_transmission_capacity(self, year: int, monthly: bool) -> pd.Series:
+        year_entsoe = self.last_entsoe_year
+        if year > year_entsoe:
+            logging.info(
+                f"Reference year {year} is after the last "
+                f"available ENTSO-E year {year_entsoe}. "
+                f"Using {year_entsoe} instead."
+            )
+            year = year_entsoe
         start, end = self._year_bounds(year)
         edges = sorted(
             (node_from, node_to)
@@ -460,7 +498,7 @@ class ENTSOE(Dataset[pd.DataFrame]):
         capacity: dict[str, float] = {}
         for idx, (node_from, node_to) in enumerate(edges):
             logger.info(
-                f"Querying ENTSO-E transmission capacity from"
+                f"Querying ENTSO-E transmission capacity from "
                 f"{node_from} to {node_to} - {idx + 1}/{len(edges)}"
             )
             capacity[f"{node_from}-{node_to}"] = self._query_ntc(
@@ -495,7 +533,7 @@ class ENTSOE(Dataset[pd.DataFrame]):
                 )
         except _SKIP_ERRORS:
             logger.info(
-                f"No transmission capacity data found" f"from {node_from} to {node_to}"
+                f"No transmission capacity data found " f"from {node_from} to {node_to}"
             )
             return float("nan")
         except requests.RequestException as exc:

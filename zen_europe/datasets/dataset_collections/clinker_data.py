@@ -86,7 +86,6 @@ class ClinkerData(DatasetCollection):
         data = data.sort_index() / 8.76 * aidres_dataset.get_CEM2_clinker_ratio()
 
         data.index.name = "node"
-        data.name = "demand"
         return data
 
     def get_clinker_demand(self, element: Carrier) -> Attribute:

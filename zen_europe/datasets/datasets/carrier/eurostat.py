@@ -183,8 +183,20 @@ class Eurostat(Dataset[pd.DataFrame]):
     def __init__(self, settings: Settings, source_path: Path | str | None = None):
         self.settings = settings
 
-        self.eurostat_year = self.settings.time.reference_year - 1
-        self.eurostat_year_time_series = self.settings.time.year_time_series
+        last_eurostat_year = int(
+            es.get_toc_df(agency="EUROSTAT", dataset="nrg_bal_c")["data end"].squeeze()
+        )
+        eurostat_year = min(last_eurostat_year, self.settings.time.reference_year - 1)
+        if self.settings.time.reference_year - 1 > last_eurostat_year:
+            logging.info(
+                f"Reference year {self.settings.time.reference_year} is after the last"
+                f"available Eurostat year {last_eurostat_year}. "
+                f"Using {eurostat_year} instead."
+            )
+        self.eurostat_year = eurostat_year
+        self.eurostat_year_time_series = min(
+            eurostat_year, self.settings.time.year_time_series
+        )
 
         super().__init__(source_path=source_path)
 

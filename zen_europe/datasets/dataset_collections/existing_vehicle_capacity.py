@@ -395,15 +395,16 @@ class ExistingVehicleCapacity(DatasetCollection):
             element=truck_mileage
         )
         capex = capex / peak_demand_share.mean()
+        capex_df: pd.Series | None = capex
         default_value = None
         if not element.settings.cost.use_learning_curves:
             # the cost stays at the value of the reference year in all years
             default_value = float(capex.loc[element.settings.time.reference_year])
-            capex = None
+            capex_df = None
         attr = element.capex_specific_conversion
         return attr.set_data(
             default_value=default_value,
-            df=capex,
+            df=capex_df,
             source=SourceInformation(
                 description=(
                     f"The specific conversion CAPEX of {element.name} is sourced from "

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from pathlib import Path
+from typing import cast
 
 import pandas as pd
 import requests
@@ -130,7 +131,7 @@ class WorldBankPopulation(Dataset[pd.DataFrame]):
         Args:
             years (list[int] | None): Years to return, all years if None.
         """
-        population = self.data.loc[WORLD]
+        population = cast(pd.Series, self.data.loc[WORLD])
         return population if years is None else population[years]
 
     def get_population_share(

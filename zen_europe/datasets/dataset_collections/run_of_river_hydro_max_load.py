@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from typing import TYPE_CHECKING, Any, Dict, cast
 
 from zen_europe.datasets.dataset_collections.hydro_existing_capacity import (
@@ -72,6 +73,13 @@ class RunOfRiverHydroMaxLoad(DatasetCollection):
             PanEuropeanClimateDatabase, self.data["pan_european_climate_database"]
         )
         year = element.settings.time.year_time_series
+        last_entsoe_year = entsoe_dataset.last_entsoe_year
+        if year > last_entsoe_year:
+            logging.info(
+                f"Year {year} is after the last available ENTSO-E year "
+                f"{last_entsoe_year}. Using {last_entsoe_year} instead."
+            )
+            year = last_entsoe_year
         generation = entsoe_dataset.get_generation(
             psr_type=self.ENTSOE_PSR_ROR, year=year
         )
@@ -109,7 +117,6 @@ class RunOfRiverHydroMaxLoad(DatasetCollection):
         ].max(axis=0)
 
         max_load.index.name = "time"
-        max_load.name = "max_load"
         source = SourceInformation(
             description=(
                 "Maximum load data for run-of-river hydro technologies is derived from "

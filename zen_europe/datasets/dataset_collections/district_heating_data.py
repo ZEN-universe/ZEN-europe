@@ -170,7 +170,7 @@ class DistrictHeatingData(DatasetCollection):
         """
         eurostat_dataset = cast(Eurostat, self.data["eurostat"])
         share_regions = eurostat_dataset.get_population_by_urbanization()
-        share_regions = share_regions[element.settings.time.reference_year].unstack()
+        share_regions = share_regions[eurostat_dataset.eurostat_year].unstack()
         hre = cast(HRE, self.data["hre"])
         potential = cast(pd.Series, hre.get_district_heating_potential().squeeze())
         missing_countries = pd.Index(element.model.config.system.set_nodes).difference(

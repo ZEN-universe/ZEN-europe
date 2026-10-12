@@ -109,10 +109,12 @@ class OilToKeroseneConversion(ConversionTechnology):
             carr_ava = CarrierAvailability(
                 source_path=self.source_path, settings=self.settings
             )
-            ex_cap = (carr_ava.get_raw_kerosene_demand(self)).squeeze()
-            ex_cap = ex_cap.to_frame(name=self.settings.time.reference_year - 1)
-            ex_cap = calculate_capacity_addition_from_cumulative(ex_cap, element=self)
-            ex_cap = format_capacity_existing(ex_cap)
+            demand = carr_ava.get_raw_kerosene_demand(self).iloc[:, 0]
+            cumulative = demand.to_frame(name=self.settings.time.reference_year - 1)
+            addition = calculate_capacity_addition_from_cumulative(
+                cumulative, element=self
+            )
+            ex_cap = format_capacity_existing(addition)
             attr.set_data(
                 df=ex_cap,
                 source=SourceInformation(

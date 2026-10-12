@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import TYPE_CHECKING
 
 import pandas as pd
@@ -157,7 +158,7 @@ class DEACarbonTransport(Dataset[dict[str, pd.DataFrame]]):
         return self.get_opex_fixed_onshore(technology)
 
     def _get_cost_per_distance(
-        self, costs: dict[str, float], technology: TransportTechnology, variable: str
+        self, costs: Mapping[str, float], technology: TransportTechnology, variable: str
     ) -> float:
         """
         Get a distance-specific cost, corrected for inflation.

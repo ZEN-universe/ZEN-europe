@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 from zen_creator.datasets.datasets.dataset import Dataset
 from zen_creator.datasets.datasets.metadata import MetaData
-from zen_creator.elements.element import Element
+from zen_creator.elements.energy_systems.energy_system import EnergySystem
 from zen_creator.utils.attribute import Attribute, SourceInformation
 
 
@@ -44,7 +44,7 @@ class TYNDP_2020_edges(Dataset[Dict[str, pd.DataFrame]]):
 
         return {"nodes": nodes, "edges": edges}
 
-    def get_set_edges(self, element: Element) -> Attribute:
+    def get_set_edges(self, element: EnergySystem) -> Attribute:
 
         # get list of nodes used in the model
         set_nodes = np.array(element.model.config.system.set_nodes)

@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
+
+import pandas as pd
 
 from zen_europe.datasets.dataset_collections.hydro_existing_capacity import (
     HydroExistingCapacity,
@@ -169,7 +171,7 @@ class RunOfRiverHydro(ConversionTechnology):
             Attribute: An Attribute object containing the capacity limit data.
         """
         attr = self.capacity_limit
-        data = self.capacity_existing.df
+        data = cast(pd.Series, self.capacity_existing.df)
         capacity_limit = data.groupby(level=0).sum()
         capacity_limit.name = "capacity_limit"
         attr.set_data(
@@ -179,7 +181,9 @@ class RunOfRiverHydro(ConversionTechnology):
                     "The capacity limit is set to the sum of the"
                     "historical capacity additions across all years."
                 ),
-                metadata=self.capacity_existing.sources[-1].metadata,
+                metadata=cast(
+                    SourceInformation, self.capacity_existing.sources[-1]
+                ).metadata,
             ),
             unit="GW",
         )

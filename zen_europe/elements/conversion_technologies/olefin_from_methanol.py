@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 from zen_europe.datasets.datasets.carrier.aidres import Aidres
 from zen_europe.datasets.datasets.technology.technology_diffusion_mannhardt import (
@@ -67,7 +67,7 @@ class OlefinFromMethanol(ConversionTechnology):
                     "to the lifetime of methanol from natural gas, "
                     "assuming a standard industrial technology lifetime."
                 ),
-                metadata=m_ng.lifetime.sources[-1].metadata,
+                metadata=cast(SourceInformation, m_ng.lifetime.sources[-1]).metadata,
             ),
         )
         return attr
@@ -90,7 +90,9 @@ class OlefinFromMethanol(ConversionTechnology):
                         "from natural gas, assuming a standard "
                         "industrial construction timeline."
                     ),
-                    metadata=m_ng.construction_time.sources[-1].metadata,
+                    metadata=cast(
+                        SourceInformation, m_ng.construction_time.sources[-1]
+                    ).metadata,
                 ),
             )
             return attr
