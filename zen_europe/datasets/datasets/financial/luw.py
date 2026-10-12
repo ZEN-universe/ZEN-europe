@@ -9,12 +9,12 @@ import pandas as pd
 from zen_creator.datasets.datasets.dataset import Dataset
 from zen_creator.datasets.datasets.metadata import MetaData
 
-from zen_europe.utils.constants import Constants
 from zen_europe.datasets.datasets.financial._cost_schema import (
     CO2_BASIS_UNITS,
     INDEX_NAMES,
     VALUE_COLUMNS,
 )
+from zen_europe.utils.constants import Constants
 
 # internal technology name -> LUW technology label. DAC is reported on a
 # tCO2 basis rather than the power/heat Euro/kW schema used by every other
@@ -54,7 +54,11 @@ _TECHS: dict[str, str] = {
     "SMR": "Steam Methane Reforming",
     "DAC": "CO_{2} direct air capture",
 }
-_VARIABLES: dict[str, str] = {"capex": "Capex", "fopex": "Opex fix", "vopex": "Opex var"}
+_VARIABLES: dict[str, str] = {
+    "capex": "Capex",
+    "fopex": "Opex fix",
+    "vopex": "Opex var",
+}
 _MONEY_YEAR_SRC = 2020
 
 
@@ -118,10 +122,14 @@ class LUW(Dataset[pd.DataFrame]):
     def _set_metadata(self) -> MetaData:
         return MetaData(
             name=self.name,
-            title="Reflecting the energy transition from a European perspective and in the global context—Relevance of solar photovoltaics benchmarking two ambitious scenarios",
+            title=(
+                "Reflecting the energy transition from a European perspective and in "
+                "the global context—Relevance of solar photovoltaics benchmarking two "
+                "ambitious scenarios"
+            ),
             author=[
-                "Christian Breyer", 
-                "Dmitrii Bogdanov", 
+                "Christian Breyer",
+                "Dmitrii Bogdanov",
                 "Manish Ram",
                 "Siavash Khalili",
                 "Eero Vartiainen",
@@ -129,12 +137,12 @@ class LUW(Dataset[pd.DataFrame]):
                 "Eduardo Román Medina",
                 "Gaetan Masson",
                 "Arman Aghahosseini",
-                "Theophilus N. O. Mensah"
-                "Gabriel Lopez",
+                "Theophilus N. O. Mensah" "Gabriel Lopez",
                 "Michael Schmela",
                 "Raffaele Rossi",
                 "Walburga Hemetsberger",
-                "Arnulf Jaeger-Waldau"],
+                "Arnulf Jaeger-Waldau",
+            ],
             publication="Progress in Photovoltaics",
             publication_year=2022,
             url="https://onlinelibrary.wiley.com/doi/10.1002/pip.3659",
@@ -170,8 +178,11 @@ class LUW(Dataset[pd.DataFrame]):
                     schema_unit = CO2_BASIS_UNITS[variable]
                 else:
                     multiplier = _convert_to_schema_unit(unit_src, variable)
-                    schema_unit = "Euro/MWh" if variable == "vopex" else (
-                        "Euro/kW" if variable == "capex" else "Euro/kW")
+                    schema_unit = (
+                        "Euro/MWh"
+                        if variable == "vopex"
+                        else ("Euro/kW" if variable == "capex" else "Euro/kW")
+                    )
                 for year in year_columns:
                     year = int(year)
                     value_src = values[year]
@@ -179,15 +190,26 @@ class LUW(Dataset[pd.DataFrame]):
                         continue
                     rows.append(
                         (
-                            technology, "M", "ref", variable, year,
-                            float(value_src) * multiplier, schema_unit,
-                            _MONEY_YEAR_SRC, float(value_src), unit_src,
+                            technology,
+                            "M",
+                            "ref",
+                            variable,
+                            year,
+                            float(value_src) * multiplier,
+                            schema_unit,
+                            _MONEY_YEAR_SRC,
+                            float(value_src),
+                            unit_src,
                         )
                     )
             if "Lifetime" in tech_rows.index.get_level_values("Variable"):
                 lt_sel = tech_rows.loc["Lifetime"]
-                lt_unit = lt_sel.index[0] if isinstance(lt_sel, pd.DataFrame) else lt_sel.name
-                lt_values = lt_sel.iloc[0] if isinstance(lt_sel, pd.DataFrame) else lt_sel
+                lt_unit = (
+                    lt_sel.index[0] if isinstance(lt_sel, pd.DataFrame) else lt_sel.name
+                )
+                lt_values = (
+                    lt_sel.iloc[0] if isinstance(lt_sel, pd.DataFrame) else lt_sel
+                )
                 for year in year_columns:
                     year = int(year)
                     value_src = lt_values[year]
@@ -195,8 +217,16 @@ class LUW(Dataset[pd.DataFrame]):
                         continue
                     rows.append(
                         (
-                            technology, "M", "ref", "lifetime", year,
-                            float(value_src), "1", None, float(value_src), lt_unit,
+                            technology,
+                            "M",
+                            "ref",
+                            "lifetime",
+                            year,
+                            float(value_src),
+                            "1",
+                            None,
+                            float(value_src),
+                            lt_unit,
                         )
                     )
         data = pd.DataFrame(rows, columns=INDEX_NAMES + VALUE_COLUMNS)

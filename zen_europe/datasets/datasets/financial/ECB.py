@@ -127,7 +127,7 @@ class ECBInflation(Dataset[pd.DataFrame]):
             self.data.loc[by : ty - 1, "inflation_rate"],
             errors="raise",
         )
-        return float((inflation_rates.to_numpy(dtype=float).prod())**exp)
+        return float((inflation_rates.to_numpy(dtype=float).prod()) ** exp)
 
 
 class ECBDollar2Euro(Dataset[pd.DataFrame]):
@@ -186,4 +186,4 @@ class ECBDollar2Euro(Dataset[pd.DataFrame]):
             self.data.loc[year, "euro2dollar"],
             errors="raise",
         )
-        return 1/euro2dollar
+        return 1 / euro2dollar

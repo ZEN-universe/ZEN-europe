@@ -64,7 +64,8 @@ class ECProjectsOfCommonInterest(Dataset[pd.DataFrame]):
 
     # -------- methods ------------------------
     def get_capacity_addition_unbounded(
-            self, technology: TransportTechnology) -> Attribute:
+        self, technology: TransportTechnology
+    ) -> Attribute:
         """
         Get the unbounded capacity addition of a transport technology.
         """

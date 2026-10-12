@@ -36,24 +36,19 @@ class BiomassBoiler(ConversionTechnology):
         """
         Sets the reference carrier of biomass boilers to heat.
         """
-        return Attribute(
-            name="reference_carrier", default_value=["heat"], element=self
-        )
+        return Attribute(name="reference_carrier", default_value=["heat"], element=self)
 
     def _set_input_carrier(self) -> Attribute:
         """
         Sets the input carrier of biomass boilers to biomass.
         """
-        return Attribute(
-            name="input_carrier", default_value=["biomass"], element=self)
+        return Attribute(name="input_carrier", default_value=["biomass"], element=self)
 
     def _set_output_carrier(self) -> Attribute:
         """
         Set the output carrier of biomass boilers to heat.
         """
-        return Attribute(
-            name="output_carrier", default_value=["heat"], element=self
-        )
+        return Attribute(name="output_carrier", default_value=["heat"], element=self)
 
     # ---------- Required methods that are called during object build ----------
 
@@ -63,8 +58,8 @@ class BiomassBoiler(ConversionTechnology):
 
         """
         tech_db = TechnologyCostDatabase(
-            settings=self.settings, 
-            source_path=self.source_path)
+            settings=self.settings, source_path=self.source_path
+        )
         return tech_db.get_lifetime(self)
 
     def _set_conversion_factor(self) -> Attribute:
@@ -74,24 +69,21 @@ class BiomassBoiler(ConversionTechnology):
         """
         attr = self.conversion_factor
         tech_db = TechnologyCostDatabase(
-            settings=self.settings, 
-            source_path=self.source_path)
+            settings=self.settings, source_path=self.source_path
+        )
         eff, agencies = tech_db.get_efficiency(self)
         eff = eff.loc[self.settings.time.reference_year]
-        cf = [{"biomass": {
-            "default_value": 1/eff, "unit": "GW/GW"
-            }
-            }
-        ]
+        cf = [{"biomass": {"default_value": 1 / eff, "unit": "GW/GW"}}]
         source = SourceInformation(
             description=(
-                f"The conversion factor of biomass boilers is based on data from {', '.join(agencies)}. "
+                "The conversion factor of biomass boilers is based on data from "
+                f"{', '.join(agencies)}. "
             ),
             metadata=tech_db.metadata,
         )
         attr.set_data(default_value=cf, source=source)
         return attr
-    
+
     def _set_construction_time(self) -> Attribute:
         """
         Sets the construction time of biomass boilers.
@@ -100,16 +92,18 @@ class BiomassBoiler(ConversionTechnology):
         if self.settings.investment.use_construction_times:
             attr = self.construction_time
             attr.set_data(
-                default_value=0, 
+                default_value=0,
                 source=AssumptionInformation(
-                description=(
-                    "The construction time of biomass boilers is assumed to be 0 years."
-                )
-            ))
+                    description=(
+                        "The construction time of biomass boilers is assumed to be 0 "
+                        "years."
+                    )
+                ),
+            )
             return attr
         else:
             return self.construction_time
-        
+
     def _set_capex_specific_conversion(self) -> Attribute:
         """
         Sets the specific capital expenditure (capex) for biomass boilers.
@@ -118,9 +112,10 @@ class BiomassBoiler(ConversionTechnology):
             Attribute: An Attribute object containing the specific capex data.
         """
         tech_db = TechnologyCostDatabase(
-                    settings=self.settings, source_path=self.source_path)
+            settings=self.settings, source_path=self.source_path
+        )
         return tech_db.get_capex_specific_conversion(self)
-    
+
     def _set_opex_specific_fixed(self) -> Attribute:
         """
         Sets the specific fixed operational expenditure (opex) for biomass boilers.
@@ -129,9 +124,10 @@ class BiomassBoiler(ConversionTechnology):
             Attribute: An Attribute object containing the specific fixed opex data.
         """
         tech_db = TechnologyCostDatabase(
-            settings=self.settings, source_path=self.source_path)
+            settings=self.settings, source_path=self.source_path
+        )
         return tech_db.get_opex_specific_fixed(self)
-    
+
     def _set_opex_specific_variable(self) -> Attribute:
         """
         Sets the specific variable operational expenditure (opex) for biomass boilers.
@@ -140,9 +136,10 @@ class BiomassBoiler(ConversionTechnology):
             Attribute: An Attribute object containing the specific variable opex data.
         """
         tech_db = TechnologyCostDatabase(
-            settings=self.settings, source_path=self.source_path)
+            settings=self.settings, source_path=self.source_path
+        )
         return tech_db.get_opex_specific_variable(self)
-    
+
     def _set_capacity_existing(self) -> Attribute:
         """
         Sets the existing capacity for biomass boilers.
@@ -152,7 +149,8 @@ class BiomassBoiler(ConversionTechnology):
         """
         if self.settings.investment.use_existing_capacities:
             heat_demand_dataset = HeatDemand(
-                settings=self.settings, source_path=self.source_path)
+                settings=self.settings, source_path=self.source_path
+            )
             return heat_demand_dataset.get_capacity_existing(self)
         else:
             attr = self.capacity_existing
@@ -160,9 +158,7 @@ class BiomassBoiler(ConversionTechnology):
                 default_value=0,
                 df=None,
                 source=AssumptionInformation(
-                    description=(
-                        "We do not consider existing capacities."
-                    ),
+                    description=("We do not consider existing capacities."),
                 ),
             )
             return attr
@@ -175,7 +171,8 @@ class BiomassBoiler(ConversionTechnology):
             Attribute: An Attribute object containing the maximum load data.
         """
         heat_demand_dataset = HeatDemand(
-            settings=self.settings, source_path=self.source_path)
+            settings=self.settings, source_path=self.source_path
+        )
 
         return heat_demand_dataset.get_max_load(self)
 

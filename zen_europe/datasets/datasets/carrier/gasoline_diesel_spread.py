@@ -5,10 +5,9 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from pathlib import Path
 
+import pandas as pd
 from zen_creator.datasets.datasets.dataset import Dataset
 from zen_creator.datasets.datasets.metadata import MetaData
-
-import pandas as pd
 
 
 class GasolineDieselSpread(Dataset[pd.DataFrame]):
@@ -25,9 +24,7 @@ class GasolineDieselSpread(Dataset[pd.DataFrame]):
     def _set_metadata(self) -> MetaData:
         return MetaData(
             name=self.name,
-            title=(
-                "Is the refining margin stationary?"
-            ),
+            title=("Is the refining margin stationary?"),
             author=["Javier Población", "Gregorio Serna"],
             publication="International Review of Economics & Finance",
             publication_year=2016,
@@ -43,12 +40,12 @@ class GasolineDieselSpread(Dataset[pd.DataFrame]):
 
     # -------- methods ------------------------
     def get_crack_spread(self) -> int:
-        """ sets the manual data for the gasoline-diesel spread 
+        """sets the manual data for the gasoline-diesel spread.
 
-        We assume that the relative gasoline-diesel spread is stationary and 
-        does not depend on the crude oil price. Their absolute crack spread is 
+        We assume that the relative gasoline-diesel spread is stationary and
+        does not depend on the crude oil price. Their absolute crack spread is
         roughly 15 $/bbl, at a crude oil price of around 70 $/bbl
         (https://www.macrotrends.net/1369/crude-oil-price-history-chart)
-        
+
         """
-        return 15/70
+        return 15 / 70

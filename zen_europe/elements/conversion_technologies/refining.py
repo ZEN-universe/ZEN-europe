@@ -37,25 +37,21 @@ class Refining(ConversionTechnology):
         """
         Sets the reference carrier of refining to oil.
         """
-        return Attribute(
-            name="reference_carrier", default_value=["oil"], element=self
-        )
+        return Attribute(name="reference_carrier", default_value=["oil"], element=self)
 
     def _set_input_carrier(self) -> Attribute:
         """
         Sets the input carrier of refining to crude oil and hydrogen.
         """
         return Attribute(
-            name="input_carrier", default_value=["crude_oil", "hydrogen"],
-            element=self)
+            name="input_carrier", default_value=["crude_oil", "hydrogen"], element=self
+        )
 
     def _set_output_carrier(self) -> Attribute:
         """
         Set the output carrier of refining to oil.
         """
-        return Attribute(
-            name="output_carrier", default_value=["oil"], element=self
-        )
+        return Attribute(name="output_carrier", default_value=["oil"], element=self)
 
     # ---------- Required methods that are called during object build ----------
 
@@ -86,9 +82,7 @@ class Refining(ConversionTechnology):
         0.541 MWh_H2/toe of oil product, converted to a MWh/MWh basis using
         the standard MWh-to-toe conversion factor (1 MWh = 0.0859845 toe).
         """
-        future_H2_dataset = (
-            FutureHydrogenDemandNeuwirth(source_path=self.source_path)
-        )
+        future_H2_dataset = FutureHydrogenDemandNeuwirth(source_path=self.source_path)
         return future_H2_dataset.get_conversion_factor_refining(self)
 
     def _set_capex_specific_conversion(self) -> Attribute:
@@ -133,11 +127,12 @@ class Refining(ConversionTechnology):
         Sets the existing refining capacity in Europe.
 
         Returns:
-            Attribute: An Attribute object containing the existing refining capacity data.
+            Attribute: An Attribute object containing the existing refining capacity
+                data.
         """
         if self.settings.investment.use_existing_capacities:
-            energyinst_dataset = (
-                EnergyInstituteWorldEnergyReview(source_path=self.source_path)
+            energyinst_dataset = EnergyInstituteWorldEnergyReview(
+                source_path=self.source_path
             )
             return energyinst_dataset.get_capacity_existing_refining(self)
         else:
@@ -146,13 +141,11 @@ class Refining(ConversionTechnology):
                 default_value=0,
                 df=None,
                 source=AssumptionInformation(
-                    description=(
-                        "We do not consider existing capacities."
-                    ),
+                    description=("We do not consider existing capacities."),
                 ),
             )
             return attr
-        
+
     def _set_max_diffusion_rate(self) -> Attribute:
         """
         Sets the maximum diffusion rate of refining.

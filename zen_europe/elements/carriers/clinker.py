@@ -31,12 +31,12 @@ class Clinker(Carrier):
 
         """
         return Attribute(
-                "availability_import",
-                default_value=0,
-                element=self,
-                unit=self.power_unit,
-            )
-    
+            "availability_import",
+            default_value=0,
+            element=self,
+            unit=self.power_unit,
+        )
+
     def _set_demand(self) -> Attribute:
         """
         Return the demand of clinker.

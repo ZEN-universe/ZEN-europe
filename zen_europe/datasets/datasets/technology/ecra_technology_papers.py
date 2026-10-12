@@ -1,15 +1,15 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
-from inspect import Attribute
 from pathlib import Path
 
+import pandas as pd
 from zen_creator import ConversionTechnology, SourceInformation
 from zen_creator.datasets.datasets.dataset import Dataset
 from zen_creator.datasets.datasets.metadata import MetaData
-
-import pandas as pd
+from zen_creator.utils.attribute import Attribute
 
 from zen_europe.utils.constants import Constants
+
 
 class ECRATechnologyPapers(Dataset[pd.DataFrame]):
     """
@@ -48,7 +48,8 @@ class ECRATechnologyPapers(Dataset[pd.DataFrame]):
         return MetaData(
             name=self.name,
             title=(
-                "THE ECRA TECHNOLOGY PAPERS 2022 - State of the Art Cement Manufacturing"
+                "THE ECRA TECHNOLOGY PAPERS 2022 - State of the Art Cement "
+                "Manufacturing"
             ),
             author=["ECRA (European Cement Research Academy)"],
             publication="ECRA Technology Papers",
@@ -63,7 +64,7 @@ class ECRATechnologyPapers(Dataset[pd.DataFrame]):
 
     def _set_data(self) -> dict[str, pd.Series]:
         """
-        No data to be set
+        No data to be set.
         """
         data = {}
 
@@ -87,7 +88,9 @@ class ECRATechnologyPapers(Dataset[pd.DataFrame]):
             raise ValueError(f"Substitution potential for {name} is not defined.")
         return self.SUBSTITUTION_POTENTIAL[name]
 
-    def get_capex_specific_retrofitting(self,element: ConversionTechnology) -> Attribute:
+    def get_capex_specific_retrofitting(
+        self, element: ConversionTechnology
+    ) -> Attribute:
         """
         Get the specific capital expenditure (CAPEX) for the retrofitting
         of cement kilns to other feedstocks.
@@ -110,27 +113,26 @@ class ECRATechnologyPapers(Dataset[pd.DataFrame]):
             raise ValueError(
                 f"Specific CAPEX for retrofitting to {element.name} is not defined."
             )
-        energy_use = self.REFERENCE_FUEL_INTENSITY / Constants.SECONDS_PER_HOUR # GWh/t
+        energy_use = self.REFERENCE_FUEL_INTENSITY / Constants.SECONDS_PER_HOUR  # GWh/t
         size = (
-            self.REFERENCE_CLINKER_CAPACITY
-            / Constants.HOURS_PER_YEAR
-            * energy_use
-        ) # t/a -> t/h -> GW
+            self.REFERENCE_CLINKER_CAPACITY / Constants.HOURS_PER_YEAR * energy_use
+        )  # t/a -> t/h -> GW
         capacity_retrofitted = size * self.get_substitution_potential(element.name)
         attr.set_data(
             default_value=self.RETROFIT_INVESTMENT[element.name] / capacity_retrofitted,
             source=SourceInformation(
                 description=(
-                    "The specific CAPEX for retrofitting cement kilns to other feedstocks "
-                    "is derived from ECRA (2022), Technology Papers 2022."
-                    "The size and energy use values are taken from Annex II, p. 185. "
-                    "The substitution to biomass and waste is taken from Technology Paper 14,"
-                    "with the highest value (15 Mio Euro) used for the retrofitting to biomass"
-                    "because of the problems with high substitution rates of biomass. "
-                    "The retrofitting to waste is assumed to be lower (10 Mio Euro, average value)."
-                    "The substitution to hydrogen is taken from Technology paper 18, "
-                    "assuming the highest value of 4.5 Mio Euro for the retrofitting to hydrogen."
-                    " Each investment only buys the substitution potential of the "
+                    "The specific CAPEX for retrofitting cement kilns to other "
+                    "feedstocks is derived from ECRA (2022), Technology Papers "
+                    "2022.The size and energy use values are taken from Annex II, p. "
+                    "185. The substitution to biomass and waste is taken from "
+                    "Technology Paper 14,with the highest value (15 Mio Euro) used for "
+                    "the retrofitting to biomassbecause of the problems with high "
+                    "substitution rates of biomass. The retrofitting to waste is "
+                    "assumed to be lower (10 Mio Euro, average value).The substitution "
+                    "to hydrogen is taken from Technology paper 18, assuming the "
+                    "highest value of 4.5 Mio Euro for the retrofitting to hydrogen. "
+                    "Each investment only buys the substitution potential of the "
                     "respective fuel, so it is divided by the share of the kiln fuel "
                     "capacity it can cover."
                 ),

@@ -5,10 +5,10 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from pathlib import Path
 
+import pandas as pd
 from zen_creator.datasets.datasets.dataset import Dataset
 from zen_creator.datasets.datasets.metadata import MetaData
 
-import pandas as pd
 
 class Eurofer(Dataset[pd.DataFrame]):
     """
@@ -25,9 +25,7 @@ class Eurofer(Dataset[pd.DataFrame]):
     def _set_metadata(self) -> MetaData:
         return MetaData(
             name=self.name,
-            title=(
-                "European Steel in Figures 2025"
-            ),
+            title=("European Steel in Figures 2025"),
             author=["Eurofer"],
             publication="Eurofer",
             publication_year=2025,
@@ -38,11 +36,12 @@ class Eurofer(Dataset[pd.DataFrame]):
         return None
 
     def _set_data(self) -> pd.Series:
-        """ sets the manual data for the Eurofer dataset in kt/y in 2021 
-        
+        """sets the manual data for the Eurofer dataset in kt/y in 2021.
+
         We assume that all Swiss steel production is imported from the EU.
 
-        The provided number is the total export of steel from the EU to Switzerland in 2021
+        The provided number is the total export of steel from the EU to Switzerland in
+        2021
         """
         return pd.Series({"CH": 1701})
 
@@ -63,8 +62,10 @@ class Eurofer(Dataset[pd.DataFrame]):
             return self.data.loc[node]
         else:
             raise ValueError(
-                f"Node {node} not found in the manual values of the" 
-                f" Eurofer dataset.")
+                f"Node {node} not found in the manual values of the"
+                f" Eurofer dataset."
+            )
+
 
 class WorldSteel(Dataset[pd.DataFrame]):
     """
@@ -81,9 +82,7 @@ class WorldSteel(Dataset[pd.DataFrame]):
     def _set_metadata(self) -> MetaData:
         return MetaData(
             name=self.name,
-            title=(
-                "2023 World Steel in Figures"
-            ),
+            title=("2023 World Steel in Figures"),
             author=["World Steel"],
             publication="World Steel",
             publication_year=2023,
@@ -94,8 +93,8 @@ class WorldSteel(Dataset[pd.DataFrame]):
         return None
 
     def _set_data(self) -> pd.Series:
-        """ sets the manual data for the World Steel dataset in kt/y in 2023
-        
+        """sets the manual data for the World Steel dataset in kt/y in 2023.
+
         The provided number is the total production of steel in the UK in 2021
         """
         return pd.Series({"UK": 7200})
@@ -117,8 +116,10 @@ class WorldSteel(Dataset[pd.DataFrame]):
             return self.data.loc[node]
         else:
             raise ValueError(
-                f"Node {node} not found in the manual values of the" 
-                f" World Steel dataset.")
+                f"Node {node} not found in the manual values of the"
+                f" World Steel dataset."
+            )
+
 
 class TradeEconomics(Dataset[pd.DataFrame]):
     """
@@ -135,9 +136,7 @@ class TradeEconomics(Dataset[pd.DataFrame]):
     def _set_metadata(self) -> MetaData:
         return MetaData(
             name=self.name,
-            title=(
-                "Norway Steel Production"
-            ),
+            title=("Norway Steel Production"),
             author=["Trade Economics"],
             publication="Trade Economics",
             publication_year=2020,
@@ -148,12 +147,26 @@ class TradeEconomics(Dataset[pd.DataFrame]):
         return None
 
     def _set_data(self) -> pd.Series:
-        """ sets the manual data for the Trade Economics dataset in kt/y in 2020
-        
+        """sets the manual data for the Trade Economics dataset in kt/y in 2020.
+
         The provided number is the total production of steel in Norway in 2020
         """
-        return pd.Series({
-            "NO": 61.515+51.833+63.722+50.631+55+57.463+18.087+60+61.248+65+65+41.203})
+        return pd.Series(
+            {
+                "NO": 61.515
+                + 51.833
+                + 63.722
+                + 50.631
+                + 55
+                + 57.463
+                + 18.087
+                + 60
+                + 61.248
+                + 65
+                + 65
+                + 41.203
+            }
+        )
 
     # -------- methods ------------------------
     def get_manual_steel_demand_trade_economics(self, node: str) -> int:
@@ -172,5 +185,6 @@ class TradeEconomics(Dataset[pd.DataFrame]):
             return self.data.loc[node]
         else:
             raise ValueError(
-                f"Node {node} not found in the manual values of the" 
-                f" Trade Economics dataset.")
+                f"Node {node} not found in the manual values of the"
+                f" Trade Economics dataset."
+            )

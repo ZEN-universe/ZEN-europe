@@ -39,7 +39,8 @@ class CoalToCementFuel(RetrofittingTechnology):
         Sets the input carrier of coal to cement fuel to hard coal.
         """
         return Attribute(
-            name="input_carrier", default_value=["hard_coal"], element=self)
+            name="input_carrier", default_value=["hard_coal"], element=self
+        )
 
     def _set_output_carrier(self) -> Attribute:
         """
@@ -55,8 +56,9 @@ class CoalToCementFuel(RetrofittingTechnology):
         cement.
         """
         return Attribute(
-            name="retrofit_reference_carrier", default_value=["fuel_for_cement"],
-            element=self
+            name="retrofit_reference_carrier",
+            default_value=["fuel_for_cement"],
+            element=self,
         )
 
     # ---------- Required methods that are called during object build ----------
@@ -119,9 +121,9 @@ class CoalToCementFuel(RetrofittingTechnology):
             source=AssumptionInformation(
                 description=(
                     "The specific capital expenditure (capex) for coal to cement fuel "
-                    "is set to 0, since hard coal is the reference fuel for cement kilns"
-                    " and no additional retrofitting costs are assumed for "
-                    "coal to cement fuel conversion."
+                    "is set to 0, since hard coal is the reference fuel for cement "
+                    "kilns and no additional retrofitting costs are assumed for coal "
+                    "to cement fuel conversion."
                 ),
             ),
         )
@@ -143,9 +145,7 @@ class CoalToCementFuel(RetrofittingTechnology):
                 default_value=0,
                 df=None,
                 source=AssumptionInformation(
-                    description=(
-                        "We do not consider existing capacities."
-                    ),
+                    description=("We do not consider existing capacities."),
                 ),
             )
             return attr

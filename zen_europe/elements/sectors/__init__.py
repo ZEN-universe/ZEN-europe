@@ -13,3 +13,21 @@ from .refining import RefiningSector
 from .shipping import ShippingSector
 from .steel import SteelSector
 from .truck_transport import TruckTransportSector
+
+__all__ = [
+    "AmmoniaSector",
+    "AviationSector",
+    "CarbonSector",
+    "CementSector",
+    "DistrictHeatingSector",
+    "ElectricitySector",
+    "GasSector",
+    "HeatSector",
+    "HydrogenSector",
+    "MethanolSector",
+    "PassengerTransportSector",
+    "RefiningSector",
+    "ShippingSector",
+    "SteelSector",
+    "TruckTransportSector",
+]

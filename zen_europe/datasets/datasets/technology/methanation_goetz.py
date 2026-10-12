@@ -2,16 +2,15 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pandas as pd
 from zen_creator import ConversionTechnology
 from zen_creator.datasets.datasets.dataset import Dataset
 from zen_creator.datasets.datasets.metadata import MetaData, SourceInformation
 
-import pandas as pd
-
 
 class MethanationGoetz(Dataset[pd.DataFrame]):
     """
-    Dataset class for the techno-economic analysis of methanation processes, 
+    Dataset class for the techno-economic analysis of methanation processes,
     based on the work of Manuel Götz et al. (2016).
 
     """
@@ -24,17 +23,17 @@ class MethanationGoetz(Dataset[pd.DataFrame]):
     def _set_metadata(self) -> MetaData:
         return MetaData(
             name=self.name,
-            title=(
-                "Renewable Power-to-Gas: A technological and economic review"
-            ),
-            author=["Manuel Götz", 
-                    "Jonathan Lefebvre", 
-                    "Friedemann Mörs", 
-                    "Amy McDaniel Koch", 
-                    "Frank Graf", 
-                    "Siegfried Bajohr", 
-                    "Rainer Reimert", 
-                    "Thomas Kolb"],
+            title=("Renewable Power-to-Gas: A technological and economic review"),
+            author=[
+                "Manuel Götz",
+                "Jonathan Lefebvre",
+                "Friedemann Mörs",
+                "Amy McDaniel Koch",
+                "Frank Graf",
+                "Siegfried Bajohr",
+                "Rainer Reimert",
+                "Thomas Kolb",
+            ],
             publication="Renewable Energy",
             publication_year=2016,
             url="https://www.sciencedirect.com/science/article/pii/S0960148115301610",
@@ -47,18 +46,18 @@ class MethanationGoetz(Dataset[pd.DataFrame]):
         return self.source_path
 
     def _set_data(self) -> dict[str, pd.Series]:
-        """ 
-        No data to be set
+        """
+        No data to be set.
         """
         data = {}
-        
+
         data = pd.Series(data)
         return data
 
-    # -------- methods ------------------------    
+    # -------- methods ------------------------
     def get_conversion_factor_methanation(
-            self, 
-            element: ConversionTechnology) -> dict[str, dict[str, float]]:
+        self, element: ConversionTechnology
+    ) -> dict[str, dict[str, float]]:
         """
         Get the conversion factor for methanation technologies.
 
@@ -71,9 +70,12 @@ class MethanationGoetz(Dataset[pd.DataFrame]):
         consumed_carbon = 30000 * 1.836 / 1000  # m3/h -> tCO2/h
         cf = [
             {"hydrogen": {"default_value": 1 / efficiency, "unit": "GWh/GWh"}},
-            {"carbon": {
-                "default_value": consumed_carbon / produced_methane,
-                "unit": "ktCO2/GWh"}},
+            {
+                "carbon": {
+                    "default_value": consumed_carbon / produced_methane,
+                    "unit": "ktCO2/GWh",
+                }
+            },
         ]
         source = SourceInformation(
             description=(

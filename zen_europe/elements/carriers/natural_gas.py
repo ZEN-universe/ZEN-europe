@@ -26,11 +26,11 @@ class NaturalGas(Carrier):
     """
 
     name: str = "natural_gas"
-    
+
     def __init__(self, model: Model, power_unit: str = "MW"):
         super().__init__(model=model, power_unit=power_unit)
         # set the inflation rate function from the ECB dataset
-        # TODO make the inflation rate function directly available in the model, 
+        # TODO make the inflation rate function directly available in the model,
         # so that it can be used by other elements as well
         ecb_inflation = ECBInflation(source_path=self.source_path)
         self.get_inflation_rate = ecb_inflation.get_inflation_rate
@@ -45,9 +45,10 @@ class NaturalGas(Carrier):
 
         """
         natural_gas_availability = NaturalGasAvailability(
-            source_path=self.model.source_path,settings=self.settings)
+            source_path=self.model.source_path, settings=self.settings
+        )
         return natural_gas_availability.get_availability_import(element=self)
-    
+
     def _set_price_import(self) -> Attribute:
         """
         Return the import price of natural gas.
@@ -55,7 +56,7 @@ class NaturalGas(Carrier):
         """
         bnef_fuel_prices = BNEFFuelPrices(source_path=self.model.source_path)
         return bnef_fuel_prices.get_price_import(element=self)
-    
+
     def _set_carbon_intensity_carrier_import(self) -> Attribute:
         """
         Return the carbon intensity of natural gas.

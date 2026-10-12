@@ -22,13 +22,17 @@ from zen_creator import (
     SourceInformation,
 )
 
-from zen_europe.utils.utils import account_for_decommissioned_capacity, format_capacity_existing
+from zen_europe.utils.utils import (
+    account_for_decommissioned_capacity,
+    format_capacity_existing,
+)
 
 
 class SMR(ConversionTechnology):
     """Class containing all data and assumptions for Steam Methane Reforming (SMR).
-    
-    Note that this is not a small modular reactor, but a steam methane reformer for hydrogen production.
+
+    Note that this is not a small modular reactor, but a steam methane reformer for
+    hydrogen production.
     """
 
     name: str = "SMR"
@@ -51,17 +55,17 @@ class SMR(ConversionTechnology):
         Sets the input carrier of SMR to natural gas.
         """
         return Attribute(
-            name="input_carrier", default_value=["natural_gas"], element=self)
+            name="input_carrier", default_value=["natural_gas"], element=self
+        )
 
     def _set_output_carrier(self) -> Attribute:
         """
         Set the output carrier of SMR to hydrogen.
         """
         return Attribute(
-            name="output_carrier"
-            , default_value=[
-                "hydrogen","electricity"]
-            , element=self
+            name="output_carrier",
+            default_value=["hydrogen", "electricity"],
+            element=self,
         )
 
     # ---------- Required methods that are called during object build ----------
@@ -72,8 +76,8 @@ class SMR(ConversionTechnology):
 
         """
         tech_db = TechnologyCostDatabase(
-            settings=self.settings, 
-            source_path=self.source_path)
+            settings=self.settings, source_path=self.source_path
+        )
         return tech_db.get_lifetime(self)
 
     def _set_conversion_factor(self) -> Attribute:
@@ -86,34 +90,36 @@ class SMR(ConversionTechnology):
         cf = ganter_dataset.get_conversion_factor_SMR()
         source = SourceInformation(
             description=(
-                "The conversion factor of SMR is based on data from Ganter et al. (2024). "
+                "The conversion factor of SMR is based on data from Ganter et al. "
+                "(2024). "
             ),
             metadata=ganter_dataset.metadata,
         )
         attr.set_data(default_value=cf, source=source)
         return attr
-    
+
     def _set_construction_time(self) -> Attribute:
         """
         Sets the construction time of SMR.
 
         """
         if self.settings.investment.use_construction_times:
-            # assume that the construction time of SMR is the same as for methanation, as both are chemical conversion technologies
+            # assume that the construction time of SMR is the same as for methanation,
+            # as both are chemical conversion technologies
             methanation = self.model.conversion_technologies["methanation"]
             construction_time = methanation.construction_time.default_value
             attr = self.construction_time
             source = AssumptionInformation(
                 description=(
-                    "The construction time of SMR is assumed to be the same as for methanation, "
-                    "as both are chemical conversion technologies."
+                    "The construction time of SMR is assumed to be the same as for "
+                    "methanation, as both are chemical conversion technologies."
                 )
-            )   
+            )
             attr.set_data(default_value=construction_time, source=source)
             return attr
         else:
             return self.construction_time
-        
+
     def _set_capex_specific_conversion(self) -> Attribute:
         """
         Sets the specific capital expenditure (capex) for SMR.
@@ -122,9 +128,10 @@ class SMR(ConversionTechnology):
             Attribute: An Attribute object containing the specific capex data.
         """
         tech_db = TechnologyCostDatabase(
-                    settings=self.settings, source_path=self.source_path)
+            settings=self.settings, source_path=self.source_path
+        )
         return tech_db.get_capex_specific_conversion(self)
-    
+
     def _set_opex_specific_fixed(self) -> Attribute:
         """
         Sets the specific fixed operational expenditure (opex) for SMR.
@@ -133,9 +140,10 @@ class SMR(ConversionTechnology):
             Attribute: An Attribute object containing the specific fixed opex data.
         """
         tech_db = TechnologyCostDatabase(
-            settings=self.settings, source_path=self.source_path)
+            settings=self.settings, source_path=self.source_path
+        )
         return tech_db.get_opex_specific_fixed(self)
-    
+
     def _set_opex_specific_variable(self) -> Attribute:
         """
         Sets the specific variable operational expenditure (opex) for SMR.
@@ -144,9 +152,10 @@ class SMR(ConversionTechnology):
             Attribute: An Attribute object containing the specific variable opex data.
         """
         tech_db = TechnologyCostDatabase(
-            settings=self.settings, source_path=self.source_path)
+            settings=self.settings, source_path=self.source_path
+        )
         return tech_db.get_opex_specific_variable(self)
-    
+
     def _set_capacity_existing(self) -> Attribute:
         """
         Sets the existing capacity for SMR.
@@ -158,21 +167,23 @@ class SMR(ConversionTechnology):
             ganter_dataset = HydrogenRolloutGanter(source_path=self.source_path)
             capacity_existing = ganter_dataset.get_capacity_existing_SMR()
             capacity_existing = capacity_existing.to_frame(
-                name=self.settings.time.reference_year - 1)
+                name=self.settings.time.reference_year - 1
+            )
             capacity_existing = account_for_decommissioned_capacity(
-                capacity_existing, self)
+                capacity_existing, self
+            )
             capacity_existing.index.name = "node"
             capacity_existing = format_capacity_existing(capacity_existing)
             attr = self.capacity_existing
             source = SourceInformation(
                 description=(
-                    "The existing capacity of SMR is based on data from Ganter et al. (2024). "
-                    "It is assumed that all current ammonia and refinery plants are "
-                    "using SMR technology for hydrogen production."
+                    "The existing capacity of SMR is based on data from Ganter et al. "
+                    "(2024). It is assumed that all current ammonia and refinery "
+                    "plants are using SMR technology for hydrogen production."
                 ),
                 metadata=ganter_dataset.metadata,
             )
-            attr.set_data(df=capacity_existing, source=source,unit="GW")
+            attr.set_data(df=capacity_existing, source=source, unit="GW")
             return attr
         else:
             attr = self.capacity_existing
@@ -180,9 +191,7 @@ class SMR(ConversionTechnology):
                 default_value=0,
                 df=None,
                 source=AssumptionInformation(
-                    description=(
-                        "We do not consider existing capacities."
-                    ),
+                    description=("We do not consider existing capacities."),
                 ),
             )
             return attr

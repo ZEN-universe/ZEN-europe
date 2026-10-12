@@ -1,15 +1,15 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
-from inspect import Attribute
 from pathlib import Path
 
+import pandas as pd
 from zen_creator import ConversionTechnology, SourceInformation
 from zen_creator.datasets.datasets.dataset import Dataset
 from zen_creator.datasets.datasets.metadata import MetaData
-
-import pandas as pd
+from zen_creator.utils.attribute import Attribute
 
 from zen_europe.datasets.datasets.financial.ECB import ECBInflation
+
 
 class CementProductionGardarsdottir(Dataset[pd.DataFrame]):
     """
@@ -28,21 +28,24 @@ class CementProductionGardarsdottir(Dataset[pd.DataFrame]):
         return MetaData(
             name=self.name,
             title=(
-                "Comparison of Technologies for CO2 Capture from Cement Production—Part 2: Cost Analysis"
+                "Comparison of Technologies for CO2 Capture from Cement "
+                "Productionâ€”Part 2: Cost Analysis"
             ),
-            author=["Stefania Osk Gardarsdottir", 
-                    "Edoardo De Lena", 
-                    "Matteo Romano", 
-                    "Simon Roussanaly", 
-                    "Mari Voldsund", 
-                    "José-Francisco Pérez-Calvo", 
-                    "David Berstad", 
-                    "Chao Fu", 
-                    "Rahul Anantharaman",
-                    "Daniel Sutter", 
-                    "Matteo Gazzani", 
-                    "Marco Mazzotti", 
-                    "Giovanni Cinti"],
+            author=[
+                "Stefania Osk Gardarsdottir",
+                "Edoardo De Lena",
+                "Matteo Romano",
+                "Simon Roussanaly",
+                "Mari Voldsund",
+                "JosÃ©-Francisco PÃ©rez-Calvo",
+                "David Berstad",
+                "Chao Fu",
+                "Rahul Anantharaman",
+                "Daniel Sutter",
+                "Matteo Gazzani",
+                "Marco Mazzotti",
+                "Giovanni Cinti",
+            ],
             publication="MDPI Energies",
             publication_year=2019,
             url="https://www.mdpi.com/1996-1073/12/3/542",
@@ -54,15 +57,15 @@ class CementProductionGardarsdottir(Dataset[pd.DataFrame]):
         return self.source_path
 
     def _set_data(self) -> dict[str, pd.Series]:
-        """ 
-        No data to be set
+        """
+        No data to be set.
         """
         data = {}
-        
+
         data = pd.Series(data)
         return data
 
-    # -------- methods ------------------------    
+    # -------- methods ------------------------
     def _get_capex_production_value(self) -> float:
         """
         Get the specific capital expenditure (CAPEX) for cement production.
@@ -70,12 +73,11 @@ class CementProductionGardarsdottir(Dataset[pd.DataFrame]):
         Returns:
             float: The specific CAPEX value.
         """
-        capex_total = 204*1e6  # Euro, Table 6
-        hourly_production = 120.65 # t/h, Table 1
-        return capex_total,hourly_production
-    
-    def get_capex_specific(
-            self, element: ConversionTechnology) -> Attribute:
+        capex_total = 204 * 1e6  # Euro, Table 6
+        hourly_production = 120.65  # t/h, Table 1
+        return capex_total, hourly_production
+
+    def get_capex_specific(self, element: ConversionTechnology) -> Attribute:
         """
         Get the specific capital expenditure (CAPEX) for cement kilns.
 
@@ -83,12 +85,11 @@ class CementProductionGardarsdottir(Dataset[pd.DataFrame]):
             Attribute: An Attribute object containing the specific CAPEX data.
         """
         attr = element.capex_specific_conversion
-        capex_total,hourly_production = self._get_capex_production_value()
+        capex_total, hourly_production = self._get_capex_production_value()
         specific_capex = capex_total / hourly_production
-        
+
         inflation = ECBInflation(source_path=self.source_path).get_inflation_rate(
-            base_year=self.MONEY_YEAR,
-            target_year=element.settings.time.reference_year
+            base_year=self.MONEY_YEAR, target_year=element.settings.time.reference_year
         )
         specific_capex *= inflation
         attr.set_data(
@@ -104,8 +105,7 @@ class CementProductionGardarsdottir(Dataset[pd.DataFrame]):
         )
         return attr
 
-    def get_opex_specific_fixed(
-            self, element: ConversionTechnology) -> Attribute:
+    def get_opex_specific_fixed(self, element: ConversionTechnology) -> Attribute:
         """
         Get the specific fixed operational expenditure (OPEX) for cement kilns.
 
@@ -113,15 +113,14 @@ class CementProductionGardarsdottir(Dataset[pd.DataFrame]):
             Attribute: An Attribute object containing the specific fixed OPEX data.
         """
         attr = element.opex_specific_fixed
-        capex_total,hourly_production = self._get_capex_production_value()
-        share_of_capex = 0.025 + 0.02 # for maintenance and insurance, p. 8
-        labor_cost = 100*60000 # Euro/year, p. 8, 100 employees with 60k Euro/year
-        opex_total = share_of_capex * capex_total + labor_cost # Euro/year
-        opex_specific_fixed = opex_total / hourly_production 
-        
+        capex_total, hourly_production = self._get_capex_production_value()
+        share_of_capex = 0.025 + 0.02  # for maintenance and insurance, p. 8
+        labor_cost = 100 * 60000  # Euro/year, p. 8, 100 employees with 60k Euro/year
+        opex_total = share_of_capex * capex_total + labor_cost  # Euro/year
+        opex_specific_fixed = opex_total / hourly_production
+
         inflation = ECBInflation(source_path=self.source_path).get_inflation_rate(
-            base_year=self.MONEY_YEAR,
-            target_year=element.settings.time.reference_year
+            base_year=self.MONEY_YEAR, target_year=element.settings.time.reference_year
         )
         opex_specific_fixed *= inflation
         attr.set_data(
@@ -137,8 +136,7 @@ class CementProductionGardarsdottir(Dataset[pd.DataFrame]):
         )
         return attr
 
-    def get_opex_specific_variable(
-            self, element: ConversionTechnology) -> Attribute:
+    def get_opex_specific_variable(self, element: ConversionTechnology) -> Attribute:
         """
         Get the specific variable operational expenditure (OPEX) for cement kilns.
 
@@ -146,10 +144,9 @@ class CementProductionGardarsdottir(Dataset[pd.DataFrame]):
             Attribute: An Attribute object containing the specific variable OPEX data.
         """
         attr = element.opex_specific_variable
-        opex_specific_variable = 6.875 # Euro/tproduct, screengrab from Fig. 4
+        opex_specific_variable = 6.875  # Euro/tproduct, screengrab from Fig. 4
         inflation = ECBInflation(source_path=self.source_path).get_inflation_rate(
-            base_year=self.MONEY_YEAR,
-            target_year=element.settings.time.reference_year
+            base_year=self.MONEY_YEAR, target_year=element.settings.time.reference_year
         )
         opex_specific_variable *= inflation
         attr.set_data(
@@ -173,7 +170,7 @@ class CementProductionGardarsdottir(Dataset[pd.DataFrame]):
             Attribute: An Attribute object containing the lifetime data.
         """
         attr = element.lifetime
-        lifetime = 25 # years, Table 5
+        lifetime = 25  # years, Table 5
 
         attr.set_data(
             default_value=lifetime,
@@ -196,7 +193,7 @@ class CementProductionGardarsdottir(Dataset[pd.DataFrame]):
             Attribute: An Attribute object containing the construction time data.
         """
         attr = element.construction_time
-        construction_time = 2 # years, Table 5
+        construction_time = 2  # years, Table 5
 
         attr.set_data(
             default_value=construction_time,

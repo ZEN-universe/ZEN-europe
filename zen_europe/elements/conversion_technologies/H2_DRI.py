@@ -45,7 +45,8 @@ class H2_DRI(ConversionTechnology):
         return Attribute(
             name="input_carrier",
             default_value=["hydrogen", "electricity", "hard_coal"],
-            element=self)
+            element=self,
+        )
 
     def _set_output_carrier(self) -> Attribute:
         """
@@ -103,7 +104,6 @@ class H2_DRI(ConversionTechnology):
         """
         steel_woertler_dataset = SteelTechnologiesWoertler(self.source_path)
         return steel_woertler_dataset.get_capex_specific(self)
-    
 
     def _set_max_diffusion_rate(self) -> Attribute:
         """

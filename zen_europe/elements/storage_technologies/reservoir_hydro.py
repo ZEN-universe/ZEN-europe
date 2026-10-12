@@ -30,7 +30,8 @@ from zen_creator.utils.attribute import Attribute
 
 
 class ReservoirHydro(StorageTechnology):
-    """Class containing all data and assumptions for reservoir hydro storage technology."""
+    """Class containing all data and assumptions for reservoir hydro storage
+    technology."""
 
     name: str = "reservoir_hydro"
     ENTSOE_PSR = "B12"
@@ -72,7 +73,8 @@ class ReservoirHydro(StorageTechnology):
         Sets the specific capex of the power capacity of reservoir hydro.
         """
         tech_db = TechnologyCostDatabase(
-            settings=self.settings, source_path=self.source_path)
+            settings=self.settings, source_path=self.source_path
+        )
         return tech_db.get_capex_specific_storage(self)
 
     def _set_capex_specific_storage_energy(self) -> Attribute:
@@ -80,8 +82,8 @@ class ReservoirHydro(StorageTechnology):
         Sets the specific capex of the energy capacity of reservoir hydro.
 
         Since reservoir hydro is generally classified as a conversion technology,
-        most of the cost data is available for the power capacity, 
-        but not for the energy capacity. So, we use the energy capacity data of 
+        most of the cost data is available for the power capacity,
+        but not for the energy capacity. So, we use the energy capacity data of
         pumped hydro as a proxy for reservoir hydro.
         """
         attr = self.capex_specific_storage_energy
@@ -103,9 +105,10 @@ class ReservoirHydro(StorageTechnology):
         Sets the specific fixed opex of reservoir hydro.
         """
         tech_db = TechnologyCostDatabase(
-            settings=self.settings, source_path=self.source_path)
+            settings=self.settings, source_path=self.source_path
+        )
         return tech_db.get_opex_specific_fixed(self)
-    
+
     def _set_capacity_existing(self) -> Attribute:
         """
         Sets the existing capacity of reservoir hydro.
@@ -117,12 +120,14 @@ class ReservoirHydro(StorageTechnology):
         Returns:
             Attribute: An Attribute object containing the existing capacity data.
         """
-        if (self.settings.investment.use_existing_capacities
-                or self.settings.investment.keep_existing_hydro_capacities):
+        if (
+            self.settings.investment.use_existing_capacities
+            or self.settings.investment.keep_existing_hydro_capacities
+        ):
             hydro_dataset = HydroExistingCapacity(
                 settings=self.settings,
                 source_path=self.source_path,
-                set_nodes=self.model.config.system.set_nodes
+                set_nodes=self.model.config.system.set_nodes,
             )
             if self.settings.data_source.use_plant_level_hydro_capacity:
                 attr = hydro_dataset.get_capacity_existing_plant_level_data(self)
@@ -135,13 +140,11 @@ class ReservoirHydro(StorageTechnology):
                 default_value=0,
                 df=None,
                 source=AssumptionInformation(
-                    description=(
-                        "We do not consider existing capacities."
-                    ),
+                    description=("We do not consider existing capacities."),
                 ),
             )
             return attr
-        
+
     def _set_capacity_existing_energy(self) -> Attribute:
         """
         Sets the existing energy capacity of pumped hydro.
@@ -153,18 +156,21 @@ class ReservoirHydro(StorageTechnology):
         Returns:
             Attribute: An Attribute object containing the existing capacity data.
         """
-        if (self.settings.investment.use_existing_capacities
-                or self.settings.investment.keep_existing_hydro_capacities):
+        if (
+            self.settings.investment.use_existing_capacities
+            or self.settings.investment.keep_existing_hydro_capacities
+        ):
             hydro_dataset = HydroExistingCapacity(
                 settings=self.settings,
                 source_path=self.source_path,
-                set_nodes=self.model.config.system.set_nodes
+                set_nodes=self.model.config.system.set_nodes,
             )
             if self.settings.data_source.use_plant_level_hydro_capacity:
-                attr = hydro_dataset.get_capacity_existing_plant_level_data(self,
-                                                                            power=False)
+                attr = hydro_dataset.get_capacity_existing_plant_level_data(
+                    self, power=False
+                )
             else:
-                attr = hydro_dataset.get_capacity_existing_pecd_data(self,power=False)
+                attr = hydro_dataset.get_capacity_existing_pecd_data(self, power=False)
             return attr
         else:
             attr = self.capacity_existing
@@ -172,9 +178,7 @@ class ReservoirHydro(StorageTechnology):
                 default_value=0,
                 df=None,
                 source=AssumptionInformation(
-                    description=(
-                        "We do not consider existing capacities."
-                    ),
+                    description=("We do not consider existing capacities."),
                 ),
             )
             return attr
@@ -243,7 +247,8 @@ class ReservoirHydro(StorageTechnology):
         Sets the storage inflow of reservoir hydro.
         """
         pecd = PanEuropeanClimateDatabase(
-            settings=self.settings, source_path=self.source_path)
+            settings=self.settings, source_path=self.source_path
+        )
         return pecd.get_flow_storage_inflow(self)
 
     def _set_efficiency_charge(self) -> Attribute:
@@ -263,7 +268,7 @@ class ReservoirHydro(StorageTechnology):
 
     def _set_efficiency_discharge(self) -> Attribute:
         """
-        Sets the discharging efficiency of reservoir hydro 
+        Sets the discharging efficiency of reservoir hydro.
         """
         storage_technologies = StorageTechnologiesSchmidt(source_path=self.source_path)
         return storage_technologies.get_efficiency_discharge(self)

@@ -42,8 +42,7 @@ class HydrogenToCementFuel(RetrofittingTechnology):
         """
         Sets the input carrier of hydrogen to cement fuel to hydrogen.
         """
-        return Attribute(
-            name="input_carrier", default_value=["hydrogen"], element=self)
+        return Attribute(name="input_carrier", default_value=["hydrogen"], element=self)
 
     def _set_output_carrier(self) -> Attribute:
         """
@@ -59,8 +58,9 @@ class HydrogenToCementFuel(RetrofittingTechnology):
         for cement.
         """
         return Attribute(
-            name="retrofit_reference_carrier", default_value=["fuel_for_cement"],
-            element=self
+            name="retrofit_reference_carrier",
+            default_value=["fuel_for_cement"],
+            element=self,
         )
 
     # ---------- Required methods that are called during object build ----------
@@ -131,9 +131,7 @@ class HydrogenToCementFuel(RetrofittingTechnology):
                 default_value=0,
                 df=None,
                 source=AssumptionInformation(
-                    description=(
-                        "We do not consider existing capacities."
-                    ),
+                    description=("We do not consider existing capacities."),
                 ),
             )
             return attr

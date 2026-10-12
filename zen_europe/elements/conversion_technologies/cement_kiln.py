@@ -20,7 +20,6 @@ class CementKiln(ConversionTechnology):
 
     name: str = "cement_kiln"
 
-
     def __init__(self, model: Model, power_unit: str = "tproduct/h"):
         super().__init__(model=model, power_unit=power_unit)
 
@@ -40,16 +39,16 @@ class CementKiln(ConversionTechnology):
         electricity.
         """
         return Attribute(
-            name="input_carrier", default_value=["fuel_for_cement", "electricity"],
-            element=self)
+            name="input_carrier",
+            default_value=["fuel_for_cement", "electricity"],
+            element=self,
+        )
 
     def _set_output_carrier(self) -> Attribute:
         """
         Set the output carrier of cement kilns to clinker.
         """
-        return Attribute(
-            name="output_carrier", default_value=["clinker"], element=self
-        )
+        return Attribute(name="output_carrier", default_value=["clinker"], element=self)
 
     # ---------- Required methods that are called during object build ----------
 
@@ -71,7 +70,7 @@ class CementKiln(ConversionTechnology):
             return cement_dataset.get_construction_time(self)
         else:
             return self.construction_time
-        
+
     def _set_conversion_factor(self) -> Attribute:
         """
         Return the conversion factor of cement kilns.
@@ -96,7 +95,8 @@ class CementKiln(ConversionTechnology):
         kilns.
 
         Returns:
-            Attribute: An Attribute object containing the specific conversion capex data.
+            Attribute: An Attribute object containing the specific conversion capex
+                data.
         """
         cement_dataset = CementProductionGardarsdottir(source_path=self.source_path)
         return cement_dataset.get_capex_specific(self)

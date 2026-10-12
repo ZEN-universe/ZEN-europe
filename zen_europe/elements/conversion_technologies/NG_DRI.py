@@ -45,7 +45,8 @@ class NG_DRI(ConversionTechnology):
         return Attribute(
             name="input_carrier",
             default_value=["natural_gas", "electricity", "hard_coal"],
-            element=self)
+            element=self,
+        )
 
     def _set_output_carrier(self) -> Attribute:
         """
@@ -103,7 +104,6 @@ class NG_DRI(ConversionTechnology):
         """
         steel_woertler_dataset = SteelTechnologiesWoertler(self.source_path)
         return steel_woertler_dataset.get_capex_specific(self)
-    
 
     def _set_max_diffusion_rate(self) -> Attribute:
         """

@@ -88,7 +88,8 @@ class TYNDPElectricityModellingResults(Dataset[pd.DataFrame]):
         """
         lines = self.data[
             self.data["node_from"].isin(set_nodes)
-            & self.data["node_to"].isin(set_nodes)]
+            & self.data["node_to"].isin(set_nodes)
+        ]
         capacity = lines.groupby(["node_from", "node_to"])["Value"].sum() / 1000
         capacity.name = "capacity_limit"
         return capacity

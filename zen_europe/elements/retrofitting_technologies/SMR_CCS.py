@@ -52,16 +52,16 @@ class SMR_CCS(RetrofittingTechnology):
         Sets the input carrier of SMR CCS to natural gas and electricity.
         """
         return Attribute(
-            name="input_carrier", default_value=["natural_gas", "electricity"],
-            element=self)
+            name="input_carrier",
+            default_value=["natural_gas", "electricity"],
+            element=self,
+        )
 
     def _set_output_carrier(self) -> Attribute:
         """
         Set the output carrier of SMR CCS to carbon.
         """
-        return Attribute(
-            name="output_carrier", default_value=["carbon"], element=self
-        )
+        return Attribute(name="output_carrier", default_value=["carbon"], element=self)
 
     def _set_retrofit_reference_carrier(self) -> Attribute:
         """
@@ -79,7 +79,8 @@ class SMR_CCS(RetrofittingTechnology):
 
         """
         tech_db = TechnologyCostDatabase(
-            settings=self.settings, source_path=self.source_path)
+            settings=self.settings, source_path=self.source_path
+        )
         return tech_db.get_lifetime(self)
 
     def _set_construction_time(self) -> Attribute:
@@ -89,7 +90,8 @@ class SMR_CCS(RetrofittingTechnology):
         """
         if self.settings.investment.use_construction_times:
             tech_db = TechnologyCostDatabase(
-                    settings=self.settings, source_path=self.source_path)
+                settings=self.settings, source_path=self.source_path
+            )
             return tech_db.get_construction_time(self)
         else:
             return self.construction_time
@@ -130,7 +132,8 @@ class SMR_CCS(RetrofittingTechnology):
             Attribute: An Attribute object containing the specific capex data.
         """
         tech_db = TechnologyCostDatabase(
-                    settings=self.settings, source_path=self.source_path)
+            settings=self.settings, source_path=self.source_path
+        )
         return tech_db.get_capex_specific_conversion(self)
 
     def _set_opex_specific_fixed(self) -> Attribute:
@@ -141,7 +144,8 @@ class SMR_CCS(RetrofittingTechnology):
             Attribute: An Attribute object containing the specific fixed opex data.
         """
         tech_db = TechnologyCostDatabase(
-            settings=self.settings, source_path=self.source_path)
+            settings=self.settings, source_path=self.source_path
+        )
         return tech_db.get_opex_specific_fixed(self)
 
     def _set_opex_specific_variable(self) -> Attribute:
@@ -153,7 +157,8 @@ class SMR_CCS(RetrofittingTechnology):
             Attribute: An Attribute object containing the specific variable opex data.
         """
         tech_db = TechnologyCostDatabase(
-            settings=self.settings, source_path=self.source_path)
+            settings=self.settings, source_path=self.source_path
+        )
         return tech_db.get_opex_specific_variable(self)
 
     def _set_retrofit_flow_coupling_factor(self) -> Attribute:
@@ -163,12 +168,13 @@ class SMR_CCS(RetrofittingTechnology):
         This factor represents the amount of CO2 captured per unit of SMR CCS output.
         """
         ccs_cf = CCSConversionFactor(
-            settings=self.settings, source_path=self.source_path)
+            settings=self.settings, source_path=self.source_path
+        )
         base_tech = self.model.elements[self.base_technology_name]
         return ccs_cf.get_retrofit_flow_coupling_factor_SMR_CCS(
             element=self, base_tech=base_tech
         )
-    
+
     def _set_capacity_existing(self) -> Attribute:
         """
         Sets the existing capacity of SMR CCS.
@@ -185,9 +191,7 @@ class SMR_CCS(RetrofittingTechnology):
                 default_value=0,
                 df=None,
                 source=AssumptionInformation(
-                    description=(
-                        "We do not consider existing capacities."
-                    ),
+                    description=("We do not consider existing capacities."),
                 ),
             )
             return attr
@@ -213,7 +217,8 @@ class SMR_CCS(RetrofittingTechnology):
         if not self.settings.investment.use_unbounded_capacity_addition_carbon:
             return attr
         iogp_projects = IOGPCarbonStorageProjects(
-                    settings=self.settings, source_path=self.source_path)
+            settings=self.settings, source_path=self.source_path
+        )
         data = iogp_projects.get_capacity_existing_data()
         median_add = data.median()
         return attr.set_data(
@@ -221,9 +226,9 @@ class SMR_CCS(RetrofittingTechnology):
             unit="tCO2/h",
             source=SourceInformation(
                 description=(
-                    "The unbounded capacity addition of carbon storage is "
-                    "based on the median existing and future capacity from the IOGP report, "
-                    "divided by the number of nodes in the dataset."
+                    "The unbounded capacity addition of carbon storage is based on the "
+                    "median existing and future capacity from the IOGP report, divided "
+                    "by the number of nodes in the dataset."
                 ),
                 metadata=iogp_projects.metadata,
             ),

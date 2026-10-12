@@ -2,17 +2,19 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import numpy as np
+import pandas as pd
 from zen_creator import ConversionTechnology
 from zen_creator.datasets.datasets.dataset import Dataset
 from zen_creator.datasets.datasets.metadata import MetaData, SourceInformation
+
 from zen_europe.utils.utils import format_capacity_existing
 
-import pandas as pd
-import numpy as np
 
 class EuropeanBiogasAssociation(Dataset[pd.DataFrame]):
     """
-    European Biogas Association dataset class for existing biomethane conversion capacity.
+    European Biogas Association dataset class for existing biomethane conversion
+    capacity.
 
     The 2020 edition of the EBA-GIE biomethane map lists a capacity for every single
     plant, so capacity additions up to 2020 are taken straight from it. The 2026 edition
@@ -38,29 +40,97 @@ class EuropeanBiogasAssociation(Dataset[pd.DataFrame]):
     # the two readings agree everywhere except BE (18 labels / 3 orange) and DE (29
     # orange), where the printed circle values below are used.
     PLANTS_TOTAL_2026 = {
-        "AT": 20, "BE": 17, "CH": 48, "CZ": 13, "DE": 285, "DK": 61, "EE": 12,
-        "ES": 26, "FI": 32, "FR": 829, "HU": 2, "IE": 2, "IS": 2, "IT": 273,
-        "LI": 1, "LT": 12, "LU": 2, "LV": 12, "NL": 92, "NO": 15, "PL": 1,
-        "PT": 13, "SE": 67, "SK": 5, "UA": 7, "UK": 128,
+        "AT": 20,
+        "BE": 17,
+        "CH": 48,
+        "CZ": 13,
+        "DE": 285,
+        "DK": 61,
+        "EE": 12,
+        "ES": 26,
+        "FI": 32,
+        "FR": 829,
+        "HU": 2,
+        "IE": 2,
+        "IS": 2,
+        "IT": 273,
+        "LI": 1,
+        "LT": 12,
+        "LU": 2,
+        "LV": 12,
+        "NL": 92,
+        "NO": 15,
+        "PL": 1,
+        "PT": 13,
+        "SE": 67,
+        "SK": 5,
+        "UA": 7,
+        "UK": 128,
     }
     PLANTS_NEW_2026 = {
-        "AT": 6, "BE": 2, "CH": 5, "CZ": 0, "DE": 28, "DK": 3, "EE": 4,
-        "ES": 11, "FI": 3, "FR": 87, "HU": 0, "IE": 0, "IS": 0, "IT": 136,
-        "LI": 0, "LT": 7, "LU": 0, "LV": 4, "NL": 5, "NO": 0, "PL": 0,
-        "PT": 8, "SE": 4, "SK": 3, "UA": 0, "UK": 9,
+        "AT": 6,
+        "BE": 2,
+        "CH": 5,
+        "CZ": 0,
+        "DE": 28,
+        "DK": 3,
+        "EE": 4,
+        "ES": 11,
+        "FI": 3,
+        "FR": 87,
+        "HU": 0,
+        "IE": 0,
+        "IS": 0,
+        "IT": 136,
+        "LI": 0,
+        "LT": 7,
+        "LU": 0,
+        "LV": 4,
+        "NL": 5,
+        "NO": 0,
+        "PL": 0,
+        "PT": 8,
+        "SE": 4,
+        "SK": 3,
+        "UA": 0,
+        "UK": 9,
     }
 
     # "Evolution of European biomethane production facilities" chart on the same map.
     # Each bar is the number of plants standing at the start of the year (dark) plus the
     # plants commissioned during it (light).
     EU_PLANTS_EXISTING = {
-        2011: 182, 2012: 182, 2013: 243, 2014: 302, 2015: 373, 2016: 431, 2017: 504,
-        2018: 562, 2019: 627, 2020: 718, 2021: 884, 2022: 1064, 2023: 1306,
-        2024: 1509, 2025: 1620,
+        2011: 182,
+        2012: 182,
+        2013: 243,
+        2014: 302,
+        2015: 373,
+        2016: 431,
+        2017: 504,
+        2018: 562,
+        2019: 627,
+        2020: 718,
+        2021: 884,
+        2022: 1064,
+        2023: 1306,
+        2024: 1509,
+        2025: 1620,
     }
     EU_PLANTS_NEW = {
-        2012: 61, 2013: 59, 2014: 71, 2015: 58, 2016: 73, 2017: 58, 2018: 65,
-        2019: 91, 2020: 166, 2021: 180, 2022: 242, 2023: 204, 2024: 111, 2025: 267,
+        2012: 61,
+        2013: 59,
+        2014: 71,
+        2015: 58,
+        2016: 73,
+        2017: 58,
+        2018: 65,
+        2019: 91,
+        2020: 166,
+        2021: 180,
+        2022: 242,
+        2023: 204,
+        2024: 111,
+        2025: 267,
     }
 
     # EBA press figures for the 2026 edition, used to size the plants the map does not
@@ -83,18 +153,17 @@ class EuropeanBiogasAssociation(Dataset[pd.DataFrame]):
     def _set_metadata(self) -> MetaData:
         return MetaData(
             name=self.name,
-            title=(
-                "EBA-GiE biomethane map 2020 and 2026"
-            ),
+            title=("EBA-GiE biomethane map 2020 and 2026"),
             author=["European Biogas Association (EBA)"],
             publication="EBA-GiE biomethane map",
             publication_year=2026,
             url="https://www.europeanbiogas.eu/publication/european-biomethane-map-2026/",
             note=(
-                "Per-plant capacities and commissioning years are from the 2020 edition "
-                "(https://www.europeanbiogas.eu/publication/eba-gie-biomethane-map-2020/). "
-                "The 2026 edition reports plant counts only and is entered as constants on "
-                "the dataset class."
+                "Per-plant capacities and commissioning years are from the 2020 "
+                "edition "
+                "(https://www.europeanbiogas.eu/publication/eba-gie-biomethane-map-2020/)."
+                " The 2026 edition reports plant counts only and is entered as "
+                "constants on the dataset class."
             ),
         )
 
@@ -102,14 +171,16 @@ class EuropeanBiogasAssociation(Dataset[pd.DataFrame]):
         if self.source_path is None:
             raise ValueError("source_path must be set to load the dataset.")
         return (
-            self.source_path /
-            "03-technology" /
-            "capacity_existing" /
-            "biomethane_conversion")
+            self.source_path
+            / "03-technology"
+            / "capacity_existing"
+            / "biomethane_conversion"
+        )
 
     def _set_data(self) -> dict[str, pd.Series]:
-        data = pd.read_excel(self.path / "biomethane_production.xlsx",
-                             sheet_name="Append1")
+        data = pd.read_excel(
+            self.path / "biomethane_production.xlsx", sheet_name="Append1"
+        )
         return data
 
     # -------- 2020 map -----------------------
@@ -124,9 +195,11 @@ class EuropeanBiogasAssociation(Dataset[pd.DataFrame]):
         Returns:
             pd.DataFrame: columns node, plant_id, capacity_existing, year_construction.
         """
-        rename_cols = {"Column1": "plant_id",
-                       "Column6": "capacity_existing",
-                       "Column9": "year_construction"}
+        rename_cols = {
+            "Column1": "plant_id",
+            "Column6": "capacity_existing",
+            "Column9": "year_construction",
+        }
         plants = self.data.rename(rename_cols, axis=1)
         is_plant = plants["plant_id"].astype(str).str.match(r"^[A-Z]{2}-\d+$", na=False)
         plants = plants.loc[is_plant, list(rename_cols.values())].copy()
@@ -150,7 +223,8 @@ class EuropeanBiogasAssociation(Dataset[pd.DataFrame]):
         plants = plants[plants["capacity_existing"].notna()].copy()
         median_year = int(np.median(plants["year_construction"].dropna()))
         plants["year_construction"] = (
-            plants["year_construction"].fillna(median_year).astype(int))
+            plants["year_construction"].fillna(median_year).astype(int)
+        )
         return plants.groupby(["node", "year_construction"])["capacity_existing"].sum()
 
     def get_plant_count_2020(self) -> pd.Series:
@@ -191,8 +265,8 @@ class EuropeanBiogasAssociation(Dataset[pd.DataFrame]):
         is_published = published.notna()
         target = self.EU_PLANTS_TOTAL_2026 * self.EU_AVG_CAPACITY_2026
         calibration_factor = (
-            (target - (plants_2026[is_published] * published[is_published]).sum())
-            / (plants_2026[~is_published] * base[~is_published]).sum())
+            target - (plants_2026[is_published] * published[is_published]).sum()
+        ) / (plants_2026[~is_published] * base[~is_published]).sum()
 
         average_2026 = base * calibration_factor
         average_2026[is_published] = published[is_published]
@@ -201,10 +275,12 @@ class EuropeanBiogasAssociation(Dataset[pd.DataFrame]):
     # -------- 2026 map -----------------------
     def get_year_weights(self) -> tuple[pd.Series, pd.Series]:
         """
-        European plant additions per year, split into the two windows the 2026 map spans.
+        European plant additions per year, split into the two windows the 2026 map
+        spans.
 
         Window 1 runs from the 2020 map date to Q1 2025, the reference date of the 2025
-        map edition. Its 2020 weight is the plants added after the 2020 map was compiled,
+        map edition. Its 2020 weight is the plants added after the 2020 map was
+        compiled,
         not the whole of 2020, because the map is a mid-year snapshot.
 
         Window 2 runs from Q1 2025 to the June 2026 map date and covers exactly the
@@ -215,25 +291,30 @@ class EuropeanBiogasAssociation(Dataset[pd.DataFrame]):
         """
         plants_end_2020 = self.EU_PLANTS_EXISTING[2020] + self.EU_PLANTS_NEW[2020]
         plants_end_2025 = self.EU_PLANTS_EXISTING[2025] + self.EU_PLANTS_NEW[2025]
-        window_1 = pd.Series({
-            2020: plants_end_2020 - int(self.get_plant_count_2020().sum()),
-            2021: self.EU_PLANTS_NEW[2021],
-            2022: self.EU_PLANTS_NEW[2022],
-            2023: self.EU_PLANTS_NEW[2023],
-            2024: self.EU_PLANTS_NEW[2024],
-            2025: self.PLANTS_ADDED_Q1_2025,
-        })
-        window_2 = pd.Series({
-            2025: self.EU_PLANTS_NEW[2025] - self.PLANTS_ADDED_Q1_2025,
-            self.YEAR_LAST: sum(self.PLANTS_TOTAL_2026.values()) - plants_end_2025,
-        })
+        window_1 = pd.Series(
+            {
+                2020: plants_end_2020 - int(self.get_plant_count_2020().sum()),
+                2021: self.EU_PLANTS_NEW[2021],
+                2022: self.EU_PLANTS_NEW[2022],
+                2023: self.EU_PLANTS_NEW[2023],
+                2024: self.EU_PLANTS_NEW[2024],
+                2025: self.PLANTS_ADDED_Q1_2025,
+            }
+        )
+        window_2 = pd.Series(
+            {
+                2025: self.EU_PLANTS_NEW[2025] - self.PLANTS_ADDED_Q1_2025,
+                self.YEAR_LAST: sum(self.PLANTS_TOTAL_2026.values()) - plants_end_2025,
+            }
+        )
         return window_1, window_2
 
     def get_plant_additions(self) -> pd.DataFrame:
         """
         Modelled plant additions per node and year, from the 2020 map date to mid-2026.
 
-        A node's plants added over the whole period is the difference between the two map
+        A node's plants added over the whole period is the difference between the two
+        map
         counts. The orange plants of the 2026 map date that difference for the recent
         window; the remainder is spread over the earlier window with the European yearly
         profile. Nodes that shrank (SE, NO, LU) or whose orange count exceeds their net
@@ -254,7 +335,8 @@ class EuropeanBiogasAssociation(Dataset[pd.DataFrame]):
         added_window_1 = (plants_2026 - plants_2020 - plants_new).clip(lower=0)
 
         additions = pd.DataFrame(
-            np.outer(added_window_1, share_1), index=nodes, columns=share_1.index)
+            np.outer(added_window_1, share_1), index=nodes, columns=share_1.index
+        )
         for year, share in share_2.items():
             additions[year] = additions.get(year, 0.0) + plants_new * share
         return additions.sort_index(axis=1)
@@ -263,7 +345,8 @@ class EuropeanBiogasAssociation(Dataset[pd.DataFrame]):
         """
         Plants per node that the two maps imply were closed, delisted or reclassified.
 
-        A node whose 2026 count is below its 2020 count, or below the plants the 2026 map
+        A node whose 2026 count is below its 2020 count, or below the plants the 2026
+        map
         itself flags as new, cannot have had only additions. That shortfall is reported
         here rather than netted off the additions.
 
@@ -290,15 +373,19 @@ class EuropeanBiogasAssociation(Dataset[pd.DataFrame]):
         return capacity.rename("capacity_existing")
 
     # -------- methods ------------------------
-    def get_capacity_existing(self, element: ConversionTechnology,
-                              extend_to_2026: bool = True) -> pd.Series:
+    def get_capacity_existing(
+        self, element: ConversionTechnology, extend_to_2026: bool = True
+    ) -> pd.Series:
         """
         Get the existing capacity for biomethane conversion technologies.
 
-        Up to the 2020 map date the capacities are the ones the 2020 map reports for each
+        Up to the 2020 map date the capacities are the ones the 2020 map reports for
+        each
         plant. After it they are modelled from the 2026 map: plant counts per country,
-        allocated to years with the European yearly profile on that map and valued with an
-        average capacity per plant. Both parts land in the same series, so 2020 holds the
+        allocated to years with the European yearly profile on that map and valued with
+        an
+        average capacity per plant. Both parts land in the same series, so 2020 holds
+        the
         plants the 2020 map dates to 2020 plus the modelled remainder of that year, and
         2026 covers H1 only.
 
@@ -319,17 +406,16 @@ class EuropeanBiogasAssociation(Dataset[pd.DataFrame]):
         attr = element.capacity_existing
         source = SourceInformation(
             description=(
-                f"The existing capacity of biomethane conversion is obtained from the "
+                "The existing capacity of biomethane conversion is obtained from the "
                 "European Biogas Association's biomethane production statistics. "
-                "Capacities up to 2020 are per-plant values from the 2020 biomethane map. "
-                "The 2026 map reports plant counts only, so additions after the 2020 map "
-                "are the difference between the two editions' counts, allocated to years "
-                "with the European yearly profile printed on the 2026 map and valued at "
-                "an average capacity per plant calibrated to the 8.2 bcm/yr EBA reports "
-                "for 2026."
+                "Capacities up to 2020 are per-plant values from the 2020 biomethane "
+                "map. The 2026 map reports plant counts only, so additions after the "
+                "2020 map are the difference between the two editions' counts, "
+                "allocated to years with the European yearly profile printed on the "
+                "2026 map and valued at an average capacity per plant calibrated to "
+                "the 8.2 bcm/yr EBA reports for 2026."
             ),
             metadata=self.metadata,
         )
         attr.set_data(df=capa, source=source, unit="GW")
         return attr
-

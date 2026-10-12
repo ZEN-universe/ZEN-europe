@@ -6,7 +6,6 @@ if TYPE_CHECKING:
     from zen_creator.model import Model
 
 from zen_creator.elements import Carrier
-from zen_creator.utils.attribute import Attribute
 
 
 class Biomethane(Carrier):
@@ -16,7 +15,6 @@ class Biomethane(Carrier):
     """
 
     name: str = "biomethane"
-    
 
     def __init__(self, model: Model, power_unit: str = "MW"):
         super().__init__(model=model, power_unit=power_unit)

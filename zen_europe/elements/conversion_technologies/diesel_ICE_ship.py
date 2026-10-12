@@ -9,7 +9,10 @@ from zen_europe.datasets.datasets.technology.shipping_technologies_korberg impor
 from zen_europe.datasets.datasets.technology.technology_diffusion_mannhardt import (
     TechnologyDiffusionMannhardt,
 )
-from zen_europe.utils.utils import account_for_decommissioned_capacity, format_capacity_existing
+from zen_europe.utils.utils import (
+    account_for_decommissioned_capacity,
+    format_capacity_existing,
+)
 
 if TYPE_CHECKING:
     from zen_creator.model import Model
@@ -106,8 +109,11 @@ class DieselICEShip(ConversionTechnology):
         cf_dict = korberg_dataset.get_shipping_conversion_factors(self)
         fuel_per_service = cf_dict["diesel"]
         gj_to_mwh = Constants.GJ_PER_MWH
-        vopex = (korberg_dataset.get_fuel_distribution_cost(self) * 
-                 gj_to_mwh * fuel_per_service)
+        vopex = (
+            korberg_dataset.get_fuel_distribution_cost(self)
+            * gj_to_mwh
+            * fuel_per_service
+        )
         attr.set_data(
             default_value=vopex,
             unit="Euro/MWh",
@@ -149,22 +155,27 @@ class DieselICEShip(ConversionTechnology):
         """
         if self.settings.investment.use_existing_capacities:
             eurostat_dataset = Eurostat(
-                settings=self.settings, source_path=self.source_path)
+                settings=self.settings, source_path=self.source_path
+            )
             shipping_fuel_demand = eurostat_dataset.get_shipping_fuel_demand()
             common_nodes = shipping_fuel_demand.index.intersection(
-                self.model.config.system.set_nodes)
+                self.model.config.system.set_nodes
+            )
             demand = shipping_fuel_demand.loc[common_nodes] / Constants.HOURS_PER_YEAR
             max_load = self.max_load.default_value
             cf_dict = self.conversion_factor.default_value
             diesel_cf = next(
-                entry["diesel"]["default_value"] 
-                for entry in cf_dict if "diesel" in entry)
+                entry["diesel"]["default_value"]
+                for entry in cf_dict
+                if "diesel" in entry
+            )
             capacity_existing = demand / diesel_cf / max_load
-            
+
             capacity_existing.index.name = "node"
             capacity_existing.name = self.settings.time.reference_year - 1
             capacity_existing = account_for_decommissioned_capacity(
-                capacity_existing.to_frame(),self)
+                capacity_existing.to_frame(), self
+            )
             capacity_existing = format_capacity_existing(capacity_existing)
             attr = self.capacity_existing
             source = SourceInformation(
@@ -184,9 +195,7 @@ class DieselICEShip(ConversionTechnology):
                 default_value=0,
                 df=None,
                 source=AssumptionInformation(
-                    description=(
-                        "We do not consider existing capacities."
-                    ),
+                    description=("We do not consider existing capacities."),
                 ),
             )
             return attr
@@ -221,7 +230,7 @@ class DieselICEShip(ConversionTechnology):
         """
         Sets the specific fixed operational expenditure (opex) for diesel ICE ships.
 
-        The fixed opex is obtained from Korberg et al. (2021) 
+        The fixed opex is obtained from Korberg et al. (2021)
         and is expressed in Euro/kW.
 
         Returns:

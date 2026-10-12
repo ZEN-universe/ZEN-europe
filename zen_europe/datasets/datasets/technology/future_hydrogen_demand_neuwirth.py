@@ -1,19 +1,20 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
-from inspect import Attribute
 from pathlib import Path
 
+import pandas as pd
 from zen_creator import ConversionTechnology, SourceInformation
 from zen_creator.datasets.datasets.dataset import Dataset
 from zen_creator.datasets.datasets.metadata import MetaData
-
-import pandas as pd
+from zen_creator.utils.attribute import Attribute
 
 from zen_europe.utils.constants import Constants
 
+
 class FutureHydrogenDemandNeuwirth(Dataset[pd.DataFrame]):
     """
-    Dataset class for the future hydrogen demand projections from Neuwirth et al. (2021).
+    Dataset class for the future hydrogen demand projections from Neuwirth et al.
+    (2021).
 
     """
 
@@ -26,9 +27,10 @@ class FutureHydrogenDemandNeuwirth(Dataset[pd.DataFrame]):
         return MetaData(
             name=self.name,
             title=(
-                "The future potential hydrogen demand in energy-intensive industries - a site-specific approach applied to Germany"
+                "The future potential hydrogen demand in energy-intensive industries - "
+                "a site-specific approach applied to Germany"
             ),
-            author=["Marius Neuwirth", "Tobias Fleitner", "Pia Manz", "René Hofmann"],
+            author=["Marius Neuwirth", "Tobias Fleitner", "Pia Manz", "RenÃ© Hofmann"],
             publication="Energy Conversion and Management",
             publication_year=2021,
             url="https://www.sciencedirect.com/science/article/pii/S0196890421012280",
@@ -41,27 +43,33 @@ class FutureHydrogenDemandNeuwirth(Dataset[pd.DataFrame]):
         return self.source_path
 
     def _set_data(self) -> dict[str, pd.Series]:
-        """ 
-        No data to be set
+        """
+        No data to be set.
         """
         data = {}
-        
+
         data = pd.Series(data)
         return data
 
-    # -------- methods ------------------------    
-    def get_conversion_factor_refining(self,element: ConversionTechnology) -> Attribute:
+    # -------- methods ------------------------
+    def get_conversion_factor_refining(
+        self, element: ConversionTechnology
+    ) -> Attribute:
         """
         Get the conversion factor for refining technologies.
 
         Returns:
             pd.Series: A pandas Series containing the conversion factor data.
         """
-        hydrogen_demand = 0.514*Constants.TOE_PER_MWH # between 0.389 - 0.639, Table 2
-        conversion_factor = [{
-            "crude_oil": {"default_value": 1, "unit": "GW/GW"},
-            "hydrogen": {"default_value": hydrogen_demand, "unit": "GW/GW"},
-        }]
+        hydrogen_demand = (
+            0.514 * Constants.TOE_PER_MWH
+        )  # between 0.389 - 0.639, Table 2
+        conversion_factor = [
+            {
+                "crude_oil": {"default_value": 1, "unit": "GW/GW"},
+                "hydrogen": {"default_value": hydrogen_demand, "unit": "GW/GW"},
+            }
+        ]
         attr = element.conversion_factor
         attr.set_data(
             default_value=conversion_factor,

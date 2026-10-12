@@ -210,8 +210,10 @@ class DESNZGreenhouseGasInventory(Dataset[pd.DataFrame]):
         df = df.set_index(memo).drop(columns=gas)
         df.columns = df.columns.astype(int)
         df.index = pd.MultiIndex.from_tuples(
-            [(INTERNATIONAL_SECTOR, INTERNATIONAL_SUBSECTOR, memo_item)
-             for memo_item in df.index]
+            [
+                (INTERNATIONAL_SECTOR, INTERNATIONAL_SUBSECTOR, memo_item)
+                for memo_item in df.index
+            ]
         )
         return df
 
@@ -301,12 +303,8 @@ class DESNZGreenhouseGasInventory(Dataset[pd.DataFrame]):
             sectors (list[str]): Modeled sectors, as in the model settings.
             start_year (int): First year of the time series.
         """
-        emissions_sectors = self.get_emissions_sectors(
-            sectors, start_year
-        )
-        emissions_total = self.get_emissions_total(
-            sectors, start_year
-        )
+        emissions_sectors = self.get_emissions_sectors(sectors, start_year)
+        emissions_total = self.get_emissions_total(sectors, start_year)
         return emissions_sectors, emissions_total
 
     def get_sector_share(
@@ -320,9 +318,7 @@ class DESNZGreenhouseGasInventory(Dataset[pd.DataFrame]):
             sectors (list[str]): Modeled sectors, as in the model settings.
             start_year (int): First year of the time series.
         """
-        emissions_sectors, emissions_total = self.get_emissions(
-            sectors, start_year
-        )
+        emissions_sectors, emissions_total = self.get_emissions(sectors, start_year)
         return emissions_sectors.sum() / emissions_total
 
     # ------ Helpers ------
@@ -333,6 +329,7 @@ class DESNZGreenhouseGasInventory(Dataset[pd.DataFrame]):
         if missing:
             raise ValueError(f"The workbook does not report the categories {missing}.")
         return self.data.loc[categories]
+
 
 class DESNZGreenhouseGasInventoryAllGHG(DESNZGreenhouseGasInventory):
     """All UK greenhouse gas emissions in CO2 equivalents."""

@@ -10,10 +10,10 @@ from pathlib import Path
 
 import pytest
 from pydantic import ValidationError
-
-import zen_europe.settings  # noqa: F401  (registers the categories)
 from zen_creator.utils.config import Config
 from zen_creator.utils.settings import Settings
+
+import zen_europe.settings  # noqa: F401  (registers the categories)
 
 CONFIG_PATH = Path(__file__).parents[2] / "data" / "zen_europe_config.yaml"
 

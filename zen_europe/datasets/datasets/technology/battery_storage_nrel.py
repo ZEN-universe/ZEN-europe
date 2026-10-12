@@ -51,24 +51,25 @@ class BatteryStorageNREL(Dataset[pd.DataFrame]):
         return data
 
     # -------- methods ------------------------
-    def get_energy_to_power_ratio_min(
-            self, technology: StorageTechnology) -> Attribute:
+    def get_energy_to_power_ratio_min(self, technology: StorageTechnology) -> Attribute:
         """
         Get the minimum energy-to-power ratio of a storage technology.
         """
         return self._set_energy_to_power_ratio(
-            technology, technology.energy_to_power_ratio_min)
+            technology, technology.energy_to_power_ratio_min
+        )
 
-    def get_energy_to_power_ratio_max(
-            self, technology: StorageTechnology) -> Attribute:
+    def get_energy_to_power_ratio_max(self, technology: StorageTechnology) -> Attribute:
         """
         Get the maximum energy-to-power ratio of a storage technology.
         """
         return self._set_energy_to_power_ratio(
-            technology, technology.energy_to_power_ratio_max)
+            technology, technology.energy_to_power_ratio_max
+        )
 
     def _set_energy_to_power_ratio(
-            self, technology: StorageTechnology, attr: Attribute) -> Attribute:
+        self, technology: StorageTechnology, attr: Attribute
+    ) -> Attribute:
         """
         Set an energy-to-power ratio attribute to the storage duration.
         """

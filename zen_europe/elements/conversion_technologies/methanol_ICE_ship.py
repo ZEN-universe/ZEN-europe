@@ -40,8 +40,7 @@ class MethanolICEShip(ConversionTechnology):
         """
         Sets the input carrier of methanol ICE ships to methanol.
         """
-        return Attribute(
-            name="input_carrier", default_value=["methanol"], element=self)
+        return Attribute(name="input_carrier", default_value=["methanol"], element=self)
 
     def _set_output_carrier(self) -> Attribute:
         """
@@ -100,8 +99,11 @@ class MethanolICEShip(ConversionTechnology):
         cf_dict = korberg_dataset.get_shipping_conversion_factors(self)
         fuel_per_service = cf_dict["methanol"]
         gj_to_mwh = Constants.GJ_PER_MWH
-        vopex = (korberg_dataset.get_fuel_distribution_cost(self)
-                * gj_to_mwh * fuel_per_service)
+        vopex = (
+            korberg_dataset.get_fuel_distribution_cost(self)
+            * gj_to_mwh
+            * fuel_per_service
+        )
         attr.set_data(
             default_value=vopex,
             unit="Euro/MWh",
@@ -160,7 +162,7 @@ class MethanolICEShip(ConversionTechnology):
         """
         Sets the specific fixed operational expenditure (opex) for methanol ICE ships.
 
-        The fixed opex is obtained from Korberg et al. (2021) 
+        The fixed opex is obtained from Korberg et al. (2021)
         and is expressed in Euro/kW.
 
         Returns:

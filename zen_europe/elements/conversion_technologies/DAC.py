@@ -47,15 +47,14 @@ class DAC(ConversionTechnology):
         Sets the input carrier of DAC to electricity and heat.
         """
         return Attribute(
-            name="input_carrier", default_value=["electricity", "heat"], element=self)
+            name="input_carrier", default_value=["electricity", "heat"], element=self
+        )
 
     def _set_output_carrier(self) -> Attribute:
         """
         Set the output carrier of DAC to carbon.
         """
-        return Attribute(
-            name="output_carrier", default_value=["carbon"], element=self
-        )
+        return Attribute(name="output_carrier", default_value=["carbon"], element=self)
 
     # ---------- Required methods that are called during object build ----------
 
@@ -65,7 +64,8 @@ class DAC(ConversionTechnology):
 
         """
         tech_db = TechnologyCostDatabase(
-            settings=self.settings, source_path=self.source_path)
+            settings=self.settings, source_path=self.source_path
+        )
         return tech_db.get_lifetime(self)
 
     def _set_conversion_factor(self) -> Attribute:
@@ -95,7 +95,8 @@ class DAC(ConversionTechnology):
         """
         if self.settings.investment.use_construction_times:
             tech_db = TechnologyCostDatabase(
-                    settings=self.settings, source_path=self.source_path)
+                settings=self.settings, source_path=self.source_path
+            )
             return tech_db.get_construction_time(self)
         else:
             return self.construction_time
@@ -108,7 +109,8 @@ class DAC(ConversionTechnology):
             Attribute: An Attribute object containing the specific capex data.
         """
         tech_db = TechnologyCostDatabase(
-                    settings=self.settings, source_path=self.source_path)
+            settings=self.settings, source_path=self.source_path
+        )
         return tech_db.get_capex_specific_conversion(self)
 
     def _set_opex_specific_fixed(self) -> Attribute:
@@ -119,7 +121,8 @@ class DAC(ConversionTechnology):
             Attribute: An Attribute object containing the specific fixed opex data.
         """
         tech_db = TechnologyCostDatabase(
-            settings=self.settings, source_path=self.source_path)
+            settings=self.settings, source_path=self.source_path
+        )
         return tech_db.get_opex_specific_fixed(self)
 
     def _set_opex_specific_variable(self) -> Attribute:
@@ -130,7 +133,8 @@ class DAC(ConversionTechnology):
             Attribute: An Attribute object containing the specific variable opex data.
         """
         tech_db = TechnologyCostDatabase(
-            settings=self.settings, source_path=self.source_path)
+            settings=self.settings, source_path=self.source_path
+        )
         return tech_db.get_opex_specific_variable(self)
 
     def _set_capacity_existing(self) -> Attribute:
@@ -142,7 +146,8 @@ class DAC(ConversionTechnology):
         """
         if self.settings.investment.use_existing_capacities:
             dac_db = DACCapacitiesZurbriggen(
-                settings=self.settings, source_path=self.source_path)        
+                settings=self.settings, source_path=self.source_path
+            )
             return dac_db.get_capacity_existing(self)
         else:
             attr = self.capacity_existing
@@ -150,9 +155,7 @@ class DAC(ConversionTechnology):
                 default_value=0,
                 df=None,
                 source=AssumptionInformation(
-                    description=(
-                        "We do not consider existing capacities."
-                    ),
+                    description=("We do not consider existing capacities."),
                 ),
             )
             return attr
@@ -166,19 +169,24 @@ class DAC(ConversionTechnology):
         diffusion_rates = TechnologyDiffusionMannhardt(source_path=self.source_path)
         return diffusion_rates.get_max_diffusion_rate(self)
 
-    
     def _set_capacity_addition_unbounded(self) -> Attribute:
         """
         Sets the unbounded capacity addition of carbon storage.
 
         Returns:
-            Attribute: An Attribute object containing the unbounded capacity addition data.
+            Attribute: An Attribute object containing the unbounded capacity addition
+                data.
         """
         dac_db = DACCapacitiesZurbriggen(
-            settings=self.settings, source_path=self.source_path)
+            settings=self.settings, source_path=self.source_path
+        )
         data = dac_db.data.copy()
-        data = data[["node","year_construction","Capacity"]].groupby(
-            ["node","year_construction"]).sum().squeeze()
+        data = (
+            data[["node", "year_construction", "Capacity"]]
+            .groupby(["node", "year_construction"])
+            .sum()
+            .squeeze()
+        )
         median_add = data.median()
         n_nodes = len(data.index.get_level_values("node").unique())
         addition = median_add / n_nodes

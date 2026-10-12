@@ -38,16 +38,31 @@ class StorageTechnologiesVictoria(Dataset[pd.DataFrame]):
     # underground hydrogen storage by energy [Euro/kWh].
     OVERNIGHT_COST: dict[str, dict[int, float]] = {
         "battery_inverter": {
-            2020: 270, 2025: 215, 2030: 160, 2035: 130,
-            2040: 100, 2045: 80, 2050: 60,
+            2020: 270,
+            2025: 215,
+            2030: 160,
+            2035: 130,
+            2040: 100,
+            2045: 80,
+            2050: 60,
         },
         "battery_storage": {
-            2020: 232, 2025: 187, 2030: 142, 2035: 118,
-            2040: 94, 2045: 84, 2050: 75,
+            2020: 232,
+            2025: 187,
+            2030: 142,
+            2035: 118,
+            2040: 94,
+            2045: 84,
+            2050: 75,
         },
         "hydrogen_storage_underground": {
-            2020: 3.0, 2025: 2.5, 2030: 2.0, 2035: 1.8,
-            2040: 1.5, 2045: 1.4, 2050: 1.2,
+            2020: 3.0,
+            2025: 2.5,
+            2030: 2.0,
+            2035: 1.8,
+            2040: 1.5,
+            2045: 1.4,
+            2050: 1.2,
         },
     }
 
@@ -96,14 +111,31 @@ class StorageTechnologiesVictoria(Dataset[pd.DataFrame]):
             opex_share = self.FIXED_OPEX_SHARE.get(power, 0.0)
             for year, cost_energy in self.OVERNIGHT_COST[energy].items():
                 cost_power = power_cost.get(year, 0.0)
-                rows.append(self._row(
-                    technology, "capex", year, cost_power, cost_power, "Euro/kW"))
-                rows.append(self._row(
-                    technology, "capex_energy", year, cost_energy, cost_energy,
-                    "Euro/kWh"))
-                rows.append(self._row(
-                    technology, "fopex", year, cost_power * opex_share / 100,
-                    opex_share, "%/year"))
+                rows.append(
+                    self._row(
+                        technology, "capex", year, cost_power, cost_power, "Euro/kW"
+                    )
+                )
+                rows.append(
+                    self._row(
+                        technology,
+                        "capex_energy",
+                        year,
+                        cost_energy,
+                        cost_energy,
+                        "Euro/kWh",
+                    )
+                )
+                rows.append(
+                    self._row(
+                        technology,
+                        "fopex",
+                        year,
+                        cost_power * opex_share / 100,
+                        opex_share,
+                        "%/year",
+                    )
+                )
         data = pd.DataFrame(rows, columns=INDEX_NAMES + VALUE_COLUMNS)
         return data.set_index(INDEX_NAMES).sort_index()
 
@@ -118,9 +150,16 @@ class StorageTechnologiesVictoria(Dataset[pd.DataFrame]):
     ) -> tuple:
         """Build a single row of the cost schema."""
         return (
-            technology, "M", "ref", variable, int(year),
-            float(value), STANDARD_UNITS[variable], self.MONEY_YEAR,
-            float(value_src), unit_src,
+            technology,
+            "M",
+            "ref",
+            variable,
+            int(year),
+            float(value),
+            STANDARD_UNITS[variable],
+            self.MONEY_YEAR,
+            float(value_src),
+            unit_src,
         )
 
     # -------- methods ------------------------

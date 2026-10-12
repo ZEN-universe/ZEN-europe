@@ -26,13 +26,43 @@ from zen_europe.utils.constants import Constants
 
 
 _MAIN_TECHS: dict[str, tuple[str, str, str, str | None]] = {
-    "wind_onshore": ("Onshore wind turbine, utility", "renewable power", "wind", "large"),
-    "photovoltaics": ("PV", "renewable power", "solar", "utility-scale, ground mounted"),
+    "wind_onshore": (
+        "Onshore wind turbine, utility",
+        "renewable power",
+        "wind",
+        "large",
+    ),
+    "photovoltaics": (
+        "PV",
+        "renewable power",
+        "solar",
+        "utility-scale, ground mounted",
+    ),
     "rooftop_photovoltaics": ("PV", "renewable power", "solar", "residential rooftop"),
-    "rooftop_photovoltaics_com": ("PV", "renewable power", "solar", "commercial/industrial rooftop"),
-    "natural_gas_turbine": ("Gas turbine, combined cycle", "extraction", "natural gas", "large"),
-    "oc_natural_gas_turbine": ("Gas turbine, open cycle", "back pressure", "natural gas", "medium"),
-    "hard_coal_plant": ("Coal power plant, supercritical", "extraction", "coal", "medium"),
+    "rooftop_photovoltaics_com": (
+        "PV",
+        "renewable power",
+        "solar",
+        "commercial/industrial rooftop",
+    ),
+    "natural_gas_turbine": (
+        "Gas turbine, combined cycle",
+        "extraction",
+        "natural gas",
+        "large",
+    ),
+    "oc_natural_gas_turbine": (
+        "Gas turbine, open cycle",
+        "back pressure",
+        "natural gas",
+        "medium",
+    ),
+    "hard_coal_plant": (
+        "Coal power plant, supercritical",
+        "extraction",
+        "coal",
+        "medium",
+    ),
     "natural_gas_boiler_DH": ("Gas boiler", "boiler", "natural gas", "medium"),
     "heat_pump_DH": ("Heat pump, air source", "heat pump", "electricity", None),
     "waste_boiler_DH": ("Waste boiler", "boiler", "waste", "small"),
@@ -42,19 +72,30 @@ _MAIN_TECHS: dict[str, tuple[str, str, str, str | None]] = {
 }
 
 # DEA reports rooftop-residential/rooftop-commercial/utility-scale PV as three separate
-# `Technology` rows, keyed here via `_SIZE_MAP_PV` purely to find each one's DEA label -- unlike
-# `_MAIN_TECHS`'s other `fixed_size` entries, this isn't a real small/medium/large *capacity*
-# split, since each of the three is already its own internal technology name. None of them have
+# `Technology` rows, keyed here via `_SIZE_MAP_PV` purely to find each one's DEA label
+# -- unlike
+# `_MAIN_TECHS`'s other `fixed_size` entries, this isn't a real small/medium/large
+# *capacity*
+# split, since each of the three is already its own internal technology name. None of
+# them have
 # genuine size variation, so (per `_cost_schema`'s "agencies/technologies without a size
-# dimension report under 'M'" convention, followed by every other agency here) their rows are
+# dimension report under 'M'" convention, followed by every other agency here) their
+# rows are
 # tagged `plant_size="M"` regardless of which DEA label matched -- see `_parse_main`.
 _PV_TECHS = {"photovoltaics", "rooftop_photovoltaics", "rooftop_photovoltaics_com"}
 _SIZE_MAP = {"S": "small", "M": "medium", "L": "large"}
-_SIZE_MAP_PV = {"S": "residential rooftop", "M": "commercial/industrial rooftop", "L": "utility-scale, ground mounted"}
+_SIZE_MAP_PV = {
+    "S": "residential rooftop",
+    "M": "commercial/industrial rooftop",
+    "L": "utility-scale, ground mounted",
+}
 
-# `heat_pump_DH`'s DEA label now carries a DH-supply-temperature suffix (a 2025 catalogue
-# revision split district-heating heat pumps by heat source x size x supply temperature, where
-# there used to be one entry per size); we use the 70/35 degree, air-source variant, the closest
+# `heat_pump_DH`'s DEA label now carries a DH-supply-temperature suffix (a 2025
+# catalogue
+# revision split district-heating heat pumps by heat source x size x supply temperature,
+# where
+# there used to be one entry per size); we use the 70/35 degree, air-source variant, the
+# closest
 # continuation of the old single "Heat pump, air source" entry.
 _LABEL_SUFFIXES: dict[str, str] = {
     "heat_pump_DH": " - dh temp 70/35 degrees",
@@ -62,11 +103,15 @@ _LABEL_SUFFIXES: dict[str, str] = {
 
 # Technologies whose DEA `Technology` label no longer decomposes into the standard
 # Type/Category/Input/Size join used by `_MAIN_TECHS`: a catalogue revision restructured
-# offshore wind into a grid-connection x foundation-type taxonomy with no separate size field
+# offshore wind into a grid-connection x foundation-type taxonomy with no separate size
+# field
 # (replacing the old single "Offshore wind turbines"/".... nearshore" entries). Internal
-# technology name -> (complete DEA `Technology` label, plant_size it represents). We use the
-# AC-connected, fixed-bottom variant for both -- standard grid-connected offshore wind on a
-# fixed-bottom foundation, still the dominant real-world technology and the closest continuation
+# technology name -> (complete DEA `Technology` label, plant_size it represents). We use
+# the
+# AC-connected, fixed-bottom variant for both -- standard grid-connected offshore wind
+# on a
+# fixed-bottom foundation, still the dominant real-world technology and the closest
+# continuation
 # of the old entries -- always at plant_size "L", matching their old fixed "large" size.
 _MAIN_TECHS_LITERAL: dict[str, tuple[str, str]] = {
     "wind_offshore": ("Offshore Wind - AC connected - Fixed bottom", "L"),
@@ -79,7 +124,10 @@ _IH_TECHS: dict[str, tuple[str, str]] = {
     "natural_gas_boiler": ("Natural gas boiler", "existing building"),
     "heat_pump": ("Heat pump, Air-to-water", "existing building"),
     "oil_boiler": ("Oil boiler (mineral oil fired, < 10 % FAME)", "existing building"),
-    "biomass_boiler": ("Biomass boiler, automatic stoking , wood pellets or wood chips", "existing building"),
+    "biomass_boiler": (
+        "Biomass boiler, automatic stoking , wood pellets or wood chips",
+        "existing building",
+    ),
     "electrode_boiler": ("Electric heating", "new building"),
 }
 # DEA has no "small" building-level entry; only single-family houses (M) and
@@ -87,17 +135,29 @@ _IH_TECHS: dict[str, tuple[str, str]] = {
 _IH_SIZE_MAP = {"M": "single-family house", "L": "apartment complex"}
 
 _SCENARIOS = {"min": "lower", "max": "upper", "ref": "ctrl"}
-_COST_VAR_LABELS = {"capex": "Nominal investment", "fopex": "Fixed O&M", "vopex": "Variable O&M"}
+_COST_VAR_LABELS = {
+    "capex": "Nominal investment",
+    "fopex": "Fixed O&M",
+    "vopex": "Variable O&M",
+}
 
 # internal technology name -> DEA carbon-capture technology row key. Costs are
 # reported per tCO2/h captured rather than per kW, so these use
 # `CO2_BASIS_UNITS` instead of the power/heat schema.
 _CCS_TECHS: dict[str, str] = {
     "DAC": "Solid Adsorption Direct Air Capture Plant",
-    "cement_post_comb": "Post-combustion carbon capture - Retrofit 4500 ton clinker per day cement kiln",
-    "NG_DRI_CCS": "Post-combustion carbon capture - Retrofit 4500 ton clinker per day cement kiln",
-    "BF_BOF_CCS": "Post-combustion carbon capture - Retrofit 4500 ton clinker per day cement kiln",
-    "SMR_CCS": "Post-combustion carbon capture retrofit - 100 MW(th) WtE or biomass CHP plant",
+    "cement_post_comb": (
+        "Post-combustion carbon capture - Retrofit 4500 ton clinker per day cement kiln"
+    ),
+    "NG_DRI_CCS": (
+        "Post-combustion carbon capture - Retrofit 4500 ton clinker per day cement kiln"
+    ),
+    "BF_BOF_CCS": (
+        "Post-combustion carbon capture - Retrofit 4500 ton clinker per day cement kiln"
+    ),
+    "SMR_CCS": (
+        "Post-combustion carbon capture retrofit - 100 MW(th) WtE or biomass CHP plant"
+    ),
 }
 # DAC has no reported variable O&M figure.
 _CCS_COST_PARS: dict[str, dict[str, str]] = {
@@ -114,33 +174,59 @@ _CCS_COST_PARS: dict[str, dict[str, str]] = {
 _CCS_SCENARIOS = {"min": "Lower", "max": "Upper", "ref": "Est"}
 
 # DEA's own stable media links for the four source workbooks (the legacy script's
-# ens.dk/sites/ens.dk/files/... URLs no longer resolve), and the local filename each is cached
-# under on first load (matching the other agencies' checked-in-raw-file convention). Each
+# ens.dk/sites/ens.dk/files/... URLs no longer resolve), and the local filename each is
+# cached
+# under on first load (matching the other agencies' checked-in-raw-file convention).
+# Each
 # workbook contains an "alldata_flat" sheet.
 _SOURCES: dict[str, tuple[str, str]] = {
-    "main": ("technology_data_for_el_and_dh.xlsx", "https://ens.dk/media/8615/download"),
-    "ih": ("technology_data_heating_installations.xlsx", "https://ens.dk/media/8518/download"),
-    "rf": ("data_sheets_for_renewable_fuels.xlsx", "https://ens.dk/media/6444/download"),
-    "ccs": ("technology_data_for_carbon_capture_transport_storage.xlsx", "https://ens.dk/media/5729/download"),
-    "dh_transport": ("technology_data_for_energy_transport.xlsx", "https://ens.dk/media/7681/download"),
+    "main": (
+        "technology_data_for_el_and_dh.xlsx",
+        "https://ens.dk/media/8615/download",
+    ),
+    "ih": (
+        "technology_data_heating_installations.xlsx",
+        "https://ens.dk/media/8518/download",
+    ),
+    "rf": (
+        "data_sheets_for_renewable_fuels.xlsx",
+        "https://ens.dk/media/6444/download",
+    ),
+    "ccs": (
+        "technology_data_for_carbon_capture_transport_storage.xlsx",
+        "https://ens.dk/media/5729/download",
+    ),
+    "dh_transport": (
+        "technology_data_for_energy_transport.xlsx",
+        "https://ens.dk/media/7681/download",
+    ),
 }
 
-# `ws`-sheet name (within the energy-transport workbook's `alldata_flat`) for each district
+# `ws`-sheet name (within the energy-transport workbook's `alldata_flat`) for each
+# district
 # heating distribution network variant -> our area-type label. DEA also reports DH
-# *transmission* (bulk, inter-node pipelines, sheet "3.1 DH transmission", `€/MW/m` capex tiered
-# by capacity band) in the same workbook, not extracted here: `district_heating_grid` is a
-# `ConversionTechnology` (district_heat -> heat), matching the last-mile distribution step, not
+# *transmission* (bulk, inter-node pipelines, sheet "3.1 DH transmission", `€/MW/m`
+# capex tiered
+# by capacity band) in the same workbook, not extracted here: `district_heating_grid` is
+# a
+# `ConversionTechnology` (district_heat -> heat), matching the last-mile distribution
+# step, not
 # bulk transport between nodes.
 _DH_DISTRIBUTION_SHEETS: dict[str, str] = {
     "suburban": "3.2 DH_Distribu Suburb",
     "city": "3.3 DH_Distribu City",
     "new_area": "3.4 DH_Distribu New area",
 }
-# DH distribution capex is reported per km² of network service area (not per kW, unlike every
-# other DEA figure in this file), so it doesn't fit `_cost_schema`'s Euro/kW convention; fopex
-# and vopex are capacity/energy-based and would fit, but are kept in the same native-unit table
-# for consistency. `get_dh_distribution_data` returns this separately from `get_costs()` rather
-# than forcing it into the shared schema -- how to turn an area-based network cost into a
+# DH distribution capex is reported per km² of network service area (not per kW, unlike
+# every
+# other DEA figure in this file), so it doesn't fit `_cost_schema`'s Euro/kW convention;
+# fopex
+# and vopex are capacity/energy-based and would fit, but are kept in the same
+# native-unit table
+# for consistency. `get_dh_distribution_data` returns this separately from `get_costs()`
+# rather
+# than forcing it into the shared schema -- how to turn an area-based network cost into
+# a
 # technology capex is a modeling decision for whatever consumes it, not this dataset.
 _DH_DISTRIBUTION_COST_PARS: dict[str, str] = {
     "capex": "Investments cost, distribution network  [M€/km2]",
@@ -150,15 +236,23 @@ _DH_DISTRIBUTION_COST_PARS: dict[str, str] = {
 _DH_DISTRIBUTION_TECH_PARS: dict[str, str] = {
     "lifetime": "Technical life time [years]",
     "construction_time": "Construction time [years]",
-    "energy_losses": "Energy losses, network [%]"
+    "energy_losses": "Energy losses, network [%]",
 }
 
-# The energy-transport workbook's `priceyear` column is blank (like `rf`/`ih`); its Index sheet
-# states the price basis instead: "Cost data for el transmission, DH, H2 pipelines and road is
+# The energy-transport workbook's `priceyear` column is blank (like `rf`/`ih`); its
+# Index sheet
+# states the price basis instead: "Cost data for el transmission, DH, H2 pipelines and
+# road is
 # in 2025 EURO".
 _DH_MONEY_YEAR_SRC = 2025
 _DH_DISTRIBUTION_INDEX_NAMES = ["area_type", "variable", "scenario", "year"]
-_DH_DISTRIBUTION_VALUE_COLUMNS = ["value", "unit", "money_year_src", "value_src", "unit_src"]
+_DH_DISTRIBUTION_VALUE_COLUMNS = [
+    "value",
+    "unit",
+    "money_year_src",
+    "value_src",
+    "unit_src",
+]
 
 # internal technology name -> DEA renewable-fuel technology row key. All
 # reported on a Euro/kW(h)-of-output basis, so they fit the power/heat schema
@@ -173,7 +267,9 @@ _DH_DISTRIBUTION_VALUE_COLUMNS = ["value", "unit", "money_year_src", "value_src"
 _RF_TECHS: dict[str, str] = {
     "methanol_from_biomass": "Bio Methanol",
     "methanol_from_hydrogen": "Methanol from hydrogen and carbon dioxide",
-    "haber_bosch": "Green Ammonia plant: Hydrogen to ammonia (excl. electrolyzer and excl. ASU)",
+    "haber_bosch": (
+        "Green Ammonia plant: Hydrogen to ammonia (excl. electrolyzer and excl. ASU)"
+    ),
     "fischer_tropsch": "Hydrogen to Jet Fuel",
     # DEA reorganized its old single "Slow pyrolysis ... from straw" entry into scale x
     # feedstock variants (large/small scale x straw/garden waste/digestate); we use the
@@ -206,11 +302,15 @@ _RF_COST_PARS: dict[str, dict[str, tuple[str, float]]] = {
         "vopex": ("Variable O&M [€/MWH Liquids]", 1.0),
     },
     # DEA's reorganized pyrolysis chapter merged fixed and variable O&M into a single
-    # per-MW/year figure (previously reported separately); mapped to fopex only, vopex is left
+    # per-MW/year figure (previously reported separately); mapped to fopex only, vopex
+    # is left
     # unset rather than guessing a split.
     "pyrolysis": {
         "capex": ("Specific investment [M€/MW output from pyrolysis process]", 1000.0),
-        "fopex": ("Fixed and variabel O&M [M€/MW output from pyrolysis process/year]", 1000.0),
+        "fopex": (
+            "Fixed and variabel O&M [M€/MW output from pyrolysis process/year]",
+            1000.0,
+        ),
     },
     "methanation": {
         "capex": ("Specific investment [M€/MW SNG]", 1000.0),
@@ -227,18 +327,27 @@ _RF_COST_PARS: dict[str, dict[str, tuple[str, float]]] = {
         # no separate "Variable O&M" figure is reported for this technology any more.
     },
     "anaerobic_digestion": {
-        # relabeled "MWh Output" in the current catalogue, but the values (order of magnitude
-        # ~1 M€/MW) confirm this is still a capacity, not an annual-output, basis -- almost
-        # certainly a labeling inconsistency in DEA's own spreadsheet, not a methodology change.
+        # relabeled "MWh Output" in the current catalogue, but the values (order of
+        # magnitude
+        # ~1 M€/MW) confirm this is still a capacity, not an annual-output, basis --
+        # almost
+        # certainly a labeling inconsistency in DEA's own spreadsheet, not a methodology
+        # change.
         "capex": ("Specific investment [M€/MWh Output]", 1000.0),
-        # combined fixed+variable O&M, now reported directly on a €/MW/year capacity basis --
-        # replaces the old separate ton-input-based fopex figure (which needed an empirical
-        # €/(ton/year) -> €/kW/year conversion factor) and the old vopex figure, both gone from
+        # combined fixed+variable O&M, now reported directly on a €/MW/year capacity
+        # basis --
+        # replaces the old separate ton-input-based fopex figure (which needed an
+        # empirical
+        # €/(ton/year) -> €/kW/year conversion factor) and the old vopex figure, both
+        # gone from
         # the current catalogue; mapped to fopex only, vopex is left unset.
         "fopex": ("Total O&M [k€/MW/year]", 1.0),
     },
     "biomethane_conversion": {
-        "capex": ("Specific investment, upgrading and methane reduction [k€/MW output]", 1.0),
+        "capex": (
+            "Specific investment, upgrading and methane reduction [k€/MW output]",
+            1.0,
+        ),
         "fopex": (
             "- of which fixed O&M costs upgrading and methane reduction, "
             "excl. electricity and heat [k€/MW output/year]",
@@ -255,15 +364,19 @@ _RF_SCENARIOS_DEFAULT = {"min": "Lower", "max": "Upper", "ref": "ctrl"}
 _RF_SCENARIOS_ALT = {"min": "Lower", "max": "Upper", "ref": "Est"}
 _RF_ALT_SCENARIO_TECHS = {"anaerobic_digestion", "biomethane_conversion"}
 
-# The renewable-fuels workbook's `priceyear` column is entirely blank (unlike the other three
-# DEA workbooks); its own Index sheet states the price basis instead: "All cost data is in 2020
+# The renewable-fuels workbook's `priceyear` column is entirely blank (unlike the other
+# three
+# DEA workbooks); its own Index sheet states the price basis instead: "All cost data is
+# in 2020
 # EURO, except the chapters on pyrolysis which are in 2025 EURO".
 _RF_MONEY_YEAR_SRC: dict[str, int] = {"pyrolysis": 2025}
 _RF_DEFAULT_MONEY_YEAR_SRC = 2020
 
 
 def _dea_size(plant_size: str, technology: str) -> str:
-    return _SIZE_MAP_PV[plant_size] if technology in _PV_TECHS else _SIZE_MAP[plant_size]
+    return (
+        _SIZE_MAP_PV[plant_size] if technology in _PV_TECHS else _SIZE_MAP[plant_size]
+    )
 
 
 def _convert_main_unit(unit_src: str, variable: str) -> float:
@@ -298,11 +411,14 @@ def _extract_embedded_year(label: str) -> int:
 
     A 2025 catalogue revision of the individual-heating workbook left the dedicated
     `priceyear` column blank and instead embeds the price year directly in the par label
-    (e.g. `"Nominal investment (*total) [k€/unit, 2025]"`), so it has to be parsed out instead.
+    (e.g. `"Nominal investment (*total) [k€/unit, 2025]"`), so it has to be parsed out
+    instead.
     """
     match = re.search(r"(\d{4})\D*$", label)
     if match is None:
-        raise ValueError(f"Could not find an embedded price year in DEA label '{label}'")
+        raise ValueError(
+            f"Could not find an embedded price year in DEA label '{label}'"
+        )
     return int(match.group(1))
 
 
@@ -321,19 +437,26 @@ class DEA(Dataset[pd.DataFrame]):
     *not* included (out of scope for a technology cost database: they price
     logistics infrastructure, not a conversion technology).
 
-    Raw data is downloaded once from DEA's own stable media links (see `_SOURCES`) and cached
-    locally under `self.path` as an "alldata_flat" export per source, matching the legacy
-    script's approach (its original `ens.dk/sites/ens.dk/files/...` URLs no longer resolve) and
+    Raw data is downloaded once from DEA's own stable media links (see `_SOURCES`) and
+    cached
+    locally under `self.path` as an "alldata_flat" export per source, matching the
+    legacy
+    script's approach (its original `ens.dk/sites/ens.dk/files/...` URLs no longer
+    resolve) and
     the other agencies' checked-in-local-file convention.
 
     DEA revises this catalogue continuously; a handful of technologies were renamed or
-    restructured by revisions made since this class was first ported (see `_MAIN_TECHS_LITERAL`,
-    `_LABEL_SUFFIXES`, and the `pyrolysis` entries in `_RF_TECHS`/`_RF_COST_PARS` for specifics).
-    If DEA renames or restructures a technology again, re-verify this file's mappings against a
+    restructured by revisions made since this class was first ported (see
+    `_MAIN_TECHS_LITERAL`,
+    `_LABEL_SUFFIXES`, and the `pyrolysis` entries in `_RF_TECHS`/`_RF_COST_PARS` for
+    specifics).
+    If DEA renames or restructures a technology again, re-verify this file's mappings
+    against a
     delete-and-refetch of the affected file in `self.path`.
 
     District heating distribution-network data are available separately via
-    `get_dh_distribution_data`, in DEA's own native units (`€/km²` capacity, not `€/kW`) rather
+    `get_dh_distribution_data`, in DEA's own native units (`€/km²` capacity, not `€/kW`)
+    rather
     than folded into `get_costs()`'s shared schema.
     """
 
@@ -384,14 +507,22 @@ class DEA(Dataset[pd.DataFrame]):
         data.reset_index().to_feather(cache_path)
         return data
 
-    def _load(self, source: str, rf_category_fixup: bool = False) -> tuple[pd.DataFrame, pd.DataFrame]:
-        """Load one of DEA's "alldata_flat" workbooks and split it into financial/technical.
+    def _load(
+        self, source: str, rf_category_fixup: bool = False
+    ) -> tuple[pd.DataFrame, pd.DataFrame]:
+        """Load one of DEA's "alldata_flat" workbooks and split it into
+        financial/technical.
 
-        Downloads the workbook to `self.path` on first use (see `_download`); subsequent loads
-        read the cached local file. Mirrors the legacy script's `load_DEA`: split rows by the
-        `cat` column into "Financial data" and "Energy/technical data". The renewable-fuels
-        workbook's `cat` column has several whitespace-inconsistent "Financial data..." variants
-        (`rf_category_fixup=True` normalizes them to "Financial data", exactly as the legacy
+        Downloads the workbook to `self.path` on first use (see `_download`); subsequent
+        loads
+        read the cached local file. Mirrors the legacy script's `load_DEA`: split rows
+        by the
+        `cat` column into "Financial data" and "Energy/technical data". The
+        renewable-fuels
+        workbook's `cat` column has several whitespace-inconsistent "Financial data..."
+        variants
+        (`rf_category_fixup=True` normalizes them to "Financial data", exactly as the
+        legacy
         script did); every other source uses `cat` values that already match exactly.
         """
         filename, url = _SOURCES[source]
@@ -423,22 +554,40 @@ class DEA(Dataset[pd.DataFrame]):
         df["val"] = pd.to_numeric(df["val"], errors="coerce")
         return df.dropna(subset=["val"])
 
-    def _parse_main(self, financial: pd.DataFrame, technical: pd.DataFrame) -> list[tuple]:
+    def _parse_main(
+        self, financial: pd.DataFrame, technical: pd.DataFrame
+    ) -> list[tuple]:
         rows: list[tuple] = []
-        for technology, (dea_tech, category, dea_input, fixed_size) in _MAIN_TECHS.items():
+        for technology, (
+            dea_tech,
+            category,
+            dea_input,
+            fixed_size,
+        ) in _MAIN_TECHS.items():
             for plant_size in ("S", "M", "L"):
                 size = _dea_size(plant_size, technology)
                 if fixed_size is not None and size != fixed_size:
                     continue
-                label = " - ".join([dea_tech, category, dea_input, size]) + _LABEL_SUFFIXES.get(technology, "")
+                label = " - ".join(
+                    [dea_tech, category, dea_input, size]
+                ) + _LABEL_SUFFIXES.get(technology, "")
                 output_size = "M" if technology in _PV_TECHS else plant_size
-                rows += self._parse_main_label(financial, technical, label, technology, output_size)
+                rows += self._parse_main_label(
+                    financial, technical, label, technology, output_size
+                )
         for technology, (label, plant_size) in _MAIN_TECHS_LITERAL.items():
-            rows += self._parse_main_label(financial, technical, label, technology, plant_size)
+            rows += self._parse_main_label(
+                financial, technical, label, technology, plant_size
+            )
         return rows
 
     def _parse_main_label(
-        self, financial: pd.DataFrame, technical: pd.DataFrame, label: str, technology: str, plant_size: str
+        self,
+        financial: pd.DataFrame,
+        technical: pd.DataFrame,
+        label: str,
+        technology: str,
+        plant_size: str,
     ) -> list[tuple]:
         tech_rows = financial[financial["Technology"] == label]
         if tech_rows.empty:
@@ -454,13 +603,24 @@ class DEA(Dataset[pd.DataFrame]):
                     continue
                 unit_src = sel["unit"].iloc[0]
                 multiplier = _convert_main_unit(unit_src, variable)
-                schema_unit = {"capex": "Euro/kW", "fopex": "Euro/kW", "vopex": "Euro/MWh"}[variable]
+                schema_unit = {
+                    "capex": "Euro/kW",
+                    "fopex": "Euro/kW",
+                    "vopex": "Euro/MWh",
+                }[variable]
                 for _, row in sel.iterrows():
                     rows.append(
                         (
-                            technology, plant_size, scenario, variable, int(row["year"]),
-                            float(row["val"]) * multiplier, schema_unit,
-                            int(row["priceyear"]), float(row["val"]), unit_src,
+                            technology,
+                            plant_size,
+                            scenario,
+                            variable,
+                            int(row["year"]),
+                            float(row["val"]) * multiplier,
+                            schema_unit,
+                            int(row["priceyear"]),
+                            float(row["val"]),
+                            unit_src,
                         )
                     )
         rows += self._parse_main_tech_vars(technical, label, technology, plant_size)
@@ -470,7 +630,9 @@ class DEA(Dataset[pd.DataFrame]):
     def _find_cost_par(tech_rows: pd.DataFrame, var_label: str) -> str | None:
         """DEA reports electric- and heat-basis figures under different par
         strings; prefer the electric one, fall back to heat."""
-        for suffix in ("MW_e", "MW_h") if var_label != "Variable O&M" else ("MWh_e", "MWh_h"):
+        for suffix in (
+            ("MW_e", "MW_h") if var_label != "Variable O&M" else ("MWh_e", "MWh_h")
+        ):
             money = "MEUR" if var_label == "Nominal investment" else "Euro"
             year_str = "/y" if var_label == "Fixed O&M" else ""
             par = f"{var_label} (*total) [{money}/{suffix}{year_str}]"
@@ -487,12 +649,19 @@ class DEA(Dataset[pd.DataFrame]):
             return []
         rows: list[tuple] = []
         tech_pars = {
-            "efficiency": ["Electrical efficiency (net, name plate) []", "Heat efficiency (net, name plate) []"],
+            "efficiency": [
+                "Electrical efficiency (net, name plate) []",
+                "Heat efficiency (net, name plate) []",
+            ],
             "lifetime": ["Technical lifetime [years]"],
             "construction_time": ["Construction time [years]"],
         }
         schema_units = {"efficiency": "1", "lifetime": "1", "construction_time": "1"}
-        source_units = {"efficiency": "-", "lifetime": "years", "construction_time": "years"}
+        source_units = {
+            "efficiency": "-",
+            "lifetime": "years",
+            "construction_time": "years",
+        }
         for variable, candidate_pars in tech_pars.items():
             for par in candidate_pars:
                 sel = tech_rows[tech_rows["par"] == par]
@@ -503,9 +672,16 @@ class DEA(Dataset[pd.DataFrame]):
                     for _, row in scen_sel.iterrows():
                         rows.append(
                             (
-                                technology, plant_size, scenario, variable, int(row["year"]),
-                                float(row["val"]), schema_units[variable],
-                                None, float(row["val"]), source_units[variable],
+                                technology,
+                                plant_size,
+                                scenario,
+                                variable,
+                                int(row["year"]),
+                                float(row["val"]),
+                                schema_units[variable],
+                                None,
+                                float(row["val"]),
+                                source_units[variable],
                             )
                         )
                 break
@@ -526,7 +702,9 @@ class DEA(Dataset[pd.DataFrame]):
                 if capacity_kw is None:
                     continue
                 for scenario, est in _SCENARIOS.items():
-                    rows += self._parse_ih_costs(fin_rows, technology, plant_size, scenario, est, capacity_kw)
+                    rows += self._parse_ih_costs(
+                        fin_rows, technology, plant_size, scenario, est, capacity_kw
+                    )
                 rows += self._parse_ih_tech_vars(tech_rows, technology, plant_size)
         return rows
 
@@ -544,14 +722,22 @@ class DEA(Dataset[pd.DataFrame]):
 
     @staticmethod
     def _parse_ih_costs(
-        fin_rows: pd.DataFrame, technology: str, plant_size: str, scenario: str, est: str, capacity_kw: float
+        fin_rows: pd.DataFrame,
+        technology: str,
+        plant_size: str,
+        scenario: str,
+        est: str,
+        capacity_kw: float,
     ) -> list[tuple]:
         """Fills the individual-heating cost rows.
 
         The individual-heating workbook's `priceyear` column is blank (a 2025 catalogue
-        revision); each par label embeds its price year instead (e.g. `"...[k€/unit, 2025]"`),
-        so the par is matched by its stable prefix and the year is parsed out of the matched
-        label via `_extract_embedded_year` rather than read from `priceyear` or hardcoded.
+        revision); each par label embeds its price year instead (e.g. `"...[k€/unit,
+        2025]"`),
+        so the par is matched by its stable prefix and the year is parsed out of the
+        matched
+        label via `_extract_embedded_year` rather than read from `priceyear` or
+        hardcoded.
         """
         rows: list[tuple] = []
         par_prefix_by_var = {
@@ -560,7 +746,11 @@ class DEA(Dataset[pd.DataFrame]):
             "vopex": "Variable O&M (*total) [€/kWh,",
         }
         for variable, prefix in par_prefix_by_var.items():
-            matching_pars = [par for par in fin_rows["par"].unique() if isinstance(par, str) and par.startswith(prefix)]
+            matching_pars = [
+                par
+                for par in fin_rows["par"].unique()
+                if isinstance(par, str) and par.startswith(prefix)
+            ]
             if not matching_pars:
                 continue
             par = matching_pars[0]
@@ -581,14 +771,24 @@ class DEA(Dataset[pd.DataFrame]):
                     unit = "Euro/MWh"
                 rows.append(
                     (
-                        technology, plant_size, scenario, variable, int(row["year"]),
-                        value, unit, money_year_src, value_src, par,
+                        technology,
+                        plant_size,
+                        scenario,
+                        variable,
+                        int(row["year"]),
+                        value,
+                        unit,
+                        money_year_src,
+                        value_src,
+                        par,
                     )
                 )
         return rows
 
     @staticmethod
-    def _parse_ih_tech_vars(tech_rows: pd.DataFrame, technology: str, plant_size: str) -> list[tuple]:
+    def _parse_ih_tech_vars(
+        tech_rows: pd.DataFrame, technology: str, plant_size: str
+    ) -> list[tuple]:
         rows: list[tuple] = []
         tech_pars = {
             "efficiency": "Heat efficiency (annual average, net) [p.u.]",
@@ -602,14 +802,23 @@ class DEA(Dataset[pd.DataFrame]):
                 for scenario in _SCENARIOS:
                     rows.append(
                         (
-                            technology, plant_size, scenario, variable, int(row["year"]),
-                            float(row["val"]), schema_units[variable],
-                            None, float(row["val"]), source_units[variable],
+                            technology,
+                            plant_size,
+                            scenario,
+                            variable,
+                            int(row["year"]),
+                            float(row["val"]),
+                            schema_units[variable],
+                            None,
+                            float(row["val"]),
+                            source_units[variable],
                         )
                     )
         return rows
 
-    def _parse_ccs(self, financial: pd.DataFrame, technical: pd.DataFrame) -> list[tuple]:
+    def _parse_ccs(
+        self, financial: pd.DataFrame, technical: pd.DataFrame
+    ) -> list[tuple]:
         rows: list[tuple] = []
         for technology, dea_label in _CCS_TECHS.items():
             cost_pars = _CCS_COST_PARS.get(technology, _CCS_COST_PARS["_default"])
@@ -627,25 +836,44 @@ class DEA(Dataset[pd.DataFrame]):
                     for _, row in sel.iterrows():
                         rows.append(
                             (
-                                technology, "M", scenario, variable, int(row["year"]),
-                                float(row["val"]) * multiplier, CO2_BASIS_UNITS[variable],
-                                int(row["priceyear"]), float(row["val"]), unit_src,
+                                technology,
+                                "M",
+                                scenario,
+                                variable,
+                                int(row["year"]),
+                                float(row["val"]) * multiplier,
+                                CO2_BASIS_UNITS[variable],
+                                int(row["priceyear"]),
+                                float(row["val"]),
+                                unit_src,
                             )
                         )
-            rows += self._parse_lifetime_and_construction_time(tech_rows, technology, "M", _CCS_SCENARIOS)
+            rows += self._parse_lifetime_and_construction_time(
+                tech_rows, technology, "M", _CCS_SCENARIOS
+            )
         return rows
 
-    def _parse_renewable_fuels(self, financial: pd.DataFrame, technical: pd.DataFrame) -> list[tuple]:
+    def _parse_renewable_fuels(
+        self, financial: pd.DataFrame, technical: pd.DataFrame
+    ) -> list[tuple]:
         """Fills the renewable-fuels cost rows.
 
-        The renewable-fuels workbook's `priceyear` column is entirely blank; `_RF_MONEY_YEAR_SRC`
-        supplies the price year instead, taken from the workbook's own Index sheet statement of
+        The renewable-fuels workbook's `priceyear` column is entirely blank;
+        `_RF_MONEY_YEAR_SRC`
+        supplies the price year instead, taken from the workbook's own Index sheet
+        statement of
         its price basis (see that constant's definition).
         """
         rows: list[tuple] = []
         for technology, dea_label in _RF_TECHS.items():
-            scenarios = _RF_SCENARIOS_ALT if technology in _RF_ALT_SCENARIO_TECHS else _RF_SCENARIOS_DEFAULT
-            money_year_src = _RF_MONEY_YEAR_SRC.get(technology, _RF_DEFAULT_MONEY_YEAR_SRC)
+            scenarios = (
+                _RF_SCENARIOS_ALT
+                if technology in _RF_ALT_SCENARIO_TECHS
+                else _RF_SCENARIOS_DEFAULT
+            )
+            money_year_src = _RF_MONEY_YEAR_SRC.get(
+                technology, _RF_DEFAULT_MONEY_YEAR_SRC
+            )
             fin_rows = financial[financial["Technology"] == dea_label]
             tech_rows = technical[technical["Technology"] == dea_label]
             if fin_rows.empty:
@@ -659,20 +887,35 @@ class DEA(Dataset[pd.DataFrame]):
                     for _, row in sel.iterrows():
                         rows.append(
                             (
-                                technology, "M", scenario, variable, int(row["year"]),
-                                float(row["val"]) * multiplier, schema_units[variable],
-                                money_year_src, float(row["val"]), par,
+                                technology,
+                                "M",
+                                scenario,
+                                variable,
+                                int(row["year"]),
+                                float(row["val"]) * multiplier,
+                                schema_units[variable],
+                                money_year_src,
+                                float(row["val"]),
+                                par,
                             )
                         )
-            rows += self._parse_lifetime_and_construction_time(tech_rows, technology, "M", scenarios)
+            rows += self._parse_lifetime_and_construction_time(
+                tech_rows, technology, "M", scenarios
+            )
         return rows
 
     @staticmethod
     def _parse_lifetime_and_construction_time(
-        tech_rows: pd.DataFrame, technology: str, plant_size: str, scenarios: dict[str, str]
+        tech_rows: pd.DataFrame,
+        technology: str,
+        plant_size: str,
+        scenarios: dict[str, str],
     ) -> list[tuple]:
         rows: list[tuple] = []
-        tech_pars = {"lifetime": "Technical lifetime [years]", "construction_time": "Construction time [years]"}
+        tech_pars = {
+            "lifetime": "Technical lifetime [years]",
+            "construction_time": "Construction time [years]",
+        }
         for variable, par in tech_pars.items():
             sel = tech_rows[tech_rows["par"] == par]
             if sel.empty:
@@ -682,8 +925,16 @@ class DEA(Dataset[pd.DataFrame]):
                 for _, row in scen_sel.iterrows():
                     rows.append(
                         (
-                            technology, plant_size, scenario, variable, int(row["year"]),
-                            float(row["val"]), "1", None, float(row["val"]), "years",
+                            technology,
+                            plant_size,
+                            scenario,
+                            variable,
+                            int(row["year"]),
+                            float(row["val"]),
+                            "1",
+                            None,
+                            float(row["val"]),
+                            "years",
                         )
                     )
         return rows
@@ -692,8 +943,12 @@ class DEA(Dataset[pd.DataFrame]):
         financial, technical = self._load("dh_transport")
         rows: list[tuple] = []
         for area_type, ws in _DH_DISTRIBUTION_SHEETS.items():
-            rows += self._parse_dh_distribution_sheet(financial, technical, ws, area_type)
-        data = pd.DataFrame(rows, columns=_DH_DISTRIBUTION_INDEX_NAMES + _DH_DISTRIBUTION_VALUE_COLUMNS)
+            rows += self._parse_dh_distribution_sheet(
+                financial, technical, ws, area_type
+            )
+        data = pd.DataFrame(
+            rows, columns=_DH_DISTRIBUTION_INDEX_NAMES + _DH_DISTRIBUTION_VALUE_COLUMNS
+        )
         data = data.drop_duplicates(subset=_DH_DISTRIBUTION_INDEX_NAMES)
         return data.set_index(_DH_DISTRIBUTION_INDEX_NAMES).sort_index()
 
@@ -711,9 +966,15 @@ class DEA(Dataset[pd.DataFrame]):
                 for _, row in sel.iterrows():
                     rows.append(
                         (
-                            area_type, variable, scenario, int(row["year"]),
-                            float(row["val"]), row["unit"],
-                            _DH_MONEY_YEAR_SRC, float(row["val"]), row["unit"],
+                            area_type,
+                            variable,
+                            scenario,
+                            int(row["year"]),
+                            float(row["val"]),
+                            row["unit"],
+                            _DH_MONEY_YEAR_SRC,
+                            float(row["val"]),
+                            row["unit"],
                         )
                     )
         for variable, par in _DH_DISTRIBUTION_TECH_PARS.items():
@@ -723,11 +984,14 @@ class DEA(Dataset[pd.DataFrame]):
                 for _, row in sel.iterrows():
                     rows.append(
                         (
-                            area_type, variable, scenario, int(row["year"]),
-                            float(row["val"]), 
-                            row["unit"], 
-                            None, 
-                            float(row["val"]), 
+                            area_type,
+                            variable,
+                            scenario,
+                            int(row["year"]),
+                            float(row["val"]),
+                            row["unit"],
+                            None,
+                            float(row["val"]),
                             row["unit"],
                         )
                     )
@@ -740,35 +1004,44 @@ class DEA(Dataset[pd.DataFrame]):
         return self.data.copy()
 
     def get_dh_distribution_data(self) -> pd.DataFrame:
-        """Return district heating distribution-network cost/tech data, in DEA's native units.
+        """Return district heating distribution-network cost/tech data, in DEA's native
+        units.
 
-        Index: `area_type` (`"suburban"`/`"city"`/`"new_area"`, DEA's three network-density
-        variants), `variable` (`"capex"`/`"fopex"`/`"vopex"`/`"lifetime"`/`"construction_time"`),
+        Index: `area_type` (`"suburban"`/`"city"`/`"new_area"`, DEA's three
+            network-density
+        variants), `variable`
+        (`"capex"`/`"fopex"`/`"vopex"`/`"lifetime"`/`"construction_time"`),
         `scenario` (`"min"`/`"ref"`/`"max"`), `year`. Columns match `get_costs()`
-        (`value`/`unit`/`money_year_src`/`value_src`/`unit_src`), except `capex`'s `unit` is
-        `M€/km²` (network cost per unit of service area) rather than a `€/kW` figure -- this
+        (`value`/`unit`/`money_year_src`/`value_src`/`unit_src`), except `capex`'s
+        `unit` is
+        `M€/km²` (network cost per unit of service area) rather than a `€/kW` figure --
+        this
         table is intentionally kept separate from `get_costs()`/`_cost_schema`'s shared
         Euro/kW(h) schema rather than forcing an area-based figure into it. `fopex`
-        (`€/MW/year`) and `vopex` (`€/MWh`) are on a normal capacity/energy basis and would fit
-        the shared schema, but are kept alongside `capex` here for a single consistent table.
+        (`€/MW/year`) and `vopex` (`€/MWh`) are on a normal capacity/energy basis and
+        would fit
+        the shared schema, but are kept alongside `capex` here for a single consistent
+        table.
 
-        DEA also reports district heating *transmission* (bulk, inter-node pipelines, distinct
-        from this last-mile distribution-network data) in the same source workbook; that data is
+        DEA also reports district heating *transmission* (bulk, inter-node pipelines,
+        distinct
+        from this last-mile distribution-network data) in the same source workbook; that
+        data is
         not extracted here (see `_DH_DISTRIBUTION_SHEETS`).
         """
         return self._dh_distribution_data.copy()
 
     def get_conversion_factor_electrolysis(self):
-        """ returns the conversion factor for electrolysis.
-        
-        Hydrogen production via PEMEC electrolysis for 100 MW plant, 
+        """returns the conversion factor for electrolysis.
+
+        Hydrogen production via PEMEC electrolysis for 100 MW plant,
         https://ens.dk/en/analyses-and-statistics/technology-data-renewable-fuels
         """
-        return [{"electricity": {"default_value": 1/0.526,"unit":"GW/GW"}}] 
+        return [{"electricity": {"default_value": 1 / 0.526, "unit": "GW/GW"}}]
 
     def get_conversion_factor_anaerobic_digestion(self):
-        """ returns the conversion factor for anaerobic digestion.
-        
+        """returns the conversion factor for anaerobic digestion.
+
         Values from the DEA technology catalogue for renewable fuels (Biogas
         plant, Basic plant, large [~6,000 Nm3 CH4/h]), assuming a straw
         feedstock.
@@ -779,10 +1052,10 @@ class DEA(Dataset[pd.DataFrame]):
             {"electricity": {"default_value": 0.0211, "unit": "GWh/GWh"}},
             {"heat": {"default_value": 0.0505, "unit": "GWh/GWh"}},
         ]
-    
+
     def get_conversion_factor_biomethane_conversion(self):
-        """ returns the conversion factor for biomethane conversion.
-        
+        """returns the conversion factor for biomethane conversion.
+
         Values from the DEA technology catalogue for renewable fuels (Biogas
         upgrading - Amine scrubber [~6,000 Nm3 CH4/h]).
         https://ens.dk/en/analyses-and-statistics/technology-data-renewable-fuels
@@ -793,9 +1066,9 @@ class DEA(Dataset[pd.DataFrame]):
         ]
 
     def get_conversion_factor_gasification(self):
-        """ returns the conversion factor for gasification.
-        
-        Values from the DEA technology catalogue for renewable fuels 
+        """returns the conversion factor for gasification.
+
+        Values from the DEA technology catalogue for renewable fuels
         (Gasifier, biomass, bio-SNG, medium - large scale), assuming a bio-SNG
         conversion efficiency of 60% and heat co-generation of 20% (2020 values).
         https://ens.dk/en/analyses-and-statistics/technology-data-renewable-fuels
@@ -807,7 +1080,7 @@ class DEA(Dataset[pd.DataFrame]):
         ]
 
     def get_conversion_factor_fischer_tropsch(self):
-        """ returns the conversion factor for fischer-tropsch.
+        """returns the conversion factor for fischer-tropsch.
 
         Values from the DEA technology catalogue for renewable fuels
         (Hydrogen to Jet Fuel), normalized to the oil reference carrier,
@@ -819,17 +1092,28 @@ class DEA(Dataset[pd.DataFrame]):
         ton_ft_to_gwh = 44 / (Constants.GJ_PER_MWH * 1000)  # GWh/ton
         return [
             {"hydrogen": {"default_value": 0.995 / oil_per_input, "unit": "GWh/GWh"}},
-            {"carbon": {
-                "default_value": (4.3 / ton_ft_to_gwh / 1000) / oil_per_input,
-                "unit": "ktCO2/GWh"}},
-            {"electricity": {
-                "default_value": 0.005 / oil_per_input, "unit": "GWh/GWh"}},
-            {"district_heat": {
-                "default_value": 0.25 / oil_per_input, "unit": "GWh/GWh"}},
+            {
+                "carbon": {
+                    "default_value": (4.3 / ton_ft_to_gwh / 1000) / oil_per_input,
+                    "unit": "ktCO2/GWh",
+                }
+            },
+            {
+                "electricity": {
+                    "default_value": 0.005 / oil_per_input,
+                    "unit": "GWh/GWh",
+                }
+            },
+            {
+                "district_heat": {
+                    "default_value": 0.25 / oil_per_input,
+                    "unit": "GWh/GWh",
+                }
+            },
         ]
 
     def get_conversion_factor_pyrolysis(self):
-        """ returns the conversion factor for pyrolysis.
+        """returns the conversion factor for pyrolysis.
 
         Values from the DEA technology catalogue for renewable fuels (Large
         scale slow pyrolysis (20 MW), straw feedstock), normalized to the
@@ -848,7 +1132,7 @@ class DEA(Dataset[pd.DataFrame]):
         ]
 
     def get_conversion_factor_haber_bosch(self):
-        """ returns the conversion factor for the Haber-Bosch process.
+        """returns the conversion factor for the Haber-Bosch process.
 
         Values from the DEA technology catalogue for renewable fuels (Green
         Ammonia plant: Hydrogen to ammonia, excl. electrolyzer and excl.
@@ -861,7 +1145,7 @@ class DEA(Dataset[pd.DataFrame]):
         ]
 
     def get_conversion_factor_methanol_from_hydrogen(self):
-        """ returns the conversion factor for methanol from hydrogen.
+        """returns the conversion factor for methanol from hydrogen.
 
         Values from the DEA technology catalogue for renewable fuels
         (Methanol from hydrogen and carbon dioxide).
@@ -869,16 +1153,23 @@ class DEA(Dataset[pd.DataFrame]):
         """
         ton_meoh_to_mwh = Constants.METHANOL_KWH_PER_KG
         return [
-            {"hydrogen": {
-                "default_value": 6.4 / ton_meoh_to_mwh, "unit": "GWh/GWh"}},
-            {"carbon": {
-                "default_value": 1.4 / ton_meoh_to_mwh, "unit": "kilotCO2/GWh"}},
-            {"electricity": {
-                "default_value": 0.1 / ton_meoh_to_mwh, "unit": "GWh/GWh"}},
+            {"hydrogen": {"default_value": 6.4 / ton_meoh_to_mwh, "unit": "GWh/GWh"}},
+            {
+                "carbon": {
+                    "default_value": 1.4 / ton_meoh_to_mwh,
+                    "unit": "kilotCO2/GWh",
+                }
+            },
+            {
+                "electricity": {
+                    "default_value": 0.1 / ton_meoh_to_mwh,
+                    "unit": "GWh/GWh",
+                }
+            },
         ]
 
     def get_conversion_factor_methanol_from_biomass(self):
-        """ returns the conversion factor for methanol from biomass.
+        """returns the conversion factor for methanol from biomass.
 
         Values from the DEA technology catalogue for renewable fuels (Bio
         Methanol).
@@ -886,16 +1177,28 @@ class DEA(Dataset[pd.DataFrame]):
         """
         methanol_production_biomass = 0.58
         return [
-            {"biomass": {
-                "default_value": 1 / methanol_production_biomass, "unit": "GWh/GWh"}},
-            {"district_heat": {
-                "default_value": 0.22 / methanol_production_biomass, "unit": "GWh/GWh"}},
-            {"electricity": {
-                "default_value": 0.02 / methanol_production_biomass, "unit": "GWh/GWh"}},
+            {
+                "biomass": {
+                    "default_value": 1 / methanol_production_biomass,
+                    "unit": "GWh/GWh",
+                }
+            },
+            {
+                "district_heat": {
+                    "default_value": 0.22 / methanol_production_biomass,
+                    "unit": "GWh/GWh",
+                }
+            },
+            {
+                "electricity": {
+                    "default_value": 0.02 / methanol_production_biomass,
+                    "unit": "GWh/GWh",
+                }
+            },
         ]
 
     def get_conversion_factor_DAC(self):
-        """ returns the conversion factor for DAC.
+        """returns the conversion factor for DAC.
 
         Values from the DEA technology catalogue for carbon capture,
         transport and storage (Solid Adsorption Direct Air Capture Plant,
@@ -904,11 +1207,16 @@ class DEA(Dataset[pd.DataFrame]):
         """
         return [
             {"electricity": {"default_value": 0.8, "unit": "GWh/kilotCO2"}},
-            {"heat": {"default_value": 9.5 / Constants.GJ_PER_MWH, "unit": "GWh/kilotCO2"}},
+            {
+                "heat": {
+                    "default_value": 9.5 / Constants.GJ_PER_MWH,
+                    "unit": "GWh/kilotCO2",
+                }
+            },
         ]
 
     def get_conversion_factor_SMR_CCS(self):
-        """ returns the conversion factor for SMR CCS.
+        """returns the conversion factor for SMR CCS.
 
         Values from the DEA technology catalogue for carbon capture,
         transport and storage (Post-combustion carbon capture retrofit -
@@ -923,7 +1231,7 @@ class DEA(Dataset[pd.DataFrame]):
         ]
 
     def get_conversion_factor_district_heating_grid(self):
-        """ returns the conversion factor for district heating grids.
+        """returns the conversion factor for district heating grids.
 
         Based on DEA district-heating distribution-network energy losses
         (reference scenario, suburban network).
@@ -932,9 +1240,8 @@ class DEA(Dataset[pd.DataFrame]):
         cf = 1 - data.loc[("suburban", "energy_losses", "ref"), "value"].iloc[0] / 100
         return [{"district_heat": {"default_value": 1 / cf, "unit": "GW/GW"}}]
 
-    
     def get_conversion_factor_cement_post_comb(self):
-        """ returns the conversion factor for cement post-combustion capture.
+        """returns the conversion factor for cement post-combustion capture.
 
         Values from the DEA technology catalogue for carbon capture,
         transport and storage (Post-combustion carbon capture in a cement
@@ -949,7 +1256,7 @@ class DEA(Dataset[pd.DataFrame]):
         ]
 
     def get_capture_rate_CCS(self):
-        """ returns the capture rate for cement post-combustion capture.
+        """returns the capture rate for cement post-combustion capture.
 
         Values from the DEA technology catalogue for carbon capture,
         transport and storage (Post-combustion carbon capture in a cement

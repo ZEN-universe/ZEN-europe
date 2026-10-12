@@ -45,8 +45,13 @@ _PHEV_ELECTRIC = "PHEV-e"
 _ELECTRIC_CAR = "BEV"
 _PHEV = "PHEV"
 _POWERTRAINS = [
-    _PETROL_CAR, _DIESEL_CAR, _GAS_CAR, _HYBRID_CAR,
-    _PHEV_COMBUSTION, _PHEV_ELECTRIC, _ELECTRIC_CAR,
+    _PETROL_CAR,
+    _DIESEL_CAR,
+    _GAS_CAR,
+    _HYBRID_CAR,
+    _PHEV_COMBUSTION,
+    _PHEV_ELECTRIC,
+    _ELECTRIC_CAR,
 ]
 # Combustion cars draw their auxiliary power as a mechanical load.
 _COMBUSTION_ONLY = [_PETROL_CAR, _DIESEL_CAR, _GAS_CAR]
@@ -66,10 +71,22 @@ _TECHNOLOGIES = {
 
 # Masses that add up to the curb mass and the driving mass of a vehicle.
 _CURB_MASS = [
-    "glider base mass", "weight reduction", "engine mass", "emotor mass",
-    "powertrain mass", "converter mass", "inverter mass", "charger mass",
-    "power distribution unit mass", "battery cell mass", "battery BoP mass",
-    "fuel tank mass", "CNG tank mass", "petrol mass", "diesel mass", "CNG mass",
+    "glider base mass",
+    "weight reduction",
+    "engine mass",
+    "emotor mass",
+    "powertrain mass",
+    "converter mass",
+    "inverter mass",
+    "charger mass",
+    "power distribution unit mass",
+    "battery cell mass",
+    "battery BoP mass",
+    "fuel tank mass",
+    "CNG tank mass",
+    "petrol mass",
+    "diesel mass",
+    "CNG mass",
 ]
 _DRIVING_MASS = _CURB_MASS + ["total cargo mass"]
 # The fuel masses carried on board, which size the fuel tank cost.
@@ -77,9 +94,14 @@ _FUEL_MASS = ["petrol mass", "diesel mass", "CNG mass"]
 
 # Cost components that add up to the purchase price of a vehicle.
 _PURCHASE_COST = [
-    "glider cost", "lightweighting cost", "electric powertrain cost",
-    "combustion powertrain cost", "power battery cost",
-    "energy storage battery cost", "fuel tank cost", "heat pump cost",
+    "glider cost",
+    "lightweighting cost",
+    "electric powertrain cost",
+    "combustion powertrain cost",
+    "power battery cost",
+    "energy storage battery cost",
+    "fuel tank cost",
+    "heat pump cost",
     "battery onboard charging infrastructure cost",
     "combustion exhaust treatment cost",
 ]
@@ -87,10 +109,22 @@ _PURCHASE_COST = [
 # Quantities that the component sizing reads before it computes them, and that
 # therefore have to exist on the first iteration.
 _ITERATED = [
-    "curb mass", "driving mass", "power", "engine power", "emotor power",
-    "engine mass", "emotor mass", "powertrain mass", "power battery power",
-    "battery cell mass", "battery BoP mass", "fuel tank mass", "CNG tank mass",
-    "energy stored", "TtW energy", "electric utility factor",
+    "curb mass",
+    "driving mass",
+    "power",
+    "engine power",
+    "emotor power",
+    "engine mass",
+    "emotor mass",
+    "powertrain mass",
+    "power battery power",
+    "battery cell mass",
+    "battery BoP mass",
+    "fuel tank mass",
+    "CNG tank mass",
+    "energy stored",
+    "TtW energy",
+    "electric utility factor",
 ]
 
 # The mass iteration is converged once the driving mass moves by less than this
@@ -112,8 +146,14 @@ _HOURS_PER_YEAR = 8760
 _KJ_PER_GWH = 3.6e9
 
 _OUTPUT_COLUMNS = [
-    "km per h", "lifetime", "capex", "capex_bat_cur", "capex_bat_fut", "vopex",
-    "conversion_factor_electricity", "conversion_factor_fuel",
+    "km per h",
+    "lifetime",
+    "capex",
+    "capex_bat_cur",
+    "capex_bat_fut",
+    "vopex",
+    "conversion_factor_electricity",
+    "conversion_factor_fuel",
 ]
 # The parameters that are monetary and therefore have to be rebased from the
 # money year of Cox et al. to the reference year.
@@ -174,9 +214,7 @@ class PassengerCarsCox(Dataset[pd.DataFrame]):
             ],
             publication="Applied Energy",
             publication_year=2020,
-            url=(
-                "https://www.sciencedirect.com/science/article/pii/S030626192030533X"
-            ),
+            url=("https://www.sciencedirect.com/science/article/pii/S030626192030533X"),
             doi="10.1016/j.apenergy.2020.115021",
         )
 
@@ -200,11 +238,13 @@ class PassengerCarsCox(Dataset[pd.DataFrame]):
             # a cache written before a parameter was added is stale
             if list(cached.columns) == _OUTPUT_COLUMNS:
                 logger.info(
-                    f"Loading cached passenger car parameters from {cache_path}")
+                    f"Loading cached passenger car parameters from {cache_path}"
+                )
                 return cached
             logger.info(
                 f"The cached passenger car parameters in {cache_path} are "
-                "outdated and are recalculated.")
+                "outdated and are recalculated."
+            )
 
         logger.info("Calculating passenger car parameters from Cox et al. (2020)...")
         parameters = self._calculate_parameters()
@@ -235,18 +275,17 @@ class PassengerCarsCox(Dataset[pd.DataFrame]):
         base_values: dict[str, dict[str, dict[str, dict[str, float]]]] = {}
         for time in _TIMES:
             base_values[time] = {}
-            for (parameter, powertrain, size, _), value in data[
-                    (time, _BASE)].items():
+            for (parameter, powertrain, size, _), value in data[(time, _BASE)].items():
                 # a parameter is reported once per distribution, and every
                 # distribution shares the same mode
                 base_values[time].setdefault(parameter, {}).setdefault(
-                    powertrain, {}).setdefault(size, value)
+                    powertrain, {}
+                ).setdefault(size, value)
         return base_values
 
     def _read_driving_cycle(self) -> np.ndarray:
         """Read the speed profile of the WLTC driving cycle in km/h."""
-        cycle = pd.read_excel(
-            self.path / _INPUT_FILE, sheet_name=_DRIVING_CYCLE_SHEET)
+        cycle = pd.read_excel(self.path / _INPUT_FILE, sheet_name=_DRIVING_CYCLE_SHEET)
         return cycle.set_index("Time (s)")[_DRIVING_CYCLE].dropna().to_numpy()
 
     def _build_cars(self) -> pd.DataFrame:
@@ -269,13 +308,13 @@ class PassengerCarsCox(Dataset[pd.DataFrame]):
                     size_group = self._find_group(groups[powertrain_group], _SIZE)
                     if size_group is None:
                         raise ValueError(
-                            f"No size group of '{parameter}' covers '{_SIZE}'.")
+                            f"No size group of '{parameter}' covers '{_SIZE}'."
+                        )
                     car[parameter] = groups[powertrain_group][size_group]
                 cars[(time, powertrain)] = car
 
         data = pd.DataFrame.from_dict(cars, orient="index")
-        data.index = pd.MultiIndex.from_tuples(
-            data.index, names=["time", "powertrain"])
+        data.index = pd.MultiIndex.from_tuples(data.index, names=["time", "powertrain"])
         data["powertrain"] = data.index.get_level_values("powertrain")
         return data
 
@@ -290,7 +329,8 @@ class PassengerCarsCox(Dataset[pd.DataFrame]):
             return None
         if len(matches) > 1:
             raise ValueError(
-                f"'{member}' is covered by more than one group: {matches}.")
+                f"'{member}' is covered by more than one group: {matches}."
+            )
         return matches[0]
 
     # -------- vehicle model ------------------
@@ -298,20 +338,25 @@ class PassengerCarsCox(Dataset[pd.DataFrame]):
     def _set_derived_parameters(self, cars: pd.DataFrame) -> pd.DataFrame:
         """Derive the vehicle parameters that follow directly from the input."""
         cars["weight reduction"] = (
-            -1 * cars["glider base mass"] * cars["lightweighting"])
+            -1 * cars["glider base mass"] * cars["lightweighting"]
+        )
         cars["total cargo mass"] = (
             cars["average passengers"] * cars["average passenger mass"]
-            + cars["cargo mass"])
+            + cars["cargo mass"]
+        )
         cars["auxiliary power demand"] = (
             cars["auxilliary power base demand"]
             + cars["heating thermal demand"] * cars["heating energy consumption"]
-            + cars["cooling thermal demand"] * cars["cooling energy consumption"])
+            + cars["cooling thermal demand"] * cars["cooling energy consumption"]
+        )
         cars["TtW efficiency"] = (
             cars["battery discharge efficiency"].fillna(1)
             * cars["drivetrain efficiency"].fillna(1)
-            * cars["engine efficiency"].fillna(1))
+            * cars["engine efficiency"].fillna(1)
+        )
         cars["recuperation efficiency"] = (
-            cars["drivetrain efficiency"] * cars["battery charge efficiency"])
+            cars["drivetrain efficiency"] * cars["battery charge efficiency"]
+        )
         for parameter in _ITERATED:
             cars[parameter] = np.nan
         return cars
@@ -323,10 +368,10 @@ class PassengerCarsCox(Dataset[pd.DataFrame]):
         A component that a powertrain does not have is missing rather than
         zero, hence the nansum.
         """
-        car["curb mass"] = np.nansum(
-            [car.get(mass, np.nan) for mass in _CURB_MASS])
+        car["curb mass"] = np.nansum([car.get(mass, np.nan) for mass in _CURB_MASS])
         car["driving mass"] = np.nansum(
-            [car.get(mass, np.nan) for mass in _DRIVING_MASS])
+            [car.get(mass, np.nan) for mass in _DRIVING_MASS]
+        )
         return car
 
     @staticmethod
@@ -344,27 +389,34 @@ class PassengerCarsCox(Dataset[pd.DataFrame]):
 
         car["engine mass"] = (
             car["engine power"] * car["engine mass per power"]
-            + car["engine fixed mass"])
+            + car["engine fixed mass"]
+        )
         car["emotor mass"] = (
             car["emotor power"] * car["emotor mass per power"]
-            + car["emotor fixed mass"])
+            + car["emotor fixed mass"]
+        )
         car["powertrain mass"] = (
             car["power"] * car["powertrain mass per power"]
-            + car["powertrain fixed mass"])
+            + car["powertrain fixed mass"]
+        )
 
         if powertrain in _ENERGY_BATTERY:
             # the battery is sized by the energy it stores
             car["battery cell mass"] = (
-                car["energy battery mass"] * car["battery cell mass share"])
-            car["battery BoP mass"] = (
-                car["energy battery mass"] * (1 - car["battery cell mass share"]))
+                car["energy battery mass"] * car["battery cell mass share"]
+            )
+            car["battery BoP mass"] = car["energy battery mass"] * (
+                1 - car["battery cell mass share"]
+            )
         else:
             # the battery only has to deliver the power of the electric motor
             car["power battery power"] = car["emotor power"]
             car["battery cell mass"] = (
-                car["power battery power"] / car["battery cell power density"])
-            car["battery BoP mass"] = (
-                car["battery cell mass"] * (1 - car["battery cell mass share"]))
+                car["power battery power"] / car["battery cell power density"]
+            )
+            car["battery BoP mass"] = car["battery cell mass"] * (
+                1 - car["battery cell mass share"]
+            )
 
         # energy contained in the fuel carried on board, in kWh
         if powertrain == _GAS_CAR:
@@ -380,14 +432,16 @@ class PassengerCarsCox(Dataset[pd.DataFrame]):
         # other car in its fuel
         if powertrain in [_ELECTRIC_CAR, _PHEV_ELECTRIC]:
             car["energy stored"] = (
-                car["battery cell mass"] * car["battery cell energy density"])  # kWh
+                car["battery cell mass"] * car["battery cell energy density"]
+            )  # kWh
         else:
             car["energy stored"] = fuel_energy
 
         if powertrain == _GAS_CAR:
             car["CNG tank mass"] = (
                 fuel_energy * car["CNG tank mass slope"]
-                + car["CNG tank mass intercept"])
+                + car["CNG tank mass intercept"]
+            )
         elif powertrain != _ELECTRIC_CAR:
             car["fuel tank mass"] = fuel_energy * car["fuel tank mass per energy"]
         return car
@@ -406,10 +460,15 @@ class PassengerCarsCox(Dataset[pd.DataFrame]):
 
         kinetic_force = acceleration * car["driving mass"]
         rolling_resistance = (
-            car["driving mass"] * car["rolling resistance coefficient"] * _GRAVITY)
+            car["driving mass"] * car["rolling resistance coefficient"] * _GRAVITY
+        )
         air_resistance = (
-            velocity ** 2 * car["frontal area"]
-            * car["aerodynamic drag coefficient"] * _AIR_DENSITY / 2)
+            velocity**2
+            * car["frontal area"]
+            * car["aerodynamic drag coefficient"]
+            * _AIR_DENSITY
+            / 2
+        )
 
         # Total force at the wheel. Rolling and air resistance always resist
         # the motion, the kinetic force is negative while the car decelerates.
@@ -420,21 +479,23 @@ class PassengerCarsCox(Dataset[pd.DataFrame]):
         # The powertrain recuperates the braking power that does not exceed the
         # power of the electric motor, within the efficiency limits.
         braking_power = np.where(decelerating, power, 0.0)
-        recuperated_power = np.clip(
-            braking_power, -1000 * car["emotor power"], None
-        ) * car["recuperation efficiency"]
+        recuperated_power = (
+            np.clip(braking_power, -1000 * car["emotor power"], None)
+            * car["recuperation efficiency"]
+        )
         traction_power = np.where(decelerating, 0.0, power)
 
         distance = velocity.sum() / 1000  # m/s over 1 s steps, in km
         auxiliary_energy = (
-            car["auxiliary power demand"] * cycle.size / distance / 1000)  # kJ/km
+            car["auxiliary power demand"] * cycle.size / distance / 1000
+        )  # kJ/km
         if car["powertrain"] in _COMBUSTION_ONLY:
             # the auxiliaries of a combustion car are a mechanical load
             auxiliary_energy = auxiliary_energy / car["engine efficiency"]
 
-        return (
-            (traction_power.sum() + recuperated_power.sum())
-            / (1000 * distance) / car["TtW efficiency"] + auxiliary_energy)
+        return (traction_power.sum() + recuperated_power.sum()) / (
+            1000 * distance
+        ) / car["TtW efficiency"] + auxiliary_energy
 
     @staticmethod
     def _calculate_costs(car: dict) -> dict:
@@ -442,22 +503,35 @@ class PassengerCarsCox(Dataset[pd.DataFrame]):
         vehicle."""
         car["glider cost"] = (
             car["glider base mass"] * car["glider cost slope"]
-            + car["glider cost intercept"]) * car["markup factor"]
+            + car["glider cost intercept"]
+        ) * car["markup factor"]
         car["lightweighting cost"] = (
-            -1 * car["weight reduction"] * car["glider lightweighting cost per kg"]
-            * car["markup factor"])
+            -1
+            * car["weight reduction"]
+            * car["glider lightweighting cost per kg"]
+            * car["markup factor"]
+        )
         car["electric powertrain cost"] = (
-            car["electric powertrain cost per kW"] * car["emotor power"]
-            * car["markup factor"])
+            car["electric powertrain cost per kW"]
+            * car["emotor power"]
+            * car["markup factor"]
+        )
         car["combustion powertrain cost"] = (
-            car["engine power"] * car["combustion powertrain cost per kW"]
-            * car["markup factor"])
+            car["engine power"]
+            * car["combustion powertrain cost per kW"]
+            * car["markup factor"]
+        )
         car["power battery cost"] = (
-            car["power battery power"] * car["power battery cost per kW"]
-            * car["markup factor"])
+            car["power battery power"]
+            * car["power battery cost per kW"]
+            * car["markup factor"]
+        )
         car["energy storage battery cost"] = (
-            car["energy storage battery cost per kWh"] * car["battery cell mass"]
-            * car["battery cell energy density"] * car["markup factor"])
+            car["energy storage battery cost per kWh"]
+            * car["battery cell mass"]
+            * car["battery cell energy density"]
+            * car["markup factor"]
+        )
 
         if car["powertrain"] == _ELECTRIC_CAR:
             car["fuel tank cost"] = 0
@@ -465,12 +539,15 @@ class PassengerCarsCox(Dataset[pd.DataFrame]):
             car["fuel tank cost"] = (
                 car["fuel tank cost per kg"]
                 * np.nansum([car[fuel] for fuel in _FUEL_MASS])
-                * car["markup factor"])
+                * car["markup factor"]
+            )
 
         car["purchase cost"] = np.nansum([car[cost] for cost in _PURCHASE_COST])
         car["maintenance cost"] = (
-            car["maintenance cost per glider cost"] * car["glider cost"]
-            / car["kilometers per year"])
+            car["maintenance cost per glider cost"]
+            * car["glider cost"]
+            / car["kilometers per year"]
+        )
         return car
 
     def _iterate_mass_and_energy(self, cars: pd.DataFrame) -> pd.DataFrame:
@@ -495,24 +572,27 @@ class PassengerCarsCox(Dataset[pd.DataFrame]):
                 if iteration == _MAX_ITERATIONS:
                     raise RuntimeError(
                         f"The mass of the vehicle {index} did not converge "
-                        f"within {_MAX_ITERATIONS} iterations.")
+                        f"within {_MAX_ITERATIONS} iterations."
+                    )
             if car["TtW energy"] < 0:
-                raise ValueError(
-                    f"The vehicle {index} has a negative energy demand.")
+                raise ValueError(f"The vehicle {index} has a negative energy demand.")
             fleet[index] = self._calculate_costs(car)
 
         cars = pd.DataFrame.from_dict(fleet, orient="index")
-        cars.index = pd.MultiIndex.from_tuples(
-            cars.index, names=["time", "powertrain"])
+        cars.index = pd.MultiIndex.from_tuples(cars.index, names=["time", "powertrain"])
         cars["range"] = (
-            cars["energy stored"] * 3600 * cars["battery DoD"].fillna(1)
-            / cars["TtW energy"])
+            cars["energy stored"]
+            * 3600
+            * cars["battery DoD"].fillna(1)
+            / cars["TtW energy"]
+        )
         # share of the kilometres a plug-in hybrid drives electrically
         cars["electric utility factor"] = np.where(
             cars["powertrain"] == _PHEV_ELECTRIC,
             (1 - np.exp(_UTILITY_FACTOR_SLOPE * cars["range"]))
             ** _UTILITY_FACTOR_EXPONENT,
-            cars["electric utility factor"])
+            cars["electric utility factor"],
+        )
         return cars
 
     @staticmethod
@@ -539,9 +619,9 @@ class PassengerCarsCox(Dataset[pd.DataFrame]):
             elif column in ["battery discharge efficiency", "battery DoD"]:
                 phev[column] = electric[column]
             else:
-                phev[column] = (
-                    electric[column].fillna(0) * utility_factor
-                    + combustion[column].fillna(0) * (1 - utility_factor))
+                phev[column] = electric[column].fillna(0) * utility_factor + combustion[
+                    column
+                ].fillna(0) * (1 - utility_factor)
 
         phev = pd.concat({_PHEV: phev}, names=["powertrain", "time"])
         return pd.concat([cars, phev]).swaplevel().sort_index()
@@ -572,19 +652,26 @@ class PassengerCarsCox(Dataset[pd.DataFrame]):
             parameters.loc[technology, "km per h"] = mileage
             # the years a car lasts before its lifetime mileage is driven
             parameters.loc[technology, "lifetime"] = round(
-                car["lifetime kilometers"] / car["kilometers per year"])
+                car["lifetime kilometers"] / car["kilometers per year"]
+            )
             parameters.loc[technology, "capex"] = (
-                car["purchase cost"] / mileage / markup)
+                car["purchase cost"] / mileage / markup
+            )
             parameters.loc[technology, "capex_bat_cur"] = (
-                car["energy storage battery cost"] / mileage / markup)
+                car["energy storage battery cost"] / mileage / markup
+            )
             parameters.loc[technology, "capex_bat_fut"] = (
                 cars.loc[("future", powertrain), "energy storage battery cost"]
-                / mileage / markup)
+                / mileage
+                / markup
+            )
             parameters.loc[technology, "vopex"] = car["maintenance cost"] / markup
             parameters.loc[technology, "conversion_factor_electricity"] = (
-                self._electricity_demand(car) / _KJ_PER_GWH)
+                self._electricity_demand(car) / _KJ_PER_GWH
+            )
             parameters.loc[technology, "conversion_factor_fuel"] = (
-                self._fuel_demand(car) / _KJ_PER_GWH)
+                self._fuel_demand(car) / _KJ_PER_GWH
+            )
         return parameters.astype(float)
 
     @staticmethod
@@ -598,11 +685,14 @@ class PassengerCarsCox(Dataset[pd.DataFrame]):
         if car["powertrain"] not in [_ELECTRIC_CAR, _PHEV]:
             return np.nan
         electric_share = (
-            1 if car["powertrain"] == _ELECTRIC_CAR
-            else car["electric utility factor"])
+            1 if car["powertrain"] == _ELECTRIC_CAR else car["electric utility factor"]
+        )
         return (
-            car["TtW energy"] * electric_share * car["battery charge efficiency"]
-            / car["TtW efficiency"])
+            car["TtW energy"]
+            * electric_share
+            * car["battery charge efficiency"]
+            / car["TtW efficiency"]
+        )
 
     @staticmethod
     def _fuel_demand(car: pd.Series) -> float:
@@ -637,11 +727,13 @@ class PassengerCarsCox(Dataset[pd.DataFrame]):
         if technology not in self.data.index:
             raise ValueError(
                 f"Cox et al. (2020) does not cover the technology "
-                f"'{technology}', expected one of {sorted(_TECHNOLOGIES)}.")
+                f"'{technology}', expected one of {sorted(_TECHNOLOGIES)}."
+            )
         if parameter not in self.data.columns:
             raise ValueError(
                 f"Unknown parameter '{parameter}', expected one of "
-                f"{_OUTPUT_COLUMNS}.")
+                f"{_OUTPUT_COLUMNS}."
+            )
         return self.data.loc[technology, parameter]
 
     def get_cost(self, element: ConversionTechnology, parameter: str) -> float:
@@ -658,10 +750,11 @@ class PassengerCarsCox(Dataset[pd.DataFrame]):
         if parameter not in _COST_COLUMNS:
             raise ValueError(
                 f"'{parameter}' is not a cost parameter, expected one of "
-                f"{_COST_COLUMNS}.")
+                f"{_COST_COLUMNS}."
+            )
         inflation = self.get_inflation_rate(
-            base_year=self.MONEY_YEAR,
-            target_year=element.settings.time.reference_year)
+            base_year=self.MONEY_YEAR, target_year=element.settings.time.reference_year
+        )
         return float(self.get_parameter(element.name, parameter)) * inflation
 
     # -------- attribute setters ------------------
@@ -704,16 +797,22 @@ class PassengerCarsCox(Dataset[pd.DataFrame]):
             if carrier not in _CARRIER_PARAMETER:
                 raise ValueError(
                     f"Cox et al. (2020) does not report the demand of "
-                    f"'{carrier}' for '{element.name}'.")
+                    f"'{carrier}' for '{element.name}'."
+                )
             value = self.get_parameter(element.name, _CARRIER_PARAMETER[carrier])
             if pd.isna(value):
                 raise ValueError(
                     f"Cox et al. (2020) reports no '{carrier}' demand for "
-                    f"'{element.name}'.")
+                    f"'{element.name}'."
+                )
             conversion_factors.append(
-                {carrier: {
-                    "default_value": float(value),
-                    "unit": _CONVERSION_FACTOR_UNIT}})
+                {
+                    carrier: {
+                        "default_value": float(value),
+                        "unit": _CONVERSION_FACTOR_UNIT,
+                    }
+                }
+            )
 
         attr = element.conversion_factor
         return attr.set_data(
@@ -731,8 +830,7 @@ class PassengerCarsCox(Dataset[pd.DataFrame]):
             ),
         )
 
-    def get_opex_specific_variable(
-            self, element: ConversionTechnology) -> Attribute:
+    def get_opex_specific_variable(self, element: ConversionTechnology) -> Attribute:
         """Get the specific variable OPEX of the specified passenger car.
 
         Args:

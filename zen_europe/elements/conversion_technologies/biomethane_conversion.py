@@ -48,7 +48,8 @@ class BiomethaneConversion(ConversionTechnology):
         Sets the input carrier of biomethane conversion to biomethane and heat.
         """
         return Attribute(
-            name="input_carrier", default_value=["biomethane", "heat"], element=self)
+            name="input_carrier", default_value=["biomethane", "heat"], element=self
+        )
 
     def _set_output_carrier(self) -> Attribute:
         """
@@ -66,7 +67,8 @@ class BiomethaneConversion(ConversionTechnology):
 
         """
         tech_db = TechnologyCostDatabase(
-            settings=self.settings, source_path=self.source_path)
+            settings=self.settings, source_path=self.source_path
+        )
         return tech_db.get_lifetime(self)
 
     def _set_conversion_factor(self) -> Attribute:
@@ -79,7 +81,8 @@ class BiomethaneConversion(ConversionTechnology):
         cf = dea_dataset.get_conversion_factor_biomethane_conversion()
         source = SourceInformation(
             description=(
-                "The conversion factor of biomethane conversion is obtained from """
+                "The conversion factor of biomethane conversion is obtained from "
+                ""
                 "the DEA dataset for renewable fuels"
             ),
             metadata=dea_dataset.metadata,
@@ -94,7 +97,8 @@ class BiomethaneConversion(ConversionTechnology):
         """
         if self.settings.investment.use_construction_times:
             tech_db = TechnologyCostDatabase(
-                    settings=self.settings, source_path=self.source_path)
+                settings=self.settings, source_path=self.source_path
+            )
             return tech_db.get_construction_time(self)
         else:
             return self.construction_time
@@ -108,7 +112,8 @@ class BiomethaneConversion(ConversionTechnology):
             Attribute: An Attribute object containing the specific capex data.
         """
         tech_db = TechnologyCostDatabase(
-                    settings=self.settings, source_path=self.source_path)
+            settings=self.settings, source_path=self.source_path
+        )
         return tech_db.get_capex_specific_conversion(self)
 
     def _set_opex_specific_fixed(self) -> Attribute:
@@ -120,7 +125,8 @@ class BiomethaneConversion(ConversionTechnology):
             Attribute: An Attribute object containing the specific fixed opex data.
         """
         tech_db = TechnologyCostDatabase(
-            settings=self.settings, source_path=self.source_path)
+            settings=self.settings, source_path=self.source_path
+        )
         return tech_db.get_opex_specific_fixed(self)
 
     def _set_opex_specific_variable(self) -> Attribute:
@@ -132,7 +138,8 @@ class BiomethaneConversion(ConversionTechnology):
             Attribute: An Attribute object containing the specific variable opex data.
         """
         tech_db = TechnologyCostDatabase(
-            settings=self.settings, source_path=self.source_path)
+            settings=self.settings, source_path=self.source_path
+        )
         return tech_db.get_opex_specific_variable(self)
 
     def _set_capacity_existing(self) -> Attribute:
@@ -155,9 +162,7 @@ class BiomethaneConversion(ConversionTechnology):
                 default_value=0,
                 df=None,
                 source=AssumptionInformation(
-                    description=(
-                        "We do not consider existing capacities."
-                    ),
+                    description=("We do not consider existing capacities."),
                 ),
             )
             return attr

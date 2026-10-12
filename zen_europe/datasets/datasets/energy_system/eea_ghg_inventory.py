@@ -188,10 +188,7 @@ class EEAGreenhouseGasInventory(Dataset[pd.DataFrame]):
 
     # ------ Outward facing functions ------
 
-    def get_sector_codes(
-        self,
-        sectors: list[str]
-    ) -> list[str]:
+    def get_sector_codes(self, sectors: list[str]) -> list[str]:
         """The UNFCCC sector codes covered by the modeled sectors.
 
         Args:
@@ -267,9 +264,7 @@ class EEAGreenhouseGasInventory(Dataset[pd.DataFrame]):
                 aviation and navigation to the total.
             start_year (int): First year of the time series.
         """
-        emissions_sectors = self.get_emissions_sectors(
-            sectors, nodes, start_year
-        )
+        emissions_sectors = self.get_emissions_sectors(sectors, nodes, start_year)
         emissions_total = self.get_emissions_total(
             nodes, include_international_transport, start_year
         )
@@ -322,6 +317,7 @@ class EEAGreenhouseGasInventory(Dataset[pd.DataFrame]):
             [codes, common_nodes], names=self.data.index.names
         )
         return self.data.reindex(index)
+
 
 class EEAGreenhouseGasInventoryAllGHG(EEAGreenhouseGasInventory):
     """All greenhouse gas emissions in CO2 equivalents, as reported to the UNFCCC."""

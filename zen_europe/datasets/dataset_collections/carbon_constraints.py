@@ -4,28 +4,29 @@ from typing import TYPE_CHECKING, Any, Dict, cast
 
 import pandas as pd
 
-from zen_europe.datasets.datasets.energy_system.desnz_ghg_inventory import DESNZGreenhouseGasInventory
-from zen_europe.datasets.datasets.energy_system.eea_ghg_inventory import EEAGreenhouseGasInventory
-from zen_europe.datasets.datasets.energy_system.global_carbon_budget import GlobalCarbonBudget
+from zen_europe.datasets.datasets.energy_system.desnz_ghg_inventory import (
+    DESNZGreenhouseGasInventory,
+)
+from zen_europe.datasets.datasets.energy_system.eea_ghg_inventory import (
+    EEAGreenhouseGasInventory,
+)
+from zen_europe.datasets.datasets.energy_system.global_carbon_budget import (
+    GlobalCarbonBudget,
+)
 from zen_europe.datasets.datasets.energy_system.ipcc_ar6 import IPCCAR6
-from zen_europe.datasets.datasets.energy_system.worldbank_population import WorldBankPopulation
-
+from zen_europe.datasets.datasets.energy_system.worldbank_population import (
+    WorldBankPopulation,
+)
 
 if TYPE_CHECKING:
     from pathlib import Path
 
-    from zen_creator import Dataset, Element
+    from zen_creator import Dataset
 
 
-from zen_creator import Attribute, ConversionTechnology, DatasetCollection, EnergySystem
+from zen_creator import Attribute, DatasetCollection, EnergySystem
 from zen_creator.utils.attribute import SourceInformation
 from zen_creator.utils.settings import Settings
-
-from zen_europe.datasets.datasets.carrier.aidres import Aidres
-from zen_europe.datasets.datasets.carrier.manual_steel_demand import (Eurofer,
-                                                                      WorldSteel,
-                                                                      TradeEconomics)
-from zen_europe.datasets.datasets.carrier.material_economics import MaterialEconomics
 
 # EU emission reduction targets, relative to the 1990 level: Fit for 55
 # (Regulation (EU) 2021/1119) for 2030, and Regulation (EU) 2026/667 of the
@@ -56,22 +57,27 @@ class CarbonConstraints(DatasetCollection):
 
         return {
             "worldbank_population": WorldBankPopulation(source_path=self.source_path),
-            "eea_ghg_inventory": EEAGreenhouseGasInventory(source_path=self.source_path),
+            "eea_ghg_inventory": EEAGreenhouseGasInventory(
+                source_path=self.source_path
+            ),
             "ipcc_ar6": IPCCAR6(source_path=self.source_path),
-            "desnz_ghg_inventory": DESNZGreenhouseGasInventory(source_path=self.source_path),
+            "desnz_ghg_inventory": DESNZGreenhouseGasInventory(
+                source_path=self.source_path
+            ),
             "global_carbon_budget": GlobalCarbonBudget(source_path=self.source_path),
         }
 
     def calculate_carbon_budget(self, energy_system: EnergySystem) -> Attribute:
         """
-        Calculate the remaining carbon budget for the energy system
+        Calculate the remaining carbon budget for the energy system.
         """
         global_budget = self.get_remaining_global_carbon_budget()
         share = self.calculate_budget_share_egal(energy_system)
         budget_europe = global_budget * share
         sector_share = self.calculate_sector_share(energy_system)
-        sector_budget = budget_europe * sector_share.loc[
-            self.settings.time.reference_year]
+        sector_budget = (
+            budget_europe * sector_share.loc[self.settings.time.reference_year]
+        )
         attr = energy_system.carbon_emissions_budget
         attr.set_data(
             default_value=sector_budget,
@@ -84,7 +90,7 @@ class CarbonConstraints(DatasetCollection):
                 ),
                 metadata=self.metadata,
             ),
-            unit="gigatons"
+            unit="gigatons",
         )
         return attr
 
@@ -104,15 +110,17 @@ class CarbonConstraints(DatasetCollection):
         summed over the EEA GHG inventory and the DESNZ GHG inventory (UK).
         """
         eea_ghg_inventory = cast(
-            EEAGreenhouseGasInventory, self.data["eea_ghg_inventory"])
+            EEAGreenhouseGasInventory, self.data["eea_ghg_inventory"]
+        )
         desnz_ghg_inventory = cast(
-            DESNZGreenhouseGasInventory, self.data["desnz_ghg_inventory"])
+            DESNZGreenhouseGasInventory, self.data["desnz_ghg_inventory"]
+        )
         set_nodes = energy_system.config.system.set_nodes
         sectors = list(energy_system.model.sectors)
         emissions_sectors_EU = eea_ghg_inventory.get_emissions_sectors(
-            sectors, set_nodes)
-        emissions_sectors_UK = desnz_ghg_inventory.get_emissions_sectors(
-            sectors)
+            sectors, set_nodes
+        )
+        emissions_sectors_UK = desnz_ghg_inventory.get_emissions_sectors(sectors)
         return emissions_sectors_EU.sum() + emissions_sectors_UK.sum()
 
     def calculate_total_emissions(self, energy_system: EnergySystem) -> pd.Series:
@@ -122,9 +130,11 @@ class CarbonConstraints(DatasetCollection):
         (UK).
         """
         eea_ghg_inventory = cast(
-            EEAGreenhouseGasInventory, self.data["eea_ghg_inventory"])
+            EEAGreenhouseGasInventory, self.data["eea_ghg_inventory"]
+        )
         desnz_ghg_inventory = cast(
-            DESNZGreenhouseGasInventory, self.data["desnz_ghg_inventory"])
+            DESNZGreenhouseGasInventory, self.data["desnz_ghg_inventory"]
+        )
         set_nodes = energy_system.config.system.set_nodes
         sectors = list(energy_system.model.sectors)
         emissions_total_EU = eea_ghg_inventory.get_emissions_total(set_nodes)
@@ -143,7 +153,8 @@ class CarbonConstraints(DatasetCollection):
         temperature_target = self.settings.emissions.temperature_increase
         probability = self.settings.emissions.probability_carbon_budget
         budget_since_ar6_start_year = ipcc_ar6.get_remaining_carbon_budget(
-            temperature_target=temperature_target, probability=probability)
+            temperature_target=temperature_target, probability=probability
+        )
         emitted_since_ar6_start_year = self.get_historic_global_emissions()
         return budget_since_ar6_start_year - emitted_since_ar6_start_year
 
@@ -153,14 +164,15 @@ class CarbonConstraints(DatasetCollection):
         IPCC AR6 carbon budget and the reference year of the model.
         """
         global_carbon_budget = cast(
-            GlobalCarbonBudget, self.data["global_carbon_budget"])
+            GlobalCarbonBudget, self.data["global_carbon_budget"]
+        )
         historic_emissions = global_carbon_budget.get_historic_emissions(
             start_year=IPCCAR6.AR6_BUDGET_START_YEAR,
             end_year=self.settings.time.reference_year - 1,
         )
         return historic_emissions.sum()
 
-    def calculate_budget_share_egal(self,energy_system:EnergySystem) -> float:
+    def calculate_budget_share_egal(self, energy_system: EnergySystem) -> float:
         """
         Calculate the remaining carbon budget share for each node in the model
         based on the egalitarian principle.
@@ -222,8 +234,8 @@ class CarbonConstraints(DatasetCollection):
         ]
         trajectory = pd.Series(target_emissions, index=target_years)
 
-        optimization_years = pd.Index(
-            self.settings.time.years, name="year")
+        optimization_years = pd.Index(self.settings.time.years, name="year")
         trajectory = trajectory.reindex(
-            optimization_years.union(target_years)).interpolate(method="index")
+            optimization_years.union(target_years)
+        ).interpolate(method="index")
         return trajectory.loc[optimization_years]

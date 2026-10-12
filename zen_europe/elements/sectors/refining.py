@@ -1,13 +1,8 @@
 from zen_creator import Sector
 
 from zen_europe.elements.carriers.crude_oil import CrudeOil
-from zen_europe.elements.carriers.diesel import Diesel
-from zen_europe.elements.carriers.gasoline import Gasoline
 from zen_europe.elements.carriers.naphtha import Naphtha
 from zen_europe.elements.conversion_technologies.diesel_ICE_ship import DieselICEShip
-from zen_europe.elements.conversion_technologies.HDT_diesel import HDT_diesel
-from zen_europe.elements.conversion_technologies.ICE_diesel import ICE_diesel
-from zen_europe.elements.conversion_technologies.ICE_petrol import ICE_petrol
 from zen_europe.elements.conversion_technologies.oil_to_diesel_conversion import (
     OilToDieselConversion,
 )

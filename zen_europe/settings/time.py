@@ -52,7 +52,5 @@ class TimeSettings(SettingsCategory):
 
     @property
     def years(self) -> list[int]:
-        """Every calendar year of the horizon, used to index the written data.
-
-        """
+        """Every calendar year of the horizon, used to index the written data."""
         return list(range(self.reference_year, self.last_year + 1))

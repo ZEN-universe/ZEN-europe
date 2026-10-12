@@ -28,6 +28,7 @@ from zen_creator import (
     SourceInformation,
 )
 
+
 class CarbonStorage(ConversionTechnology):
     """Class containing all data and assumptions for carbon (CO2) storage."""
 
@@ -109,12 +110,13 @@ class CarbonStorage(ConversionTechnology):
         storage.
 
         Returns:
-            Attribute: An Attribute object containing the specific conversion capex data.
+            Attribute: An Attribute object containing the specific conversion capex
+                data.
         """
         nl_costs = NorthernLightsCosts(source_path=self.source_path)
-        
+
         return nl_costs.get_capex_specific(self)
-    
+
     def _set_opex_specific_variable(self) -> Attribute:
         """
         Sets the specific variable operational expenditure (opex) for carbon
@@ -156,7 +158,8 @@ class CarbonStorage(ConversionTechnology):
         """
         if self.settings.investment.use_existing_capacities:
             igop_projects = IOGPCarbonStorageProjects(
-                settings=self.settings, source_path=self.source_path)
+                settings=self.settings, source_path=self.source_path
+            )
             return igop_projects.get_capacity_existing(self)
         else:
             attr = self.capacity_existing
@@ -164,9 +167,7 @@ class CarbonStorage(ConversionTechnology):
                 default_value=0,
                 df=None,
                 source=AssumptionInformation(
-                    description=(
-                        "We do not consider existing capacities."
-                    ),
+                    description=("We do not consider existing capacities."),
                 ),
             )
             return attr
@@ -180,7 +181,8 @@ class CarbonStorage(ConversionTechnology):
         """
         if self.settings.data_source.use_OG_carbon_storage_limit:
             OG_extraction_db = EnergyInstituteWorldEnergyReview(
-                source_path=self.source_path)
+                source_path=self.source_path
+            )
             return OG_extraction_db.get_capacity_limit_carbon_storage(self)
         data = self.capacity_existing.df.groupby("node").sum()
         data.name = "capacity_limit"
@@ -213,10 +215,12 @@ class CarbonStorage(ConversionTechnology):
         Sets the unbounded capacity addition of carbon storage.
 
         Returns:
-            Attribute: An Attribute object containing the unbounded capacity addition data.
+            Attribute: An Attribute object containing the unbounded capacity addition
+                data.
         """
         iogp_projects = IOGPCarbonStorageProjects(
-            settings=self.settings, source_path=self.source_path)
+            settings=self.settings, source_path=self.source_path
+        )
         data = iogp_projects.get_capacity_existing_data()
         median_add = data.median()
         # n_nodes = len(data.index.get_level_values("node").unique())
@@ -227,11 +231,10 @@ class CarbonStorage(ConversionTechnology):
             unit="tCO2/h",
             source=SourceInformation(
                 description=(
-                    "The unbounded capacity addition of carbon storage is "
-                    "based on the median existing and future capacity from the IOGP report, "
-                    "divided by the number of nodes in the dataset."
+                    "The unbounded capacity addition of carbon storage is based on the "
+                    "median existing and future capacity from the IOGP report, divided "
+                    "by the number of nodes in the dataset."
                 ),
                 metadata=iogp_projects.metadata,
             ),
         )
-        

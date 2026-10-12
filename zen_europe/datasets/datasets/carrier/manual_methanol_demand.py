@@ -5,10 +5,9 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from pathlib import Path
 
+import pandas as pd
 from zen_creator.datasets.datasets.dataset import Dataset
 from zen_creator.datasets.datasets.metadata import MetaData
-
-import pandas as pd
 
 
 class WITS(Dataset[pd.DataFrame]):
@@ -26,9 +25,7 @@ class WITS(Dataset[pd.DataFrame]):
     def _set_metadata(self) -> MetaData:
         return MetaData(
             name=self.name,
-            title=(
-                "Methanol Imports and Exports by Country"
-            ),
+            title=("Methanol Imports and Exports by Country"),
             author=["World Bank"],
             publication="World Bank",
             publication_year=2022,
@@ -39,19 +36,18 @@ class WITS(Dataset[pd.DataFrame]):
         return None
 
     def _set_data(self) -> pd.Series:
-        """ sets the manual data for the WITS dataset in kt/y in 2022
-        
+        """sets the manual data for the WITS dataset in kt/y in 2022.
+
         The provided number is the total production of methanol in CH in 2022.
-        The import is calculated from the total trade value of methanol divided by the 
+        The import is calculated from the total trade value of methanol divided by the
         weighted average price of all methanol imports.
         The export is obtained from
         https://wits.worldbank.org/trade/comtrade/en/country/ALL/year/2022/tradeflow/Exports/partner/WLD/product/290511
         """
-        return pd.Series({
-            "CH": 33.48552246-2.415940})
+        return pd.Series({"CH": 33.48552246 - 2.415940})
 
     # -------- methods ------------------------
-    def get_manual_methanol_demand_wits(self, node:str) -> int:
+    def get_manual_methanol_demand_wits(self, node: str) -> int:
         """
         Get the demand of methanol for CH from the WITS dataset.
 
@@ -67,8 +63,9 @@ class WITS(Dataset[pd.DataFrame]):
             return self.data.loc[node]
         else:
             raise ValueError(
-                f"Node {node} not found in the manual values of the" 
-                f" WITS dataset.")
+                f"Node {node} not found in the manual values of the" f" WITS dataset."
+            )
+
 
 class Equinor(Dataset[pd.DataFrame]):
     """
@@ -85,9 +82,7 @@ class Equinor(Dataset[pd.DataFrame]):
     def _set_metadata(self) -> MetaData:
         return MetaData(
             name=self.name,
-            title=(
-                "Tjeldbergodden industrial facility"
-            ),
+            title=("Tjeldbergodden industrial facility"),
             author=["Equinor"],
             publication="Equinor",
             publication_year=2026,
@@ -98,15 +93,15 @@ class Equinor(Dataset[pd.DataFrame]):
         return None
 
     def _set_data(self) -> pd.Series:
-        """ sets the manual data for the Equinor dataset in kt/y in 2026
-        
-        The provided number is the total production of methanol at the Tjeldbergodden facility in 2026.
+        """sets the manual data for the Equinor dataset in kt/y in 2026.
+
+        The provided number is the total production of methanol at the Tjeldbergodden
+        facility in 2026.
         """
-        return pd.Series({
-            "NO": 900})
+        return pd.Series({"NO": 900})
 
     # -------- methods ------------------------
-    def get_manual_methanol_demand_equinor(self, node:str) -> int:
+    def get_manual_methanol_demand_equinor(self, node: str) -> int:
         """
         Get the demand of methanol for the UK from the Equinor dataset.
 
@@ -122,8 +117,9 @@ class Equinor(Dataset[pd.DataFrame]):
             return self.data.loc[node]
         else:
             raise ValueError(
-                f"Node {node} not found in the manual values of the" 
-                f" Equinor dataset.")
+                f"Node {node} not found in the manual values of the"
+                f" Equinor dataset."
+            )
 
 
 class ChemAnalyst(Dataset[pd.DataFrame]):
@@ -141,9 +137,7 @@ class ChemAnalyst(Dataset[pd.DataFrame]):
     def _set_metadata(self) -> MetaData:
         return MetaData(
             name=self.name,
-            title=(
-                "UK Methanol Market Analysis"
-            ),
+            title=("UK Methanol Market Analysis"),
             author=["World Bank"],
             publication="World Bank",
             publication_year=2023,
@@ -154,15 +148,14 @@ class ChemAnalyst(Dataset[pd.DataFrame]):
         return None
 
     def _set_data(self) -> pd.Series:
-        """ sets the manual data for the ChemAnalyst dataset in kt/y in 2023
-        
+        """sets the manual data for the ChemAnalyst dataset in kt/y in 2023.
+
         The provided number is the total production of methanol in the UK in 2023.
         """
-        return pd.Series({
-            "UK": 530})
+        return pd.Series({"UK": 530})
 
     # -------- methods ------------------------
-    def get_manual_methanol_demand_chemanalyst(self, node:str) -> int:
+    def get_manual_methanol_demand_chemanalyst(self, node: str) -> int:
         """
         Get the demand of methanol for the UK from the ChemAnalyst dataset.
 
@@ -178,14 +171,15 @@ class ChemAnalyst(Dataset[pd.DataFrame]):
             return self.data.loc[node]
         else:
             raise ValueError(
-                f"Node {node} not found in the manual values of the" 
-                f" ChemAnalyst dataset.")
+                f"Node {node} not found in the manual values of the"
+                f" ChemAnalyst dataset."
+            )
 
     def get_total_european_demand(self) -> int:
         """
         Get the total European demand of methanol from the ChemAnalyst dataset
         to correct the overall demand. The issue with AIDRES demand is that
-        it assumes 0 demand in 2018/the beginning of the dataset, which is not correct. 
+        it assumes 0 demand in 2018/the beginning of the dataset, which is not correct.
         Therefore, we use the 2030 demand from AIDRES but scale
         it to the total European demand in 2023 from ChemAnalyst.
 

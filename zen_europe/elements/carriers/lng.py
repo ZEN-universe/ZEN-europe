@@ -23,17 +23,17 @@ class LNG(Carrier):
     """
 
     name: str = "lng"
-    
+
     def __init__(self, model: Model, power_unit: str = "MW"):
         super().__init__(model=model, power_unit=power_unit)
         # set the inflation rate function from the ECB dataset
-        # TODO make the inflation rate function directly available in the model, 
+        # TODO make the inflation rate function directly available in the model,
         # so that it can be used by other elements as well
         ecb_inflation = ECBInflation(source_path=self.source_path)
         self.get_inflation_rate = ecb_inflation.get_inflation_rate
         ecb_dollar2euro = ECBDollar2Euro(source_path=self.source_path)
         self.get_dollar2euro = ecb_dollar2euro.get_dollar2euro
-        
+
     # ----Example of optional methods for overriding default attributes ------
 
     def _set_availability_import(self) -> Attribute:
@@ -51,7 +51,8 @@ class LNG(Carrier):
         """
         bnef_fuel_prices = BNEFFuelPrices(source_path=self.model.source_path)
         return bnef_fuel_prices.get_price_import(
-            element=self,manual_carrier_name="natural_gas")
+            element=self, manual_carrier_name="natural_gas"
+        )
 
     def _set_carbon_intensity_carrier_import(self) -> Attribute:
         """

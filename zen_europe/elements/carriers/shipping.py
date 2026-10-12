@@ -21,7 +21,6 @@ class Shipping(Carrier):
     """
 
     name: str = "shipping"
-    
 
     def __init__(self, model: Model, power_unit: str = "MW"):
         super().__init__(model=model, power_unit=power_unit)
@@ -34,12 +33,12 @@ class Shipping(Carrier):
 
         """
         return Attribute(
-                "availability_import",
-                default_value=0,
-                element=self,
-                unit=self.power_unit,
-            )
-    
+            "availability_import",
+            default_value=0,
+            element=self,
+            unit=self.power_unit,
+        )
+
     def _set_price_shed_demand(self) -> Attribute:
         """
         Return the price of shed demand of the carrier.
@@ -54,14 +53,15 @@ class Shipping(Carrier):
             )
         else:
             return self.price_shed_demand
-        
+
     def _set_demand(self) -> Attribute:
         """
         Return the demand of shipping.
 
         """
         carrier_availability = CarrierAvailability(
-                settings=self.settings, source_path=self.model.source_path)
+            settings=self.settings, source_path=self.model.source_path
+        )
         attr = carrier_availability.get_shipping_demand(element=self)
         if self.settings.scenario.sensitivity_demand:
             attr.add_scenarios(demand_sensitivity_scenarios(self.name))

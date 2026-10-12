@@ -83,8 +83,7 @@ class NUTSshp(Dataset[pd.DataFrame]):
             Attribute: Attribute with no default value and the edges
                 listed as data.
         """
-        set_edges = self.get_set_edges_adjacent(
-            element.model.config.system.set_nodes)
+        set_edges = self.get_set_edges_adjacent(element.model.config.system.set_nodes)
 
         # create attribute
         attr = element.set_edges
@@ -131,13 +130,12 @@ class NUTSshp(Dataset[pd.DataFrame]):
         regions = cast(
             gpd.GeoDataFrame, data[data["NUTS_ID"].isin(nodes)].set_index("NUTS_ID")
         )
-        # only consider the largest polygon for each region, as some regions have multiple polygons
+        # only consider the largest polygon for each region, as some regions have
+        # multiple polygons
         for region in regions.index:
             geom = regions.loc[region, "geometry"]
             if geom.geom_type == "MultiPolygon":
-                largest_polygon = max(
-                    geom.geoms, key=lambda p: p.area
-                )
+                largest_polygon = max(geom.geoms, key=lambda p: p.area)
                 regions.loc[region, "geometry"] = largest_polygon
         # compute centroids and convert coordinates to longitude, latitude
         centroids = regions.geometry.centroid

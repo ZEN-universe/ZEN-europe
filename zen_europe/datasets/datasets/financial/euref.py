@@ -10,7 +10,10 @@ import pandas as pd
 from zen_creator.datasets.datasets.dataset import Dataset
 from zen_creator.datasets.datasets.metadata import MetaData
 
-from zen_europe.datasets.datasets.financial._cost_schema import INDEX_NAMES, VALUE_COLUMNS
+from zen_europe.datasets.datasets.financial._cost_schema import (
+    INDEX_NAMES,
+    VALUE_COLUMNS,
+)
 
 # internal (technology, scenario) -> EUREF technology-row label. Technologies
 # with only one EUREF row (no min/max split) are keyed with scenario=None and
@@ -19,12 +22,30 @@ _TECHS: dict[tuple[str, str | None], str] = {
     ("wind_onshore", "min"): "Wind onshore - very high resource area, low hub height",
     ("wind_onshore", "ref"): "Wind onshore - medium resource area, medium height",
     ("wind_onshore", "max"): "Wind onshore - low resource area, high hub height",
-    ("wind_offshore", "min"): "Wind-offshore - shallow waters, distant from shore, high resource area",
-    ("wind_offshore", "ref"): "Wind-offshore - deep waters, distant from shore, high resource area",
-    ("wind_offshore", "max"): "Wind-offshore - deep waters, distant from shore, low resource area",
-    ("wind_offshore_near_shore", "min"): "Wind-offshore - shallow waters, near-shore, high resource area",
-    ("wind_offshore_near_shore", "ref"): "Wind-offshore - deep waters, near-shore, high resource area",
-    ("wind_offshore_near_shore", "max"): "Wind-offshore - deep waters, near-shore, low resource area",
+    (
+        "wind_offshore",
+        "min",
+    ): "Wind-offshore - shallow waters, distant from shore, high resource area",
+    (
+        "wind_offshore",
+        "ref",
+    ): "Wind-offshore - deep waters, distant from shore, high resource area",
+    (
+        "wind_offshore",
+        "max",
+    ): "Wind-offshore - deep waters, distant from shore, low resource area",
+    (
+        "wind_offshore_near_shore",
+        "min",
+    ): "Wind-offshore - shallow waters, near-shore, high resource area",
+    (
+        "wind_offshore_near_shore",
+        "ref",
+    ): "Wind-offshore - deep waters, near-shore, high resource area",
+    (
+        "wind_offshore_near_shore",
+        "max",
+    ): "Wind-offshore - deep waters, near-shore, low resource area",
     ("photovoltaics", "min"): "Solar PV - utility-scale - high resource area",
     ("photovoltaics", "ref"): "Solar PV - utility-scale - medium resource area",
     ("photovoltaics", "max"): "Solar PV - utility-scale - low resource area",
@@ -77,7 +98,10 @@ class EUREF(Dataset[pd.DataFrame]):
     def _set_metadata(self) -> MetaData:
         return MetaData(
             name=self.name,
-            title="EU Reference Scenario 2020 - Technology Assumptions for the Power and Heat Sector",
+            title=(
+                "EU Reference Scenario 2020 - Technology Assumptions for the Power "
+                "and Heat Sector"
+            ),
             author=["European Commission"],
             publication="European Commission, DG Energy",
             publication_year=2021,
@@ -114,33 +138,61 @@ class EUREF(Dataset[pd.DataFrame]):
                 block = raw.iloc[2:, segment_start:segment_end].reset_index(drop=True)
                 block.index = techs
                 multiplier = _convert_unit(unit_src, variable)
-                schema_unit = {"capex": "Euro/kW", "fopex": "Euro/kW", "vopex": "Euro/MWh"}[variable]
+                schema_unit = {
+                    "capex": "Euro/kW",
+                    "fopex": "Euro/kW",
+                    "vopex": "Euro/MWh",
+                }[variable]
                 for tech_row, values in block.iterrows():
-                    for year, value_src in zip(years, values):
+                    for year, value_src in zip(years, values, strict=True):
                         value_src = pd.to_numeric(value_src, errors="coerce")
                         if pd.isna(value_src):
                             continue
                         rows.append(
-                            (tech_row, year, variable, float(value_src) * multiplier, schema_unit, float(value_src))
+                            (
+                                tech_row,
+                                year,
+                                variable,
+                                float(value_src) * multiplier,
+                                schema_unit,
+                                float(value_src),
+                            )
                         )
             elif segment_idx in _TECH_VARIABLE_SEGMENTS:
                 variable = _TECH_VARIABLE_SEGMENTS[segment_idx]
-                # efficiency/lifetime have a single value per technology (no year breakdown)
+                # efficiency/lifetime have a single value per technology (no year
+                # breakdown)
                 values = raw.iloc[2:, segment_start].reset_index(drop=True)
                 schema_unit = "-" if variable == "efficiency" else "1"
-                for tech_row, value_src in zip(techs, values):
+                for tech_row, value_src in zip(techs, values, strict=True):
                     value_src = pd.to_numeric(value_src, errors="coerce")
                     if pd.isna(value_src):
                         continue
-                    rows.append((tech_row, None, variable, float(value_src), schema_unit, float(value_src)))
+                    rows.append(
+                        (
+                            tech_row,
+                            None,
+                            variable,
+                            float(value_src),
+                            schema_unit,
+                            float(value_src),
+                        )
+                    )
 
         by_euref_tech: dict[tuple, list] = {}
         for tech_row, year, variable, value, unit, value_src in rows:
-            by_euref_tech.setdefault((tech_row, variable), []).append((year, value, unit, value_src))
+            by_euref_tech.setdefault((tech_row, variable), []).append(
+                (year, value, unit, value_src)
+            )
 
-        cost_years = sorted({year for (_, var), entries in by_euref_tech.items()
-                              if var in _COST_VARIABLE_SEGMENTS.values()
-                              for year, *_ in entries})
+        cost_years = sorted(
+            {
+                year
+                for (_, var), entries in by_euref_tech.items()
+                if var in _COST_VARIABLE_SEGMENTS.values()
+                for year, *_ in entries
+            }
+        )
 
         out_rows = []
         for technology in {t for t, _ in _TECHS}:
@@ -154,8 +206,18 @@ class EUREF(Dataset[pd.DataFrame]):
                         continue
                     for year, value, unit, value_src in entries:
                         out_rows.append(
-                            (technology, "M", scenario, variable, year, value, unit,
-                             _MONEY_YEAR_SRC, value_src, unit)
+                            (
+                                technology,
+                                "M",
+                                scenario,
+                                variable,
+                                year,
+                                value,
+                                unit,
+                                _MONEY_YEAR_SRC,
+                                value_src,
+                                unit,
+                            )
                         )
                 for variable in ("efficiency", "lifetime"):
                     entries = by_euref_tech.get((euref_tech, variable))
@@ -164,8 +226,18 @@ class EUREF(Dataset[pd.DataFrame]):
                     _, value, unit, value_src = entries[0]
                     for year in cost_years:
                         out_rows.append(
-                            (technology, "M", scenario, variable, year, value, unit,
-                             None, value_src, unit)
+                            (
+                                technology,
+                                "M",
+                                scenario,
+                                variable,
+                                year,
+                                value,
+                                unit,
+                                None,
+                                value_src,
+                                unit,
+                            )
                         )
         data = pd.DataFrame(out_rows, columns=INDEX_NAMES + VALUE_COLUMNS)
         data = data.drop_duplicates(subset=INDEX_NAMES)

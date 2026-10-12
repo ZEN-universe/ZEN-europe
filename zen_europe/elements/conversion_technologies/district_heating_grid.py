@@ -37,24 +37,21 @@ class DistrictHeatingGrid(ConversionTechnology):
         """
         Sets the reference carrier of district heating grids to heat.
         """
-        return Attribute(
-            name="reference_carrier", default_value=["heat"], element=self
-        )
+        return Attribute(name="reference_carrier", default_value=["heat"], element=self)
 
     def _set_input_carrier(self) -> Attribute:
         """
         Sets the input carrier of district heating grids to district heat.
         """
         return Attribute(
-            name="input_carrier", default_value=["district_heat"], element=self)
+            name="input_carrier", default_value=["district_heat"], element=self
+        )
 
     def _set_output_carrier(self) -> Attribute:
         """
         Set the output carrier of district heating grids to heat.
         """
-        return Attribute(
-            name="output_carrier", default_value=["heat"], element=self
-        )
+        return Attribute(name="output_carrier", default_value=["heat"], element=self)
 
     # ---------- Required methods that are called during object build ----------
 
@@ -66,12 +63,13 @@ class DistrictHeatingGrid(ConversionTechnology):
         attr = self.lifetime
         dea = DEA(source_path=self.source_path)
         data = dea.get_dh_distribution_data()
-        lifetime = int(data.loc[("suburban","lifetime","ref"),"value"].iloc[0])
+        lifetime = int(data.loc[("suburban", "lifetime", "ref"), "value"].iloc[0])
         source = SourceInformation(
             description=(
-                "The lifetime of district heating grids is based on data from the DEA dataset, "
-                "which provides information on the distribution of lifetimes for district heating grids. "
-                "The specific value used here is the reference value for suburban district heating grids."
+                "The lifetime of district heating grids is based on data from the DEA "
+                "dataset, which provides information on the distribution of lifetimes "
+                "for district heating grids. The specific value used here is the "
+                "reference value for suburban district heating grids."
             ),
             metadata=dea.metadata,
         )
@@ -88,15 +86,16 @@ class DistrictHeatingGrid(ConversionTechnology):
         cf = dea.get_conversion_factor_district_heating_grid()
         source = SourceInformation(
             description=(
-                "The conversion factor of district heating grids is based on data from the DEA dataset, "
-                "which provides information on the distribution of energy losses for district heating grids. "
-                "The specific value used here is the reference value for suburban district heating grids."
+                "The conversion factor of district heating grids is based on data from "
+                "the DEA dataset, which provides information on the distribution of "
+                "energy losses for district heating grids. The specific value used "
+                "here is the reference value for suburban district heating grids."
             ),
             metadata=dea.metadata,
         )
         attr.set_data(default_value=cf, source=source)
         return attr
-    
+
     def _set_construction_time(self) -> Attribute:
         """
         Sets the construction time of district heating grids.
@@ -107,12 +106,15 @@ class DistrictHeatingGrid(ConversionTechnology):
             dea = DEA(source_path=self.source_path)
             data = dea.get_dh_distribution_data()
             construction_time = int(
-                data.loc[("suburban","construction_time","ref"),"value"].iloc[0])
+                data.loc[("suburban", "construction_time", "ref"), "value"].iloc[0]
+            )
             source = SourceInformation(
                 description=(
-                    "The construction time of district heating grids is based on data from the DEA dataset, "
-                    "which provides information on the construction time for district heating grids. "
-                    "The specific value used here is the reference value for suburban district heating grids."
+                    "The construction time of district heating grids is based on data "
+                    "from the DEA dataset, which provides information on the "
+                    "construction time for district heating grids. The specific value "
+                    "used here is the reference value for suburban district heating "
+                    "grids."
                 ),
                 metadata=dea.metadata,
             )
@@ -120,7 +122,7 @@ class DistrictHeatingGrid(ConversionTechnology):
             return attr
         else:
             return self.construction_time
-        
+
     def _set_capex_specific_conversion(self) -> Attribute:
         """
         Sets the specific capital expenditure (capex) for district heating grids.
@@ -129,34 +131,39 @@ class DistrictHeatingGrid(ConversionTechnology):
             Attribute: An Attribute object containing the specific capex data.
         """
         dh_dataset = DistrictHeatingData(
-            settings=self.settings, source_path=self.source_path)
+            settings=self.settings, source_path=self.source_path
+        )
         capex = dh_dataset.get_capex_specific_conversion(self)
         return capex
-    
+
     def _set_opex_specific_fixed(self) -> Attribute:
         """
-        Sets the specific fixed operational expenditure (opex) for district heating grids.
+        Sets the specific fixed operational expenditure (opex) for district heating
+        grids.
 
         Returns:
             Attribute: An Attribute object containing the specific fixed opex data.
         """
         dh_dataset = DistrictHeatingData(
-            settings=self.settings, source_path=self.source_path)
+            settings=self.settings, source_path=self.source_path
+        )
         opex_fixed = dh_dataset.get_opex_specific_fixed(self)
         return opex_fixed
-    
+
     def _set_opex_specific_variable(self) -> Attribute:
         """
-        Sets the specific variable operational expenditure (opex) for district heating grids.
+        Sets the specific variable operational expenditure (opex) for district heating
+        grids.
 
         Returns:
             Attribute: An Attribute object containing the specific variable opex data.
         """
         dh_dataset = DistrictHeatingData(
-            settings=self.settings, source_path=self.source_path)
+            settings=self.settings, source_path=self.source_path
+        )
         opex_variable = dh_dataset.get_opex_specific_variable(self)
         return opex_variable
-    
+
     def _set_capacity_limit(self) -> Attribute:
         """
         Sets the capacity limit for district heating grids.
@@ -165,9 +172,10 @@ class DistrictHeatingGrid(ConversionTechnology):
             Attribute: An Attribute object containing the capacity limit data.
         """
         dh_dataset = DistrictHeatingData(
-            settings=self.settings, source_path=self.source_path)
+            settings=self.settings, source_path=self.source_path
+        )
         return dh_dataset.get_capacity_limit(self)
-    
+
     def _set_capacity_existing(self) -> Attribute:
         """
         Sets the existing capacity for district heating grids.
@@ -177,7 +185,8 @@ class DistrictHeatingGrid(ConversionTechnology):
         """
         if self.settings.investment.use_existing_capacities:
             heat_demand_dataset = HeatDemand(
-                settings=self.settings, source_path=self.source_path)
+                settings=self.settings, source_path=self.source_path
+            )
             return heat_demand_dataset.get_capacity_existing(self)
         else:
             attr = self.capacity_existing
@@ -185,9 +194,7 @@ class DistrictHeatingGrid(ConversionTechnology):
                 default_value=0,
                 df=None,
                 source=AssumptionInformation(
-                    description=(
-                        "We do not consider existing capacities."
-                    ),
+                    description=("We do not consider existing capacities."),
                 ),
             )
             return attr
@@ -200,7 +207,8 @@ class DistrictHeatingGrid(ConversionTechnology):
             Attribute: An Attribute object containing the maximum load data.
         """
         heat_demand_dataset = HeatDemand(
-            settings=self.settings, source_path=self.source_path)
+            settings=self.settings, source_path=self.source_path
+        )
 
         return heat_demand_dataset.get_max_load(self)
 

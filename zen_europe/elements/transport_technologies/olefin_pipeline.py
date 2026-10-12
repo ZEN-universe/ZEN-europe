@@ -54,7 +54,8 @@ class OlefinPipeline(TransportTechnology):
         """
         ammonia_pipelines = AmmoniaPipelinesGalimova(source_path=self.source_path)
         return ammonia_pipelines.get_lifetime(
-            self, proxy_element_name=self.PROXY_TECHNOLOGY)
+            self, proxy_element_name=self.PROXY_TECHNOLOGY
+        )
 
     def _set_construction_time(self) -> Attribute:
         """
@@ -66,8 +67,8 @@ class OlefinPipeline(TransportTechnology):
             source_path=self.source_path,
         )
         return dea_energy_transport.get_construction_time(
-            self,
-            proxy_element_name="natural_gas_pipeline")
+            self, proxy_element_name="natural_gas_pipeline"
+        )
 
     def _set_transport_loss_factor_linear(self) -> Attribute:
         """
@@ -75,7 +76,8 @@ class OlefinPipeline(TransportTechnology):
         """
         ammonia_pipelines = AmmoniaPipelinesGalimova(source_path=self.source_path)
         return ammonia_pipelines.get_transport_loss_factor_linear(
-            self, proxy_element_name=self.PROXY_TECHNOLOGY)
+            self, proxy_element_name=self.PROXY_TECHNOLOGY
+        )
 
     def _set_capex_per_distance_transport(self) -> Attribute:
         """
@@ -90,7 +92,8 @@ class OlefinPipeline(TransportTechnology):
             set_nodes=self.model.config.system.set_nodes,
         )
         return transport_costs.get_capex_per_distance_transport(
-            self, proxy_element_name=self.PROXY_TECHNOLOGY)
+            self, proxy_element_name=self.PROXY_TECHNOLOGY
+        )
 
     # TODO implement opex_specific_fixed_per_distance in ZEN-garden
     # def _set_opex_specific_fixed(self) -> Attribute:

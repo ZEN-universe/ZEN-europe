@@ -40,7 +40,8 @@ class AnaerobicDigestion(ConversionTechnology):
         return Attribute(
             name="input_carrier",
             default_value=["wet_biomass", "electricity", "heat"],
-            element=self)
+            element=self,
+        )
 
     def _set_output_carrier(self) -> Attribute:
         """
@@ -58,7 +59,8 @@ class AnaerobicDigestion(ConversionTechnology):
 
         """
         tech_db = TechnologyCostDatabase(
-            settings=self.settings, source_path=self.source_path)
+            settings=self.settings, source_path=self.source_path
+        )
         return tech_db.get_lifetime(self)
 
     def _set_conversion_factor(self) -> Attribute:
@@ -86,7 +88,8 @@ class AnaerobicDigestion(ConversionTechnology):
         """
         if self.settings.investment.use_construction_times:
             tech_db = TechnologyCostDatabase(
-                    settings=self.settings, source_path=self.source_path)
+                settings=self.settings, source_path=self.source_path
+            )
             return tech_db.get_construction_time(self)
         else:
             return self.construction_time
@@ -99,7 +102,8 @@ class AnaerobicDigestion(ConversionTechnology):
             Attribute: An Attribute object containing the specific capex data.
         """
         tech_db = TechnologyCostDatabase(
-                    settings=self.settings, source_path=self.source_path)
+            settings=self.settings, source_path=self.source_path
+        )
         return tech_db.get_capex_specific_conversion(self)
 
     def _set_opex_specific_fixed(self) -> Attribute:
@@ -111,7 +115,8 @@ class AnaerobicDigestion(ConversionTechnology):
             Attribute: An Attribute object containing the specific fixed opex data.
         """
         tech_db = TechnologyCostDatabase(
-            settings=self.settings, source_path=self.source_path)
+            settings=self.settings, source_path=self.source_path
+        )
         return tech_db.get_opex_specific_fixed(self)
 
     def _set_opex_specific_variable(self) -> Attribute:
@@ -119,11 +124,11 @@ class AnaerobicDigestion(ConversionTechnology):
         Sets the specific variable operational expenditure (opex) for
         anaerobic digestion.
 
-        The technology cost database does not contain any variable opex data for 
+        The technology cost database does not contain any variable opex data for
         anaerobic digestion, so this method returns the default value of the attribute.
 
         Returns:
             Attribute: An Attribute object containing the specific variable opex data.
         """
         attr = self.opex_specific_variable
-        return attr  
+        return attr

@@ -50,7 +50,9 @@ class NaturalGasTurbine(ConversionTechnology):
         """
         Sets the input carrier of natural gas turbines to natural gas.
         """
-        return Attribute(name="input_carrier", default_value=["natural_gas"], element=self)
+        return Attribute(
+            name="input_carrier", default_value=["natural_gas"], element=self
+        )
 
     def _set_output_carrier(self) -> Attribute:
         """
@@ -68,8 +70,8 @@ class NaturalGasTurbine(ConversionTechnology):
 
         """
         lifetime_expectation = LifetimeExpectation(
-            settings=self.settings, 
-            source_path=self.source_path)
+            settings=self.settings, source_path=self.source_path
+        )
         return lifetime_expectation.get_lifetime(self)
 
     def _set_construction_time(self) -> Attribute:
@@ -79,11 +81,12 @@ class NaturalGasTurbine(ConversionTechnology):
         """
         if self.settings.investment.use_construction_times:
             tech_db = TechnologyCostDatabase(
-                        settings=self.settings, source_path=self.source_path)
+                settings=self.settings, source_path=self.source_path
+            )
             return tech_db.get_construction_time(self)
         else:
             return self.construction_time
-        
+
     def _set_conversion_factor(self) -> Attribute:
         """
         Return the conversion factor of natural gas turbines.
@@ -96,9 +99,11 @@ class NaturalGasTurbine(ConversionTechnology):
             raise ValueError(
                 f"Efficiency for {self.name} is not available in the Eurostat dataset."
             )
-        conversion_factor = [{
-            "natural_gas": {"default_value": 1/efficiency, "unit": "GWh/GWh"},
-        }]
+        conversion_factor = [
+            {
+                "natural_gas": {"default_value": 1 / efficiency, "unit": "GWh/GWh"},
+            }
+        ]
         attr = self.conversion_factor
         attr.set_data(
             default_value=conversion_factor,
@@ -121,9 +126,10 @@ class NaturalGasTurbine(ConversionTechnology):
             Attribute: An Attribute object containing the specific capex data.
         """
         tech_db = TechnologyCostDatabase(
-            settings=self.settings, source_path=self.source_path)
+            settings=self.settings, source_path=self.source_path
+        )
         return tech_db.get_capex_specific_conversion(self)
-    
+
     def _set_opex_specific_fixed(self) -> Attribute:
         """
         Sets the specific fixed operational expenditure (opex) for natural gas turbines.
@@ -132,18 +138,21 @@ class NaturalGasTurbine(ConversionTechnology):
             Attribute: An Attribute object containing the specific fixed opex data.
         """
         tech_db = TechnologyCostDatabase(
-            settings=self.settings, source_path=self.source_path)
+            settings=self.settings, source_path=self.source_path
+        )
         return tech_db.get_opex_specific_fixed(self)
-    
+
     def _set_opex_specific_variable(self) -> Attribute:
         """
-        Sets the specific variable operational expenditure (opex) for natural gas turbines.
+        Sets the specific variable operational expenditure (opex) for natural gas
+        turbines.
 
         Returns:
             Attribute: An Attribute object containing the specific variable opex data.
         """
         tech_db = TechnologyCostDatabase(
-            settings=self.settings, source_path=self.source_path)
+            settings=self.settings, source_path=self.source_path
+        )
         return tech_db.get_opex_specific_variable(self)
 
     def _set_capacity_existing(self) -> Attribute:
@@ -162,9 +171,7 @@ class NaturalGasTurbine(ConversionTechnology):
                 default_value=0,
                 df=None,
                 source=AssumptionInformation(
-                    description=(
-                        "We do not consider existing capacities."
-                    ),
+                    description=("We do not consider existing capacities."),
                 ),
             )
             return attr

@@ -13,7 +13,6 @@ from zen_europe.datasets.datasets.technology.IOGP_carbon_storage_projects import
 from zen_europe.datasets.datasets.technology.technology_diffusion_mannhardt import (
     TechnologyDiffusionMannhardt,
 )
-from zen_europe.utils.constants import Constants
 
 if TYPE_CHECKING:
     from zen_creator.model import Model
@@ -53,8 +52,10 @@ class CementPostComb(RetrofittingTechnology):
         for cement and electricity.
         """
         return Attribute(
-            name="input_carrier", default_value=["fuel_for_cement", "electricity"],
-            element=self)
+            name="input_carrier",
+            default_value=["fuel_for_cement", "electricity"],
+            element=self,
+        )
 
     def _set_output_carrier(self) -> Attribute:
         """
@@ -62,8 +63,9 @@ class CementPostComb(RetrofittingTechnology):
         and district heat.
         """
         return Attribute(
-            name="output_carrier", default_value=["carbon", "district_heat"],
-            element=self
+            name="output_carrier",
+            default_value=["carbon", "district_heat"],
+            element=self,
         )
 
     def _set_retrofit_reference_carrier(self) -> Attribute:
@@ -83,7 +85,8 @@ class CementPostComb(RetrofittingTechnology):
 
         """
         tech_db = TechnologyCostDatabase(
-            settings=self.settings, source_path=self.source_path)
+            settings=self.settings, source_path=self.source_path
+        )
         return tech_db.get_lifetime(self)
 
     def _set_construction_time(self) -> Attribute:
@@ -93,7 +96,8 @@ class CementPostComb(RetrofittingTechnology):
         """
         if self.settings.investment.use_construction_times:
             tech_db = TechnologyCostDatabase(
-                    settings=self.settings, source_path=self.source_path)
+                settings=self.settings, source_path=self.source_path
+            )
             return tech_db.get_construction_time(self)
         else:
             return self.construction_time
@@ -138,7 +142,8 @@ class CementPostComb(RetrofittingTechnology):
             Attribute: An Attribute object containing the specific capex data.
         """
         tech_db = TechnologyCostDatabase(
-                    settings=self.settings, source_path=self.source_path)
+            settings=self.settings, source_path=self.source_path
+        )
         return tech_db.get_capex_specific_conversion(self)
 
     def _set_opex_specific_fixed(self) -> Attribute:
@@ -150,7 +155,8 @@ class CementPostComb(RetrofittingTechnology):
             Attribute: An Attribute object containing the specific fixed opex data.
         """
         tech_db = TechnologyCostDatabase(
-            settings=self.settings, source_path=self.source_path)
+            settings=self.settings, source_path=self.source_path
+        )
         return tech_db.get_opex_specific_fixed(self)
 
     def _set_opex_specific_variable(self) -> Attribute:
@@ -162,7 +168,8 @@ class CementPostComb(RetrofittingTechnology):
             Attribute: An Attribute object containing the specific variable opex data.
         """
         tech_db = TechnologyCostDatabase(
-            settings=self.settings, source_path=self.source_path)
+            settings=self.settings, source_path=self.source_path
+        )
         return tech_db.get_opex_specific_variable(self)
 
     def _set_retrofit_flow_coupling_factor(self) -> Attribute:
@@ -173,10 +180,12 @@ class CementPostComb(RetrofittingTechnology):
         material_economics_dataset = MaterialEconomics(source_path=self.source_path)
         dea_dataset = DEA(source_path=self.source_path)
         clinker_carbon_intensity = (
-            material_economics_dataset._CARBON_INTENSITY_CEMENT_KILN)
+            material_economics_dataset._CARBON_INTENSITY_CEMENT_KILN
+        )
         carbon_capture_rate_cement = dea_dataset.get_capture_rate_CCS()
         retrofit_flow_coupling_factor = (
-            clinker_carbon_intensity * carbon_capture_rate_cement)
+            clinker_carbon_intensity * carbon_capture_rate_cement
+        )
         attr = self.retrofit_flow_coupling_factor
         attr.set_data(
             default_value=retrofit_flow_coupling_factor,
@@ -213,9 +222,7 @@ class CementPostComb(RetrofittingTechnology):
                 default_value=0,
                 df=None,
                 source=AssumptionInformation(
-                    description=(
-                        "We do not consider existing capacities."
-                    ),
+                    description=("We do not consider existing capacities."),
                 ),
             )
             return attr
@@ -241,7 +248,8 @@ class CementPostComb(RetrofittingTechnology):
         if not self.settings.investment.use_unbounded_capacity_addition_carbon:
             return attr
         iogp_projects = IOGPCarbonStorageProjects(
-                    settings=self.settings, source_path=self.source_path)
+            settings=self.settings, source_path=self.source_path
+        )
         data = iogp_projects.get_capacity_existing_data()
         median_add = data.median()
         return attr.set_data(
@@ -249,9 +257,9 @@ class CementPostComb(RetrofittingTechnology):
             unit="tCO2/h",
             source=SourceInformation(
                 description=(
-                    "The unbounded capacity addition of carbon storage is "
-                    "based on the median existing and future capacity from the IOGP report, "
-                    "divided by the number of nodes in the dataset."
+                    "The unbounded capacity addition of carbon storage is based on the "
+                    "median existing and future capacity from the IOGP report, divided "
+                    "by the number of nodes in the dataset."
                 ),
                 metadata=iogp_projects.metadata,
             ),

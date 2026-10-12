@@ -9,7 +9,10 @@ import pandas as pd
 from zen_creator.datasets.datasets.dataset import Dataset
 from zen_creator.datasets.datasets.metadata import MetaData
 
-from zen_europe.datasets.datasets.financial._cost_schema import INDEX_NAMES, VALUE_COLUMNS
+from zen_europe.datasets.datasets.financial._cost_schema import (
+    INDEX_NAMES,
+    VALUE_COLUMNS,
+)
 
 # internal technology name -> DIW cost-sheet technology label. DIW only
 # reports a single (reference) capex figure per technology, no fopex/vopex.
@@ -96,11 +99,17 @@ class DIW(Dataset[pd.DataFrame]):
 
     def _set_data(self) -> pd.DataFrame:
         path = self.path / "capex_diw.xlsx"
-        costs = pd.read_excel(path, header=1, sheet_name="costs").set_index("Technology")
+        costs = pd.read_excel(path, header=1, sheet_name="costs").set_index(
+            "Technology"
+        )
         costs.columns = costs.columns.astype(int)
-        efficiency = pd.read_excel(path, header=1, sheet_name="efficiency").set_index("Efficiency")
+        efficiency = pd.read_excel(path, header=1, sheet_name="efficiency").set_index(
+            "Efficiency"
+        )
         efficiency.columns = efficiency.columns.astype(int)
-        lifetime = pd.read_excel(path, sheet_name="lifetime").set_index("Column1")["Column2"]
+        lifetime = pd.read_excel(path, sheet_name="lifetime").set_index("Column1")[
+            "Column2"
+        ]
 
         rows = []
         for technology, diw_tech in _COST_TECHS.items():
@@ -111,9 +120,16 @@ class DIW(Dataset[pd.DataFrame]):
                     continue
                 rows.append(
                     (
-                        technology, "M", "ref", "capex", int(year),
-                        float(value_src), "Euro/kW", _MONEY_YEAR_SRC,
-                        float(value_src), _SOURCE_CAPEX_UNIT,
+                        technology,
+                        "M",
+                        "ref",
+                        "capex",
+                        int(year),
+                        float(value_src),
+                        "Euro/kW",
+                        _MONEY_YEAR_SRC,
+                        float(value_src),
+                        _SOURCE_CAPEX_UNIT,
                     )
                 )
         for technology, diw_tech in _EFFICIENCY_TECHS.items():
@@ -124,8 +140,16 @@ class DIW(Dataset[pd.DataFrame]):
                     continue
                 rows.append(
                     (
-                        technology, "M", "ref", "efficiency", int(year),
-                        float(value_src), "-", None, float(value_src), "-",
+                        technology,
+                        "M",
+                        "ref",
+                        "efficiency",
+                        int(year),
+                        float(value_src),
+                        "-",
+                        None,
+                        float(value_src),
+                        "-",
                     )
                 )
         for technology, diw_tech in _LIFETIME_TECHS.items():
@@ -134,12 +158,21 @@ class DIW(Dataset[pd.DataFrame]):
             value_src = lifetime.loc[diw_tech]
             if pd.isna(value_src):
                 continue
-            # DIW gives one lifetime figure per technology, applied to the whole year grid
+            # DIW gives one lifetime figure per technology, applied to the whole year
+            # grid
             for year in costs.columns:
                 rows.append(
                     (
-                        technology, "M", "ref", "lifetime", int(year),
-                        float(value_src), "1", None, float(value_src), "years",
+                        technology,
+                        "M",
+                        "ref",
+                        "lifetime",
+                        int(year),
+                        float(value_src),
+                        "1",
+                        None,
+                        float(value_src),
+                        "years",
                     )
                 )
         data = pd.DataFrame(rows, columns=INDEX_NAMES + VALUE_COLUMNS)

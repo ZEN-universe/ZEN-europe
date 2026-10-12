@@ -6,7 +6,6 @@ import pandas as pd
 
 from zen_europe.datasets.datasets.carrier.when2heat import When2Heat
 
-
 if TYPE_CHECKING:
     from pathlib import Path
 
@@ -17,20 +16,20 @@ from zen_creator import Attribute, Carrier, DatasetCollection
 from zen_creator.utils.attribute import SourceInformation
 from zen_creator.utils.settings import Settings
 
-from zen_europe.datasets.datasets.carrier.entsoe import ENTSOE
 from zen_europe.datasets.dataset_collections.heat_demand import HeatDemand
-from zen_europe.datasets.datasets.carrier.eurostat import Eurostat
 from zen_europe.datasets.datasets.carrier.bfe import BFE
+from zen_europe.datasets.datasets.carrier.entsoe import ENTSOE
+from zen_europe.datasets.datasets.carrier.eurostat import Eurostat
+
 
 class ElectricityDemand(DatasetCollection):
     """Extracting electricity demand data."""
 
     name = "electricity_demand"
 
-    def __init__(self, 
-                 settings: Settings,
-                 set_nodes: list[str], 
-                 source_path: Path | str):
+    def __init__(
+        self, settings: Settings, set_nodes: list[str], source_path: Path | str
+    ):
         self.settings = settings
         self.set_nodes = set_nodes
         super().__init__(source_path=source_path)
@@ -63,21 +62,26 @@ class ElectricityDemand(DatasetCollection):
         heating_share = heat_demand_dataset._calculate_heating_share_household()
         heating_share_hp = heating_share.loc["heat_pump"]
         heating_share_eb = heating_share.loc["electrode_boiler"]
-        common_nodes= heating_share_hp.index.intersection(
-            element.model.config.system.set_nodes)
+        common_nodes = heating_share_hp.index.intersection(
+            element.model.config.system.set_nodes
+        )
         missing_nodes = set(element.model.config.system.set_nodes).difference(
-            common_nodes)
-        assert len(missing_nodes) == 0, (f"Missing nodes in heating share data: "
-                                        f"{missing_nodes}")
+            common_nodes
+        )
+        assert len(missing_nodes) == 0, (
+            f"Missing nodes in heating share data: " f"{missing_nodes}"
+        )
         year_time_series = self.settings.time.year_time_series
         heating_share_hp = heating_share_hp.loc[common_nodes, year_time_series]
         heating_share_eb = heating_share_eb.loc[common_nodes, year_time_series]
-        heat_demand_hp = heat_demand*heating_share_hp
-        heat_demand_eb = heat_demand*heating_share_eb
-        electricity_demand_eb = heat_demand_eb * 1 # assume 100% efficiency for electrode boilers
+        heat_demand_hp = heat_demand * heating_share_hp
+        heat_demand_eb = heat_demand * heating_share_eb
+        electricity_demand_eb = (
+            heat_demand_eb * 1
+        )  # assume 100% efficiency for electrode boilers
         when2heat_dataset = cast(When2Heat, self.data["when2heat"])
         cop_data = when2heat_dataset.get_COP()
-        cop_data = cop_data.xs("floor",level="category", axis=1)
+        cop_data = cop_data.xs("floor", level="category", axis=1)
         electricity_demand_hp = heat_demand_hp.div(cop_data, axis=0)
         # correct demand
         demand = demand - electricity_demand_eb - electricity_demand_hp
@@ -85,9 +89,9 @@ class ElectricityDemand(DatasetCollection):
         source = SourceInformation(
             description=(
                 "The electricity demand data is derived from multiple sources:"
-                "First, the ENTSOE dataset provides the base electricity demand data. " \
+                "First, the ENTSOE dataset provides the base electricity demand data. "
                 "Second, the electricity demand must be corrected for the"
-                "electricity demand of heat pumps and electrode boilers. " \
+                "electricity demand of heat pumps and electrode boilers. "
                 "The heat demand data is derived from the HeatDemand dataset, "
                 "which combines data from the JRC IDEES, Eurostat, "
                 "DESNZ, BFE, and Energifaktanorge datasets. "
@@ -105,7 +109,7 @@ class ElectricityDemand(DatasetCollection):
             df=demand,
             unit="GW",
         )
-    
+
     def _get_base_demand(self) -> pd.DataFrame:
         """
         Get the base electricity demand data.
@@ -115,4 +119,3 @@ class ElectricityDemand(DatasetCollection):
         """
         entsoe_dataset = cast(ENTSOE, self.data["entsoe"])
         return entsoe_dataset.get_demand()
-    

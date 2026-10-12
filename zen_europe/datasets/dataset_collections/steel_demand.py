@@ -4,8 +4,10 @@ from typing import TYPE_CHECKING, Any, Dict, cast
 
 import pandas as pd
 
-from zen_europe.utils.utils import calculate_capacity_addition_from_cumulative, format_capacity_existing
-
+from zen_europe.utils.utils import (
+    calculate_capacity_addition_from_cumulative,
+    format_capacity_existing,
+)
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -17,10 +19,13 @@ from zen_creator import Attribute, ConversionTechnology, DatasetCollection
 from zen_creator.utils.attribute import SourceInformation
 
 from zen_europe.datasets.datasets.carrier.aidres import Aidres
-from zen_europe.datasets.datasets.carrier.manual_steel_demand import (Eurofer,
-                                                                      WorldSteel,
-                                                                      TradeEconomics)
+from zen_europe.datasets.datasets.carrier.manual_steel_demand import (
+    Eurofer,
+    TradeEconomics,
+    WorldSteel,
+)
 from zen_europe.datasets.datasets.carrier.material_economics import MaterialEconomics
+
 
 class SteelDemand(DatasetCollection):
     """Extracting steel demand data."""
@@ -47,50 +52,58 @@ class SteelDemand(DatasetCollection):
     def _calculate_steel_demand(self, element: Element) -> tuple[pd.Series, pd.Series]:
         """
         Calculate the steel demand for the given element.
-        """ 
+        """
         aidres_dataset = cast(Aidres, self.data["aidres"])
         data = aidres_dataset.get_demand(element)
         eurofer_dataset = cast(Eurofer, self.data["eurofer"])
         worldsteel_dataset = cast(WorldSteel, self.data["worldsteel"])
         trade_economics_dataset = cast(TradeEconomics, self.data["trade_economics"])
         material_economics_dataset = cast(
-            MaterialEconomics, self.data["material_economics"])
+            MaterialEconomics, self.data["material_economics"]
+        )
         missing_countries = pd.Index(element.model.config.system.set_nodes).difference(
-            data.index)
-        
+            data.index
+        )
+
         for country in missing_countries:
             if country == "CH":
-                data.loc[country] = (
-                    eurofer_dataset.get_manual_steel_demand_eurofer(country))
+                data.loc[country] = eurofer_dataset.get_manual_steel_demand_eurofer(
+                    country
+                )
             elif country == "UK":
                 data.loc[country] = (
-                    worldsteel_dataset.get_manual_steel_demand_worldsteel(country))
+                    worldsteel_dataset.get_manual_steel_demand_worldsteel(country)
+                )
             elif country == "NO":
                 data.loc[country] = (
                     trade_economics_dataset.get_manual_steel_demand_trade_economics(
-                        country))
+                        country
+                    )
+                )
             else:
                 raise ValueError(
                     f"Steel demand data for country {country} is not available in the "
-                    "Aidres dataset or any of the manual datasets (Eurofer, WorldSteel, "
-                    "TradeEconomics). Please provide the necessary data for this country."
+                    "Aidres dataset or any of the manual datasets (Eurofer, "
+                    "WorldSteel, TradeEconomics). Please provide the necessary data "
+                    "for this country."
                 )
-        
+
         d = data.sort_index() / 8.76
 
         secondary_steel_share_beginning, secondary_steel_share_end = (
-            material_economics_dataset.get_secondary_steel_ratios())
+            material_economics_dataset.get_secondary_steel_ratios()
+        )
         if element.name == "secondary_steel":
             rat_start = secondary_steel_share_beginning
-            rat_end = secondary_steel_share_end/rat_start
+            rat_end = secondary_steel_share_end / rat_start
         else:
-            rat_start = 1-secondary_steel_share_beginning
-            rat_end = (1-secondary_steel_share_end)/rat_start
+            rat_start = 1 - secondary_steel_share_beginning
+            rat_end = (1 - secondary_steel_share_end) / rat_start
 
         d = d * rat_start
         d.index.name = "node"
         d.name = "demand"
-        
+
         years = element.settings.time.years
 
         d_yearly_variation = pd.Series(index=years, dtype=float)
@@ -100,7 +113,7 @@ class SteelDemand(DatasetCollection):
         d_yearly_variation.index.name = "year"
         d_yearly_variation.name = "demand_yearly_variation"
         return d, d_yearly_variation
-    
+
     def get_steel_demand(self, element: Element) -> Attribute:
         """
         Get the demand for steel.
@@ -110,12 +123,11 @@ class SteelDemand(DatasetCollection):
         d, d_yearly_variation = self._calculate_steel_demand(element)
         source = SourceInformation(
             description=(
-                "Steel demand data is derived from multiple sources. The main source"
-                "is the Aidres dataset. "
-                "Additional manual data for missing countries is obtained from the "
-                "following datasets:"
-                "Eurofer, WorldSteel, and TradeEconomics. "
-                "The secondary steel ratios are derived from the Material Economics dataset."
+                "Steel demand data is derived from multiple sources. The main sourceis "
+                "the Aidres dataset. Additional manual data for missing countries is "
+                "obtained from the following datasets:Eurofer, WorldSteel, and "
+                "TradeEconomics. The secondary steel ratios are derived from the "
+                "Material Economics dataset."
             ),
             metadata=self.metadata,
         )
@@ -125,7 +137,7 @@ class SteelDemand(DatasetCollection):
             yearly_variations_df=d_yearly_variation,
             unit="tproduct/h",
         )
-    
+
     def get_capacity_existing(self, element: ConversionTechnology) -> Attribute:
         """
         Get the existing capacity for steel production technologies.
@@ -145,26 +157,27 @@ class SteelDemand(DatasetCollection):
             )
         else:
             raise ValueError(
-                f"Unexpected reference carrier '{ref_carrier}' for element '{element.name}'."
+                f"Unexpected reference carrier '{ref_carrier}' for element "
+                f"'{element.name}'."
             )
         ref_carrier = element.model.carriers[ref_carrier]
         capacity_existing, _ = self._calculate_steel_demand(ref_carrier)
         capacity_existing = capacity_existing.rename(
-            {"demand": element.settings.time.reference_year - 1},axis=1)
+            {"demand": element.settings.time.reference_year - 1}, axis=1
+        )
         capacity_existing = calculate_capacity_addition_from_cumulative(
-            capacity_existing,element)
+            capacity_existing, element
+        )
         capacity_existing = format_capacity_existing(capacity_existing)
         source = SourceInformation(
             description=(
-                "It is assumed that all current primary steel demand is based "
-                "on the BF-BOF route, and all current secondary steel demand is based"
-                "on the EAF route. "
-                "Steel demand data is derived from multiple sources. The main source"
-                "is the Aidres dataset. "
-                "Additional manual data for missing countries is obtained from the "
-                "following datasets:"
-                "Eurofer, WorldSteel, and TradeEconomics. "
-                "The secondary steel ratios are derived from the Material Economics dataset."
+                "It is assumed that all current primary steel demand is based on the "
+                "BF-BOF route, and all current secondary steel demand is basedon the "
+                "EAF route. Steel demand data is derived from multiple sources. The "
+                "main sourceis the Aidres dataset. Additional manual data for missing "
+                "countries is obtained from the following datasets:Eurofer, "
+                "WorldSteel, and TradeEconomics. The secondary steel ratios are "
+                "derived from the Material Economics dataset."
             ),
             metadata=self.metadata,
         )

@@ -10,19 +10,21 @@ from datetime import datetime
 import pandas as pd
 from zen_creator import Carrier, Dataset
 from zen_creator.datasets.datasets.metadata import MetaData
+
 from zen_europe.utils.constants import Constants
 
 _MAPPING_TECHNOLOGY_NAMES = {
-    'Elektrizität': "electricity", 
-    'Erdölprodukte': "oil",
-    'Fernwärme': "district_heating",
-    'Gas': "natural_gas",
-    'Holzenergie': "biomass",
-    'Kernbrennstoffe': "uranium",
-    'Kohle': "hard_coal",
-    'Müll und Industrieabfälle': "waste",
-    'Rohöl': "crude_oil",
+    "Elektrizität": "electricity",
+    "Erdölprodukte": "oil",
+    "Fernwärme": "district_heating",
+    "Gas": "natural_gas",
+    "Holzenergie": "biomass",
+    "Kernbrennstoffe": "uranium",
+    "Kohle": "hard_coal",
+    "Müll und Industrieabfälle": "waste",
+    "Rohöl": "crude_oil",
 }
+
 
 class SwissEnergyBalance(Dataset[pd.DataFrame]):
     """Dataset class for Swiss energy balance data."""
@@ -43,7 +45,8 @@ class SwissEnergyBalance(Dataset[pd.DataFrame]):
         )
 
     def _set_path(self) -> Path | None:
-        return None  # Swiss energy balance data is accessed directly via URL, no local path needed
+        # Swiss energy balance data is accessed directly via URL, no local path needed
+        return None
 
     # ----- Property overwrites -----
 
@@ -52,16 +55,17 @@ class SwissEnergyBalance(Dataset[pd.DataFrame]):
     def _set_data(self) -> pd.DataFrame:
         """Method to get the Swiss energy balance data."""
         url = "https://www.uvek-gis.admin.ch/BFE/ogd/115/ogd115_gest_bilanz.csv"
-        df = pd.read_csv(
-            url)
-        
-        data = df.set_index(["Energietraeger","Rubrik","Jahr"]).squeeze().unstack()
+        df = pd.read_csv(url)
 
-        data = data / Constants.GJ_PER_MWH # from TJ to GWh
+        data = df.set_index(["Energietraeger", "Rubrik", "Jahr"]).squeeze().unstack()
 
-        new_index = data.index.map(lambda x: (_MAPPING_TECHNOLOGY_NAMES.get(x[0], x[0]),x[1]))
+        data = data / Constants.GJ_PER_MWH  # from TJ to GWh
+
+        new_index = data.index.map(
+            lambda x: (_MAPPING_TECHNOLOGY_NAMES.get(x[0], x[0]), x[1])
+        )
         data.index = new_index
-        data.index.names = ["element","category"]
+        data.index.names = ["element", "category"]
 
         return data
 
@@ -72,28 +76,29 @@ class SwissEnergyBalance(Dataset[pd.DataFrame]):
         if element.name not in self.data.index.get_level_values("element"):
             raise ValueError(
                 f"Element '{element.name}' not found in the"
-                  f"Swiss Energy Balance dataset.")
-        return self.data.loc[element.name,year]
-    
+                f"Swiss Energy Balance dataset."
+            )
+        return self.data.loc[element.name, year]
+
     def get_coal_availability(self, year: int, element: Carrier) -> float:
         """Get the availability for coal."""
         data = self.get_data(year=year, element=element)
         return data.loc["Bruttoverbrauch"]
-    
+
     def get_oil_availability(self, year: int, element: Carrier) -> float:
         """Get the availability for oil."""
         data = self.get_data(year=year, element=element)
         return data.loc["Endverbrauch - Total"]
 
     def get_waste_availability(
-            self, year: int, element: Carrier, include_industry: bool = False) -> float:
+        self, year: int, element: Carrier, include_industry: bool = False
+    ) -> float:
         """Get the availability for waste."""
         data = self.get_data(year=year, element=element)
         if include_industry:
-            return data.loc["Bruttoverbrauch"] 
+            return data.loc["Bruttoverbrauch"]
         else:
             return data.loc["Bruttoverbrauch"] - data.loc["Endverbrauch - Industrie"]
-        
 
 
 class SwissOilBalance(Dataset[pd.DataFrame]):
@@ -115,30 +120,29 @@ class SwissOilBalance(Dataset[pd.DataFrame]):
         )
 
     def _set_path(self) -> Path | None:
-        return None  # Swiss oil balance data is accessed directly via URL, no local path needed
+        # Swiss oil balance data is accessed directly via URL, no local path needed
+        return None
 
     # ----- Property overwrites -----
 
     # ----- Load and format Data -----
 
     def _set_data(self) -> pd.DataFrame:
-        """Method to get the Swiss oil balance data in tons
-        
-        """
+        """Method to get the Swiss oil balance data in tons."""
         url = "https://www.uvek-gis.admin.ch/BFE/ogd/124/ogd124_erd%C3%B6lbilanz.csv"
-        df = pd.read_csv(
-            url)
-        
-        data = df.set_index(["Energietraeger","Rubrik","Jahr"]).squeeze().unstack()
-        data.index.names = ["element","category"]
+        df = pd.read_csv(url)
+
+        data = df.set_index(["Energietraeger", "Rubrik", "Jahr"]).squeeze().unstack()
+        data.index.names = ["element", "category"]
 
         return data
 
     # ------ Outward facing functions ------
     def get_kerosene_demand(self, year: int) -> float:
         """Get the demand for kerosene."""
-        data = self.data.loc[("Flugpetrol","Endverbrauch - Total"),year]
-        energy_density = 43.2 / (Constants.GJ_PER_MWH * 1000) # [GWh/t] https://www.bfe.admin.ch/bfe/de/home/versorgung/statistik-und-geodaten/energiestatistiken/gesamtenergiestatistik.exturl.html/aHR0cHM6Ly9wdWJkYi5iZmUuYWRtaW4uY2gvZGUvcHVibGljYX/Rpb24vZG93bmxvYWQvNzQ0Mg==.html
+        data = self.data.loc[("Flugpetrol", "Endverbrauch - Total"), year]
+        energy_density = 43.2 / (
+            Constants.GJ_PER_MWH * 1000
+        )  # [GWh/t] https://www.bfe.admin.ch/bfe/de/home/versorgung/statistik-und-geodaten/energiestatistiken/gesamtenergiestatistik.exturl.html/aHR0cHM6Ly9wdWJkYi5iZmUuYWRtaW4uY2gvZGUvcHVibGljYX/Rpb24vZG93bmxvYWQvNzQ0Mg==.html
         data *= energy_density
         return data
-    

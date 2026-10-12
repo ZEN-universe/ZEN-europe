@@ -14,7 +14,7 @@ class AmmoniaSector(Sector):
     """Ammonia production and transport."""
 
     name = "ammonia"
-    required_sectors = ["electricity","hydrogen"]
+    required_sectors = ["electricity", "hydrogen"]
 
     def __init__(self) -> None:
         super().__init__()

@@ -5,11 +5,10 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from pathlib import Path
 
+import pandas as pd
 from zen_creator import Carrier
 from zen_creator.datasets.datasets.dataset import Dataset
 from zen_creator.datasets.datasets.metadata import MetaData, SourceInformation
-
-import pandas as pd
 
 from zen_europe.utils.constants import Constants
 
@@ -29,10 +28,8 @@ class TYNDPFuelPrices(Dataset[pd.DataFrame]):
     def _set_metadata(self) -> MetaData:
         return MetaData(
             name=self.name,
-            title=(
-                "Fuel Commodities and Carbon Prices"
-            ),
-            author=["ENTSO-E","ENTSOG"],
+            title=("Fuel Commodities and Carbon Prices"),
+            author=["ENTSO-E", "ENTSOG"],
             publication="TYNDP 2020 Scenario Report",
             publication_year=2020,
             url="https://2020.entsos-tyndp-scenarios.eu/fuel-commodities-and-carbon-prices/",
@@ -42,12 +39,8 @@ class TYNDPFuelPrices(Dataset[pd.DataFrame]):
         return None
 
     def _set_data(self) -> pd.Series:
-        """ sets the manual data for the TYNDP fuel prices dataset in €/GJ in 2020
-        
-        """
-        return pd.Series({
-            "uranium": 0.47,
-            "lignite": 1.1})
+        """sets the manual data for the TYNDP fuel prices dataset in €/GJ in 2020."""
+        return pd.Series({"uranium": 0.47, "lignite": 1.1})
 
     # -------- methods ------------------------
     def get_price_import(self, element: Carrier) -> int:
@@ -63,11 +56,16 @@ class TYNDPFuelPrices(Dataset[pd.DataFrame]):
             The price in €/MWh for the given element.
         """
         if element.name not in self.data.index:
-            raise ValueError(f"Fuel price for {element.name}" 
-                             "is not available in the TYNDP 2020 dataset.")
-        default_value = self.data.loc[element.name] * Constants.GJ_PER_MWH  # convert from €/GJ to €/MWh
+            raise ValueError(
+                f"Fuel price for {element.name}"
+                "is not available in the TYNDP 2020 dataset."
+            )
+        default_value = (
+            self.data.loc[element.name] * Constants.GJ_PER_MWH
+        )  # convert from €/GJ to €/MWh
         inflation = element.get_inflation_rate(
-            base_year=2020, target_year=element.settings.time.reference_year)
+            base_year=2020, target_year=element.settings.time.reference_year
+        )
         source = SourceInformation(
             description=(
                 f"Import price of {element.name} from the TYNDP 2020 dataset, "

@@ -28,14 +28,13 @@ class Electricity(Carrier):
 
         """
         electricity_demand_dataset = ElectricityDemand(
-            self.settings,
-            self.model.config.system.set_nodes,
-            self.source_path)
+            self.settings, self.model.config.system.set_nodes, self.source_path
+        )
         attr = electricity_demand_dataset.get_demand(self)
         if self.settings.scenario.sensitivity_demand:
             attr.add_scenarios(demand_sensitivity_scenarios(self.name))
         return attr
-    
+
     def _set_price_shed_demand(self) -> Attribute:
         """
         Return the price of shed demand of the carrier.
@@ -59,4 +58,3 @@ class Electricity(Carrier):
             element=self,
             unit="GW",
         )
-

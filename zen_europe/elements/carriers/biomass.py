@@ -34,7 +34,7 @@ class Biomass(Carrier):
     def __init__(self, model: Model, power_unit: str = "MW"):
         super().__init__(model=model, power_unit=power_unit)
         # set the inflation rate function from the ECB dataset
-        # TODO make the inflation rate function directly available in the model, 
+        # TODO make the inflation rate function directly available in the model,
         # so that it can be used by other elements as well
         ecb = ECBInflation(source_path=self.source_path)
         self.get_inflation_rate = ecb.get_inflation_rate
@@ -51,16 +51,24 @@ class Biomass(Carrier):
             element=self, biomass_types=self._biomass_types
         )
         if self.settings.scenario.sensitivity_biomass:
-            attr.add_scenarios([
-                enspreso.get_availability_import_scenario(
-                    element=self, biomass_types=self._biomass_types,
-                    name="biomass_low", ens_scenario="ENS_Low", suffix="low",
-                ),
-                enspreso.get_availability_import_scenario(
-                    element=self, biomass_types=self._biomass_types,
-                    name="biomass_high", ens_scenario="ENS_High", suffix="high",
-                ),
-            ])
+            attr.add_scenarios(
+                [
+                    enspreso.get_availability_import_scenario(
+                        element=self,
+                        biomass_types=self._biomass_types,
+                        name="biomass_low",
+                        ens_scenario="ENS_Low",
+                        suffix="low",
+                    ),
+                    enspreso.get_availability_import_scenario(
+                        element=self,
+                        biomass_types=self._biomass_types,
+                        name="biomass_high",
+                        ens_scenario="ENS_High",
+                        suffix="high",
+                    ),
+                ]
+            )
         return attr
 
     def _set_availability_import_yearly(self) -> Attribute:
@@ -75,12 +83,12 @@ class Biomass(Carrier):
 
     def _set_price_import(self) -> Attribute:
         """Return the import price of biomass from ENSPRESO potentials.
-        
-        We assume that the price of biomass is that of chips and pellets (MINBIOWOOa) 
+
+        We assume that the price of biomass is that of chips and pellets (MINBIOWOOa)
         as a proxy for the price of all solid biomass types."""
         enspreso = EnspresoBiomassPrice(self.source_path)
         return enspreso.get_price_import(
-            element=self, 
-            biomass_types=["MINBIOWOOa"], 
-            regional_prices=self.settings.cost.use_nodal_biomass_prices
+            element=self,
+            biomass_types=["MINBIOWOOa"],
+            regional_prices=self.settings.cost.use_nodal_biomass_prices,
         )

@@ -5,11 +5,10 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from pathlib import Path
 
+import pandas as pd
 from zen_creator.datasets.datasets.dataset import Dataset
 from zen_creator.datasets.datasets.metadata import MetaData
 from zen_creator.utils.attribute import Attribute
-
-import pandas as pd
 
 _MAP_TECHNOLOGY = {
     "Heizöl": "oil_boiler",
@@ -19,11 +18,14 @@ _MAP_TECHNOLOGY = {
     "Fernwärme": "district_heating_grid",
     "El. Ohm'sche Anlagen": "electrode_boiler",
 }
+
+
 class EnergieSchweiz(Dataset[pd.DataFrame]):
     """
     EnergieSchweiz dataset class.
 
-    This class implements the data from the Liste "Thermische Netze" - Auswertungsbericht 2021
+    This class implements the data from the Liste "Thermische Netze" -
+    Auswertungsbericht 2021
     """
 
     name = "energieschweiz"
@@ -34,9 +36,7 @@ class EnergieSchweiz(Dataset[pd.DataFrame]):
     def _set_metadata(self) -> MetaData:
         return MetaData(
             name=self.name,
-            title=(
-                "Liste 'Thermische Netze' - Auswertungsbericht 2021"
-            ),
+            title=("Liste 'Thermische Netze' - Auswertungsbericht 2021"),
             author=["Diego Hangartner", "Andreas Hurni"],
             publication="EnergieSchweiz",
             publication_year=2021,
@@ -47,23 +47,24 @@ class EnergieSchweiz(Dataset[pd.DataFrame]):
         return None
 
     def _set_data(self) -> pd.Series:
-        """ Share of district heating technologies in Switzerland 
-        Table 1, p.5 
+        """Share of district heating technologies in Switzerland.
+
+        Table 1, p.5.
         """
         data = {
             "waste_boiler_DH": 0.45,
             "biomass_boiler_DH": 0.30 + 0.01,
-            "natural_gas_boiler_DH": 0.02+0.04,
-            "heat_pump_DH": 0.04+0.02+0.02+0.04,
+            "natural_gas_boiler_DH": 0.02 + 0.04,
+            "heat_pump_DH": 0.04 + 0.02 + 0.02 + 0.04,
         }
         data = pd.Series(data, name="share")
         data.index.name = "technology"
-        data = data/data.sum()
+        data = data / data.sum()
         return data
 
     # -------- methods ------------------------
     def get_share_DH(self) -> Attribute:
         """
-        Get the split of district heating heat demand into technology categories 
+        Get the split of district heating heat demand into technology categories.
         """
         return self.data

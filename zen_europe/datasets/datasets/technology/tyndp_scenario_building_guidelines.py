@@ -58,7 +58,8 @@ class TYNDPScenarioBuildingGuidelines(Dataset[pd.DataFrame]):
 
     # -------- methods ------------------------
     def get_capex_per_distance_transport(
-            self, technology: TransportTechnology) -> Attribute:
+        self, technology: TransportTechnology
+    ) -> Attribute:
         """
         Get the distance-specific capex of a transport technology.
         """

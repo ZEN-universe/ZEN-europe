@@ -7,12 +7,15 @@ from zen_europe.datasets.datasets.financial.ECB import ECBInflation
 if TYPE_CHECKING:
     from pathlib import Path
 
-from zen_creator import Attribute, ConversionTechnology, SourceInformation, TransportTechnology
+import pandas as pd
+from zen_creator import (
+    Attribute,
+    SourceInformation,
+    TransportTechnology,
+)
 from zen_creator.datasets.datasets.dataset import Dataset
 from zen_creator.datasets.datasets.metadata import MetaData
-from zen_europe.utils.constants import Constants
 
-import pandas as pd
 
 class MethanolPipelinesGalimova(Dataset[pd.DataFrame]):
     """
@@ -28,16 +31,23 @@ class MethanolPipelinesGalimova(Dataset[pd.DataFrame]):
     def __init__(self, source_path: Path | str | None = None):
         super().__init__(source_path=source_path)
         self.get_inflation_rate = ECBInflation(
-            source_path=source_path).get_inflation_rate
+            source_path=source_path
+        ).get_inflation_rate
 
     def _set_metadata(self) -> MetaData:
         return MetaData(
             name=self.name,
             title=(
-                "Analysis of green e-methanol supply costs: "
-                "Domestic production in Europe versus imports via pipelines and sea shipping"
+                "Analysis of green e-methanol supply costs: Domestic production in "
+                "Europe versus imports via pipelines and sea shipping"
             ),
-            author=["Tansu Galimova", "Mahdi Fasihi", "Dmitrii Bogdanov", "Gabriel Lopez", "Christian Breyer"],
+            author=[
+                "Tansu Galimova",
+                "Mahdi Fasihi",
+                "Dmitrii Bogdanov",
+                "Gabriel Lopez",
+                "Christian Breyer",
+            ],
             publication="Renewable Energy",
             publication_year=2025,
             url="https://www.sciencedirect.com/science/article/pii/S0960148124024042",
@@ -53,7 +63,7 @@ class MethanolPipelinesGalimova(Dataset[pd.DataFrame]):
         return data
 
     # -------- methods ------------------------
-    @staticmethod    
+    @staticmethod
     def get_offshore_cost_increase() -> float:
         """
         Get the offshore cost increase factor for offshore pipelines.
@@ -63,62 +73,79 @@ class MethanolPipelinesGalimova(Dataset[pd.DataFrame]):
         """
         return 1.4
 
-    def get_capex_per_distance_transport_onshore(self, technology: TransportTechnology) -> float:
+    def get_capex_per_distance_transport_onshore(
+        self, technology: TransportTechnology
+    ) -> float:
         """
         Get the distance-specific capex of a transport technology.
 
         Args:
-            technology (TransportTechnology): The transport technology for which to get the capex.
-        """
-        assert technology.name == "methanol_pipeline", (
-            f"The distance-specific capex of technology '{technology.name}' is not "
-            f"available in the dataset '{self.name}'."
-        )
-        return 0.098*self.get_inflation_rate(
-            base_year=self.MONEY_YEAR,
-            target_year=technology.settings.time.reference_year)*1000 # Euro/km/MW
-
-    def get_capex_per_distance_transport_offshore(self, technology: TransportTechnology) -> float:
-        """
-        Get the distance-specific capex of a transport technology.
-
-        Args:
-            technology (TransportTechnology): The transport technology for which to get the capex.
+            technology (TransportTechnology): The transport technology for which to get
+                the capex.
         """
         assert technology.name == "methanol_pipeline", (
             f"The distance-specific capex of technology '{technology.name}' is not "
             f"available in the dataset '{self.name}'."
         )
         return (
-            self.get_offshore_cost_increase()*
-            self.get_capex_per_distance_transport_onshore(technology))
+            0.098
+            * self.get_inflation_rate(
+                base_year=self.MONEY_YEAR,
+                target_year=technology.settings.time.reference_year,
+            )
+            * 1000
+        )  # Euro/km/MW
 
+    def get_capex_per_distance_transport_offshore(
+        self, technology: TransportTechnology
+    ) -> float:
+        """
+        Get the distance-specific capex of a transport technology.
+
+        Args:
+            technology (TransportTechnology): The transport technology for which to get
+                the capex.
+        """
+        assert technology.name == "methanol_pipeline", (
+            f"The distance-specific capex of technology '{technology.name}' is not "
+            f"available in the dataset '{self.name}'."
+        )
+        return (
+            self.get_offshore_cost_increase()
+            * self.get_capex_per_distance_transport_onshore(technology)
+        )
 
     def get_opex_fixed_onshore(self, technology: TransportTechnology) -> float:
         """
         Get the fixed opex of a methanol pipeline for onshore transmission.
 
         Args:
-            technology (TransportTechnology): The transport technology for which to get the opex.
+            technology (TransportTechnology): The transport technology for which to get
+                the opex.
         """
         assert technology.name == "methanol_pipeline", (
             f"The fixed opex of technology '{technology.name}' is not "
             f"available in the dataset '{self.name}'."
         )
-        return self.get_capex_per_distance_transport_onshore(technology) * 0.03 # 3% of capex per year
+        return (
+            self.get_capex_per_distance_transport_onshore(technology) * 0.03
+        )  # 3% of capex per year
 
     def get_opex_fixed_offshore(self, technology: TransportTechnology) -> float:
         """
         Get the fixed opex of a methanol pipeline for offshore transmission.
 
         Args:
-            technology (TransportTechnology): The transport technology for which to get the opex.
+            technology (TransportTechnology): The transport technology for which to get
+                the opex.
         """
         assert technology.name == "methanol_pipeline", (
             f"The fixed opex of technology '{technology.name}' is not "
             f"available in the dataset '{self.name}'."
         )
-        return self.get_capex_per_distance_transport_offshore(technology) * 0.03 # 3% of capex per year
+        return (
+            self.get_capex_per_distance_transport_offshore(technology) * 0.03
+        )  # 3% of capex per year
 
     def get_lifetime(self, technology: TransportTechnology) -> Attribute:
         """
@@ -141,7 +168,8 @@ class MethanolPipelinesGalimova(Dataset[pd.DataFrame]):
         )
 
     def get_transport_loss_factor_linear(
-            self, technology: TransportTechnology) -> Attribute:
+        self, technology: TransportTechnology
+    ) -> Attribute:
         """
         Get the losses of a transport technology.
         """
@@ -151,7 +179,7 @@ class MethanolPipelinesGalimova(Dataset[pd.DataFrame]):
         )
         attr = technology.transport_loss_factor_linear
         return attr.set_data(
-            default_value=0, # 0% per 1000 km
+            default_value=0,  # 0% per 1000 km
             unit="1/km",
             source=SourceInformation(
                 description=(

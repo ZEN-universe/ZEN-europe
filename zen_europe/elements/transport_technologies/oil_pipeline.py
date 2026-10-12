@@ -29,9 +29,7 @@ class OilPipeline(TransportTechnology):
         """
         Sets the reference carrier of oil pipeline to oil.
         """
-        return Attribute(
-            name="reference_carrier", default_value=["oil"], element=self
-        )
+        return Attribute(name="reference_carrier", default_value=["oil"], element=self)
 
     # ---------- Required methods that are called during object build ----------
 
@@ -75,8 +73,7 @@ class OilPipeline(TransportTechnology):
         The investment cost is assumed to equal the investment cost of natural
         gas pipelines.
         """
-        pipeline_costs = TYNDPScenarioBuildingGuidelines(
-            source_path=self.source_path)
+        pipeline_costs = TYNDPScenarioBuildingGuidelines(source_path=self.source_path)
         return pipeline_costs.get_capex_per_distance_transport(self)
 
     # ---------- Attributes that still have to be ported ----------

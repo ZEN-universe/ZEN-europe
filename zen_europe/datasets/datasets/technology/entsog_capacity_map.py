@@ -63,7 +63,8 @@ class ENTSOGCapacityMap(Dataset[pd.DataFrame]):
         The interconnection points that connect two different countries.
         """
         points = pd.read_excel(
-            self.path / self.FILE, sheet_name=self.SHEET, header=self.HEADER_ROW)
+            self.path / self.FILE, sheet_name=self.SHEET, header=self.HEADER_ROW
+        )
         points = points.rename(columns={self.CAPACITY_COLUMN: "capacity"})
 
         # the labels of the point sections sit in the column of the point
@@ -73,8 +74,13 @@ class ENTSOGCapacityMap(Dataset[pd.DataFrame]):
         points["section"] = points["Number"].where(is_section).ffill()
 
         for column in ("From CC", "To CC"):
-            points[column] = points[column].astype(str).str.strip().replace(
-                {"nan": None}).replace(self.COUNTRY_CODES)
+            points[column] = (
+                points[column]
+                .astype(str)
+                .str.strip()
+                .replace({"nan": None})
+                .replace(self.COUNTRY_CODES)
+            )
 
         points = points[
             (points["capacity"] > 0)
@@ -84,7 +90,8 @@ class ENTSOGCapacityMap(Dataset[pd.DataFrame]):
             & ~points["section"].astype(str).str.contains("LNG")
         ]
         return points[["capacity", "From CC", "To CC"]].rename(
-            columns={"From CC": "from_country", "To CC": "to_country"})
+            columns={"From CC": "from_country", "To CC": "to_country"}
+        )
 
     # -------- methods ------------------------
     def get_capacity_existing_pipeline(self, element: Element) -> Attribute:
@@ -100,10 +107,10 @@ class ENTSOGCapacityMap(Dataset[pd.DataFrame]):
                 "The existing pipeline capacity cannot be determined, because "
                 "the energy system of the model defines no edges."
             )
-        capacity = self.data.groupby(
-            ["from_country", "to_country"])["capacity"].sum()
+        capacity = self.data.groupby(["from_country", "to_country"])["capacity"].sum()
         capacity.index = pd.Index(
-            [f"{node_from}-{node_to}" for node_from, node_to in capacity.index])
+            [f"{node_from}-{node_to}" for node_from, node_to in capacity.index]
+        )
         capacity = capacity[capacity.index.isin(set_edges.index)].sort_index()
         capacity = capacity / Constants.HOURS_PER_DAY
         capacity.index = pd.MultiIndex.from_arrays(

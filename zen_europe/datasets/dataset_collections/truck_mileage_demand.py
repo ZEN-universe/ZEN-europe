@@ -4,8 +4,12 @@ from typing import TYPE_CHECKING, Any, Dict, cast
 
 import pandas as pd
 
-from zen_europe.datasets.datasets.carrier.truck_standard_load_profiles import TruckStandardLoadProfiles
-from zen_europe.datasets.datasets.technology.truck_technologies_icct import TruckTechnologiesICCT
+from zen_europe.datasets.datasets.carrier.truck_standard_load_profiles import (
+    TruckStandardLoadProfiles,
+)
+from zen_europe.datasets.datasets.technology.truck_technologies_icct import (
+    TruckTechnologiesICCT,
+)
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -13,16 +17,16 @@ if TYPE_CHECKING:
     from zen_creator import Dataset
 
 
+import numpy as np
 from zen_creator import Attribute, Carrier, ConversionTechnology, DatasetCollection
 from zen_creator.utils.attribute import SourceInformation
 from zen_creator.utils.settings import Settings
 
 from zen_europe.datasets.datasets.carrier.eurostat import Eurostat
 from zen_europe.datasets.datasets.carrier.statistical_pocketbook_transport import (
-    StatisticalPocketbookTransport
+    StatisticalPocketbookTransport,
 )
 
-import numpy as np
 
 class TruckMileageDemand(DatasetCollection):
     """Extracting truck mileage demand data."""
@@ -42,7 +46,8 @@ class TruckMileageDemand(DatasetCollection):
         return {
             "eurostat": Eurostat(self.settings, self.source_path),
             "statistical_pocketbook_transport": StatisticalPocketbookTransport(
-                self.settings, self.source_path),
+                self.settings, self.source_path
+            ),
             "truck_standard_load_profiles": TruckStandardLoadProfiles(self.source_path),
             "truck_technologies": TruckTechnologiesICCT(self.source_path),
         }
@@ -58,10 +63,10 @@ class TruckMileageDemand(DatasetCollection):
             description=(
                 "Total truck mileage demand is derived from the Statistical Pocketbook "
                 "Transport dataset, which provides data on passenger and truck mileage "
-                "in the EU. The standard load profiles for trucks is obtained from"
-                "Borlaug et al. (2021). The final truck mileage demand is calculated by "
-                "multiplying the total truck mileage by the weighted standard load "
-                "profiles."
+                "in the EU. The standard load profiles for trucks is obtained "
+                "fromBorlaug et al. (2021). The final truck mileage demand is "
+                "calculated by multiplying the total truck mileage by the weighted "
+                "standard load profiles."
             ),
             metadata=self.metadata,
         )
@@ -77,24 +82,29 @@ class TruckMileageDemand(DatasetCollection):
 
         """
         slp_dataset = cast(
-            TruckStandardLoadProfiles, self.data["truck_standard_load_profiles"])
+            TruckStandardLoadProfiles, self.data["truck_standard_load_profiles"]
+        )
         slp = slp_dataset.get_standard_load_profiles()
         total_demand = self._get_total_demand(element=element)
-        slp_country = pd.DataFrame(data=np.outer(slp, total_demand), index=slp.index,
-                                 columns=total_demand.index)
-        
+        slp_country = pd.DataFrame(
+            data=np.outer(slp, total_demand),
+            index=slp.index,
+            columns=total_demand.index,
+        )
+
         slp_country = slp_dataset.shift_by_timezone(slp_country)
 
         return slp_country
-    
+
     def _get_total_demand(self, element: Carrier) -> pd.Series:
         """
         Get the total truck mileage demand for the specified element.
 
         """
         spt_dataset = cast(
-            StatisticalPocketbookTransport, 
-            self.data["statistical_pocketbook_transport"])
+            StatisticalPocketbookTransport,
+            self.data["statistical_pocketbook_transport"],
+        )
         total_demand = spt_dataset.get_total_mileage(element)
         return total_demand
 
@@ -133,5 +143,3 @@ class TruckMileageDemand(DatasetCollection):
             ),
             unit="1",
         )
-
-    

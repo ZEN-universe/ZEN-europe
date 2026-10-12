@@ -19,7 +19,6 @@ class PrimarySteel(Carrier):
     """
 
     name: str = "primary_steel"
-    
 
     def __init__(self, model: Model, power_unit: str = "tproduct/h"):
         super().__init__(model=model, power_unit=power_unit)
@@ -32,13 +31,12 @@ class PrimarySteel(Carrier):
 
         """
         return Attribute(
-                "availability_import",
-                default_value=0,
-                element=self,
-                unit=self.power_unit,
-            )
-    
-    
+            "availability_import",
+            default_value=0,
+            element=self,
+            unit=self.power_unit,
+        )
+
     def _set_price_shed_demand(self) -> Attribute:
         """
         Return the price of shed demand of the carrier.
@@ -53,7 +51,7 @@ class PrimarySteel(Carrier):
             )
         else:
             return self.price_shed_demand
-        
+
     def _set_demand(self) -> Attribute:
         """
         Return the demand of primary steel.

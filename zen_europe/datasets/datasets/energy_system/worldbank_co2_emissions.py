@@ -48,9 +48,7 @@ class WorldBankCO2Emissions(Dataset[pd.DataFrame]):
             author=["World Bank"],
             publication="World Development Indicators",
             publication_year=datetime.now().year,
-            url=(
-                "https://data.worldbank.org/indicator/EN.GHG.CO2.MT.CE.AR5"
-            ),
+            url=("https://data.worldbank.org/indicator/EN.GHG.CO2.MT.CE.AR5"),
             note="Indicator EN.GHG.CO2.MT.CE.AR5, in Mt CO2 equivalent.",
         )
 

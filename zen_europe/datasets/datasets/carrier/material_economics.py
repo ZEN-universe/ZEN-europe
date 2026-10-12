@@ -5,11 +5,10 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from pathlib import Path
 
+import pandas as pd
 from zen_creator import Attribute, ConversionTechnology, SourceInformation
 from zen_creator.datasets.datasets.dataset import Dataset
 from zen_creator.datasets.datasets.metadata import MetaData
-
-import pandas as pd
 
 
 class MaterialEconomics(Dataset[pd.DataFrame]):
@@ -46,7 +45,7 @@ class MaterialEconomics(Dataset[pd.DataFrame]):
         data = {}
         return data
 
-    # -------- methods ------------------------    
+    # -------- methods ------------------------
     def get_secondary_steel_ratios(self) -> tuple[float]:
         """
         Get the secondary steel ratios.
@@ -55,20 +54,22 @@ class MaterialEconomics(Dataset[pd.DataFrame]):
         and returns them as a tuple of floats.
 
         The share at the beginning is measured from the screen.
-        The share at the end is chosen between 50% (CCS pathway) and 70% (circular economy)
+        The share at the end is chosen between 50% (CCS pathway) and 70% (circular
+        economy)
 
         Returns:
             A tuple of floats representing the secondary steel ratios.
         """
-        secondary_steel_share_beginning = 1-2.7/3.5
+        secondary_steel_share_beginning = 1 - 2.7 / 3.5
         secondary_steel_share_end = 0.6
         return (secondary_steel_share_beginning, secondary_steel_share_end)
 
-    def get_clinker_carbon_intensity(self,element: ConversionTechnology) -> Attribute:
+    def get_clinker_carbon_intensity(self, element: ConversionTechnology) -> Attribute:
         """
         Get the clinker carbon intensity.
 
-        This method retrieves the clinker carbon intensity and returns it as an Attribute.
+        This method retrieves the clinker carbon intensity and returns it as an
+        Attribute.
 
         unit: tonCO2/tproduct
 
@@ -95,7 +96,8 @@ class MaterialEconomics(Dataset[pd.DataFrame]):
         """
         Get the fuel consumption for cement kilns.
 
-        This method retrieves the fuel consumption for cement kilns and returns it as a float.
+        This method retrieves the fuel consumption for cement kilns and returns it as a
+        float.
 
         unit: GJ/tproduct
 

@@ -4,7 +4,6 @@ from typing import TYPE_CHECKING, Any, Dict, cast
 
 import pandas as pd
 
-
 if TYPE_CHECKING:
     from pathlib import Path
 
@@ -17,9 +16,12 @@ from zen_creator.utils.settings import Settings
 
 from zen_europe.datasets.datasets.carrier.eurostat import Eurostat
 from zen_europe.datasets.datasets.carrier.swiss_energy_balance import (
-    SwissEnergyBalance, SwissOilBalance)
+    SwissEnergyBalance,
+    SwissOilBalance,
+)
 from zen_europe.datasets.datasets.technology.shipping_technologies_korberg import (
-    ShippingTechnologiesKorberg)
+    ShippingTechnologiesKorberg,
+)
 from zen_europe.utils.constants import Constants
 
 
@@ -43,7 +45,8 @@ class CarrierAvailability(DatasetCollection):
             "swiss_energy_balance": SwissEnergyBalance(source_path=self.source_path),
             "swiss_oil_balance": SwissOilBalance(source_path=self.source_path),
             "shipping_technologies_korberg": ShippingTechnologiesKorberg(
-                source_path=self.source_path),
+                source_path=self.source_path
+            ),
         }
 
     def get_coal_availability(self, element: Carrier) -> Attribute:
@@ -54,43 +57,47 @@ class CarrierAvailability(DatasetCollection):
         """
         eurostat_dataset = cast(Eurostat, self.data["eurostat"])
         swiss_energy_balance_dataset = cast(
-            SwissEnergyBalance, self.data["swiss_energy_balance"])
+            SwissEnergyBalance, self.data["swiss_energy_balance"]
+        )
         data = eurostat_dataset.get_coal_availability()
         data = data[element.name]
         assert not data.empty, "Coal availability data from Eurostat is empty."
         common_countries = data.index.intersection(
-            element.model.config.system.set_nodes)
-        missing_countries =pd.Index(element.model.config.system.set_nodes).difference(
-            data.index)
-        
+            element.model.config.system.set_nodes
+        )
+        missing_countries = pd.Index(element.model.config.system.set_nodes).difference(
+            data.index
+        )
+
         data = data.loc[common_countries]
-    
+
         for country in missing_countries:
             if country == "CH":
                 if element.name == "hard_coal":
-                    data.loc[country] = swiss_energy_balance_dataset.get_coal_availability(
-                        year=eurostat_dataset.eurostat_year,
-                        element=element
+                    data.loc[country] = (
+                        swiss_energy_balance_dataset.get_coal_availability(
+                            year=eurostat_dataset.eurostat_year, element=element
+                        )
                     )
                 else:
                     data.loc[country] = 0.0
             else:
                 raise ValueError(
-                    f"Coal availability data for country {country} is not available in the "
-                    "Eurostat dataset or any of the manual datasets. "
-                    "Please provide the necessary data for this country."
-                )    
-        
-        data = data.sort_index() / Constants.HOURS_PER_YEAR # from GWh/year to GW
-        
+                    f"Coal availability data for country {country} is not available in "
+                    "the Eurostat dataset or any of the manual datasets. Please "
+                    "provide the necessary data for this country."
+                )
+
+        data = data.sort_index() / Constants.HOURS_PER_YEAR  # from GWh/year to GW
+
         data.index.name = "node"
         data.name = "availability_import"
 
         source = SourceInformation(
             description=(
-                "Coal availability data is derived from the Eurostat dataset, which provides "
-                "availability data for various energy carriers. "
-                "Additional manual data for missing countries (only CH) is obtained from the "
+                "Coal availability data is derived from the Eurostat dataset, which "
+                "provides availability data for various energy carriers. Additional "
+                "manual data for missing countries (only CH) is obtained from the "
                 "following datasets: Swiss Energy Balance dataset"
             ),
             metadata=self.metadata,
@@ -102,7 +109,8 @@ class CarrierAvailability(DatasetCollection):
         )
 
     def get_waste_availability(
-            self, element: Carrier, include_industry: bool = False) -> Attribute:
+        self, element: Carrier, include_industry: bool = False
+    ) -> Attribute:
         """
         Get the availability for waste.
 
@@ -110,41 +118,45 @@ class CarrierAvailability(DatasetCollection):
         """
         eurostat_dataset = cast(Eurostat, self.data["eurostat"])
         swiss_energy_balance_dataset = cast(
-            SwissEnergyBalance, self.data["swiss_energy_balance"])
+            SwissEnergyBalance, self.data["swiss_energy_balance"]
+        )
         data = eurostat_dataset.get_waste_availability(
-            include_industry=include_industry)
+            include_industry=include_industry
+        )
         assert not data.empty, "Waste availability data from Eurostat is empty."
         common_countries = data.index.intersection(
-            element.model.config.system.set_nodes)
-        missing_countries =pd.Index(element.model.config.system.set_nodes).difference(
-            data.index)
-        
+            element.model.config.system.set_nodes
+        )
+        missing_countries = pd.Index(element.model.config.system.set_nodes).difference(
+            data.index
+        )
+
         data = data.loc[common_countries]
-    
+
         for country in missing_countries:
             if country == "CH":
                 data.loc[country] = swiss_energy_balance_dataset.get_waste_availability(
                     year=eurostat_dataset.eurostat_year,
                     element=element,
-                    include_industry=include_industry
+                    include_industry=include_industry,
                 )
             else:
                 raise ValueError(
-                    f"Waste availability data for country {country} is not available in the "
-                    "Eurostat dataset or any of the manual datasets. "
-                    "Please provide the necessary data for this country."
-                )    
-        
-        data = data.sort_index() / Constants.HOURS_PER_YEAR # from GWh/year to GW
-        
+                    f"Waste availability data for country {country} is not available "
+                    "in the Eurostat dataset or any of the manual datasets. Please "
+                    "provide the necessary data for this country."
+                )
+
+        data = data.sort_index() / Constants.HOURS_PER_YEAR  # from GWh/year to GW
+
         data.index.name = "node"
         data.name = "availability_import"
 
         source = SourceInformation(
             description=(
-                "Waste availability data is derived from the Eurostat dataset, which provides "
-                "availability data for various energy carriers. "
-                "Additional manual data for missing countries (only CH) is obtained from the "
+                "Waste availability data is derived from the Eurostat dataset, which "
+                "provides availability data for various energy carriers. Additional "
+                "manual data for missing countries (only CH) is obtained from the "
                 "following datasets: Swiss Energy Balance dataset"
             ),
             metadata=self.metadata,
@@ -155,8 +167,7 @@ class CarrierAvailability(DatasetCollection):
             unit="GW",
         )
 
-    def get_oil_availability(
-            self, element: Carrier) -> Attribute:
+    def get_oil_availability(self, element: Carrier) -> Attribute:
         """
         Get the availability for oil.
 
@@ -164,40 +175,42 @@ class CarrierAvailability(DatasetCollection):
         """
         eurostat_dataset = cast(Eurostat, self.data["eurostat"])
         swiss_energy_balance_dataset = cast(
-            SwissEnergyBalance, self.data["swiss_energy_balance"])
+            SwissEnergyBalance, self.data["swiss_energy_balance"]
+        )
         data = eurostat_dataset.get_oil_availability()
         assert not data.empty, "Oil availability data from Eurostat is empty."
         common_countries = data.index.intersection(
-            element.model.config.system.set_nodes)
-        missing_countries =pd.Index(element.model.config.system.set_nodes).difference(
-            data.index)
-        
+            element.model.config.system.set_nodes
+        )
+        missing_countries = pd.Index(element.model.config.system.set_nodes).difference(
+            data.index
+        )
+
         data = data.loc[common_countries]
-    
+
         for country in missing_countries:
             if country == "CH":
                 data.loc[country] = swiss_energy_balance_dataset.get_oil_availability(
-                    year=eurostat_dataset.eurostat_year,
-                    element=element
+                    year=eurostat_dataset.eurostat_year, element=element
                 )
             else:
                 raise ValueError(
-                    f"Oil availability data for country {country} is not available in the "
-                    "Eurostat dataset or any of the manual datasets. "
-                    "Please provide the necessary data for this country."
-                )    
-        
-        data = data.sort_index() / Constants.HOURS_PER_YEAR # from GWh/year to GW
-        
+                    f"Oil availability data for country {country} is not available in "
+                    "the Eurostat dataset or any of the manual datasets. Please "
+                    "provide the necessary data for this country."
+                )
+
+        data = data.sort_index() / Constants.HOURS_PER_YEAR  # from GWh/year to GW
+
         data.index.name = "node"
         data.name = "availability_import"
 
         source = SourceInformation(
             description=(
-                "Oil availability data is derived from the Eurostat dataset, which provides "
-                "availability data for various energy carriers. "
-                "Additional data for missing countries (only CH) is obtained from the "
-                "following datasets: Swiss Energy Balance dataset"
+                "Oil availability data is derived from the Eurostat dataset, which "
+                "provides availability data for various energy carriers. Additional "
+                "data for missing countries (only CH) is obtained from the following "
+                "datasets: Swiss Energy Balance dataset"
             ),
             metadata=self.metadata,
         )
@@ -215,16 +228,19 @@ class CarrierAvailability(DatasetCollection):
         """
         eurostat_dataset = cast(Eurostat, self.data["eurostat"])
         swiss_oil_balance_dataset = cast(
-            SwissOilBalance, self.data["swiss_oil_balance"])
+            SwissOilBalance, self.data["swiss_oil_balance"]
+        )
         data = eurostat_dataset.get_kerosene_demand()
         assert not data.empty, "Kerosene demand data from Eurostat is empty."
         common_countries = data.index.intersection(
-            element.model.config.system.set_nodes)
-        missing_countries =pd.Index(element.model.config.system.set_nodes).difference(
-            data.index)
-        
+            element.model.config.system.set_nodes
+        )
+        missing_countries = pd.Index(element.model.config.system.set_nodes).difference(
+            data.index
+        )
+
         data = data.loc[common_countries]
-    
+
         for country in missing_countries:
             if country == "CH":
                 data.loc[country] = swiss_oil_balance_dataset.get_kerosene_demand(
@@ -232,13 +248,13 @@ class CarrierAvailability(DatasetCollection):
                 )
             else:
                 raise ValueError(
-                    f"Kerosene demand data for country {country} is not available in the "
-                    "Eurostat dataset or any of the manual datasets. "
-                    "Please provide the necessary data for this country."
-                )    
-        
-        data = data.sort_index() / Constants.HOURS_PER_YEAR # from GWh/year to GW
-        
+                    f"Kerosene demand data for country {country} is not available in "
+                    "the Eurostat dataset or any of the manual datasets. Please "
+                    "provide the necessary data for this country."
+                )
+
+        data = data.sort_index() / Constants.HOURS_PER_YEAR  # from GWh/year to GW
+
         data.index.name = "node"
         data.name = "demand"
         return data
@@ -252,8 +268,8 @@ class CarrierAvailability(DatasetCollection):
         data = self.get_raw_kerosene_demand(element)
         source = SourceInformation(
             description=(
-                "Kerosene demand data is derived from the Eurostat dataset. " \
-                "Additional data for missing countries (only CH) is obtained from the " \
+                "Kerosene demand data is derived from the Eurostat dataset. "
+                "Additional data for missing countries (only CH) is obtained from the "
                 "Swiss Oil Balance dataset."
             ),
             metadata=self.metadata,
@@ -263,7 +279,7 @@ class CarrierAvailability(DatasetCollection):
             df=data,
             unit="GW",
         )
-    
+
     def get_shipping_demand(self, element: Carrier) -> Attribute:
         """
         Get the demand for shipping.
@@ -272,38 +288,43 @@ class CarrierAvailability(DatasetCollection):
         """
         eurostat_dataset = cast(Eurostat, self.data["eurostat"])
         shipping_technologies_korberg_dataset = cast(
-            ShippingTechnologiesKorberg, self.data["shipping_technologies_korberg"])
+            ShippingTechnologiesKorberg, self.data["shipping_technologies_korberg"]
+        )
         data = eurostat_dataset.get_shipping_fuel_demand()
         assert not data.empty, "Shipping fuel demand data from Eurostat is empty."
         common_countries = data.index.intersection(
-            element.model.config.system.set_nodes)
-        missing_countries =pd.Index(element.model.config.system.set_nodes).difference(
-            data.index)
-        
+            element.model.config.system.set_nodes
+        )
+        missing_countries = pd.Index(element.model.config.system.set_nodes).difference(
+            data.index
+        )
+
         data = data.loc[common_countries]
-    
+
         for country in missing_countries:
             if country == "CH":
-                data.loc[country] = 0.0 # assume no shipping demand in Switzerland
+                data.loc[country] = 0.0  # assume no shipping demand in Switzerland
             else:
                 raise ValueError(
-                    f"Shipping fuel demand data for country {country} is not available in the "
-                    "Eurostat dataset or any of the manual datasets. "
-                    "Please provide the necessary data for this country."
-                )    
-        
-        data = data.sort_index() / Constants.HOURS_PER_YEAR # from GWh/year to GW
+                    f"Shipping fuel demand data for country {country} is not available "
+                    "in the Eurostat dataset or any of the manual datasets. Please "
+                    "provide the necessary data for this country."
+                )
+
+        data = data.sort_index() / Constants.HOURS_PER_YEAR  # from GWh/year to GW
         diesel2shipping = (
             shipping_technologies_korberg_dataset.get_shipping_conversion_factors(
-            "diesel_ICE_ship")["diesel"])
-        
-        data = data / diesel2shipping 
+                "diesel_ICE_ship"
+            )["diesel"]
+        )
+
+        data = data / diesel2shipping
         data.index.name = "node"
         data.name = "demand"
 
         source = SourceInformation(
             description=(
-                "Shipping fuel demand data is derived from the Eurostat dataset. " \
+                "Shipping fuel demand data is derived from the Eurostat dataset. "
                 "For CH it is assumed that there is no shipping demand, "
                 "as Switzerland is a landlocked country."
                 " The demand is converted to shipping fuel demand "

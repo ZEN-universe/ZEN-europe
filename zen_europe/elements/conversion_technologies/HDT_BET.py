@@ -50,7 +50,8 @@ class HDT_BET(ConversionTechnology):
         Sets the input carrier of HDT BET to electricity.
         """
         return Attribute(
-            name="input_carrier", default_value=["electricity"], element=self)
+            name="input_carrier", default_value=["electricity"], element=self
+        )
 
     def _set_output_carrier(self) -> Attribute:
         """
@@ -92,9 +93,10 @@ class HDT_BET(ConversionTechnology):
 
         """
         vehicle_capacity = ExistingVehicleCapacity(
-            settings=self.model.settings, source_path=self.source_path)
+            settings=self.model.settings, source_path=self.source_path
+        )
         return vehicle_capacity.get_capex_specific_conversion_truck(element=self)
-    
+
     def _set_capacity_existing(self) -> Attribute:
         """
         Sets the existing capacity of HDT BET.
@@ -102,7 +104,8 @@ class HDT_BET(ConversionTechnology):
         """
         if self.settings.investment.use_existing_capacities:
             vehicle_capacity = ExistingVehicleCapacity(
-                settings=self.model.settings, source_path=self.source_path)
+                settings=self.model.settings, source_path=self.source_path
+            )
             ex_cap = vehicle_capacity.get_existing_capacity_truck(element=self)
             attr = self.capacity_existing
             return attr.set_data(
@@ -112,13 +115,13 @@ class HDT_BET(ConversionTechnology):
                         "The existing capacity of HDT BET is calculated from the "
                         "existing fleet of HDT BET vehicles and the total truck "
                         "mileage demand. The existing fleet is sourced from the UNECE "
-                        "dataset, and the total truck mileage demand is sourced from the "
-                        "TruckMileageDemand dataset."
-                        " The capacity is corrected for the peak demand share."
+                        "dataset, and the total truck mileage demand is sourced from "
+                        "the TruckMileageDemand dataset. The capacity is corrected for "
+                        "the peak demand share."
                     ),
-                    metadata=vehicle_capacity.metadata
+                    metadata=vehicle_capacity.metadata,
                 ),
-                unit="megatkm/h"
+                unit="megatkm/h",
             )
         else:
             attr = self.capacity_existing
@@ -126,9 +129,7 @@ class HDT_BET(ConversionTechnology):
                 default_value=0,
                 df=None,
                 source=AssumptionInformation(
-                    description=(
-                        "We do not consider existing capacities."
-                    ),
+                    description=("We do not consider existing capacities."),
                 ),
             )
             return attr
@@ -139,10 +140,10 @@ class HDT_BET(ConversionTechnology):
 
         """
         truck_transport_db = TruckMileageDemand(
-            settings=self.model.settings, source_path=self.source_path)
-        
+            settings=self.model.settings, source_path=self.source_path
+        )
+
         return truck_transport_db.get_max_load(element=self)
-    
 
     def _set_max_diffusion_rate(self) -> Attribute:
         """

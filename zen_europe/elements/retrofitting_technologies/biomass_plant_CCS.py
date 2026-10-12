@@ -51,16 +51,14 @@ class BiomassPlantCCS(RetrofittingTechnology):
         Sets the input carrier of biomass plant CCS to electricity.
         """
         return Attribute(
-            name="input_carrier", default_value=["electricity"], element=self)
+            name="input_carrier", default_value=["electricity"], element=self
+        )
 
     def _set_output_carrier(self) -> Attribute:
         """
         Set the output carrier of biomass plant CCS to carbon.
         """
-        return Attribute(
-            name="output_carrier", default_value=["carbon"],
-            element=self
-        )
+        return Attribute(name="output_carrier", default_value=["carbon"], element=self)
 
     def _set_retrofit_reference_carrier(self) -> Attribute:
         """
@@ -78,7 +76,8 @@ class BiomassPlantCCS(RetrofittingTechnology):
 
         """
         tech_db = TechnologyCostDatabase(
-            settings=self.settings, source_path=self.source_path)
+            settings=self.settings, source_path=self.source_path
+        )
         return tech_db.get_lifetime(self)
 
     def _set_construction_time(self) -> Attribute:
@@ -88,7 +87,8 @@ class BiomassPlantCCS(RetrofittingTechnology):
         """
         if self.settings.investment.use_construction_times:
             tech_db = TechnologyCostDatabase(
-                    settings=self.settings, source_path=self.source_path)
+                settings=self.settings, source_path=self.source_path
+            )
             return tech_db.get_construction_time(self)
         else:
             return self.construction_time
@@ -107,10 +107,12 @@ class BiomassPlantCCS(RetrofittingTechnology):
             Attribute: An Attribute object containing the specific capex data.
         """
         tech_db = TechnologyCostDatabase(
-                    settings=self.settings, source_path=self.source_path)
+            settings=self.settings, source_path=self.source_path
+        )
         base_tech = self.model.elements[self.base_technology_name]
         return tech_db.get_capex_specific_conversion_retrofit(
-            self, base_technology=base_tech)
+            self, base_technology=base_tech
+        )
 
     def _set_opex_specific_fixed(self) -> Attribute:
         """
@@ -125,10 +127,10 @@ class BiomassPlantCCS(RetrofittingTechnology):
             Attribute: An Attribute object containing the specific fixed opex data.
         """
         tech_db = TechnologyCostDatabase(
-            settings=self.settings, source_path=self.source_path)
+            settings=self.settings, source_path=self.source_path
+        )
         base_tech = self.model.elements[self.base_technology_name]
-        return tech_db.get_opex_specific_fixed_retrofit(
-            self, base_technology=base_tech)
+        return tech_db.get_opex_specific_fixed_retrofit(self, base_technology=base_tech)
 
     def _set_opex_specific_variable(self) -> Attribute:
         """
@@ -143,10 +145,12 @@ class BiomassPlantCCS(RetrofittingTechnology):
             Attribute: An Attribute object containing the specific variable opex data.
         """
         tech_db = TechnologyCostDatabase(
-            settings=self.settings, source_path=self.source_path)
+            settings=self.settings, source_path=self.source_path
+        )
         base_tech = self.model.elements[self.base_technology_name]
         return tech_db.get_opex_specific_variable_retrofit(
-            self, base_technology=base_tech)
+            self, base_technology=base_tech
+        )
 
     def _set_conversion_factor(self) -> Attribute:
         """
@@ -154,10 +158,10 @@ class BiomassPlantCCS(RetrofittingTechnology):
 
         """
         ccs_cf_db = CCSConversionFactor(
-            settings=self.settings, source_path=self.source_path)
+            settings=self.settings, source_path=self.source_path
+        )
         base_tech = self.model.elements[self.base_technology_name]
-        cf = ccs_cf_db.get_conversion_factor_CCS(
-            element=self, base_tech=base_tech)
+        cf = ccs_cf_db.get_conversion_factor_CCS(element=self, base_tech=base_tech)
         return cf
 
     def _set_retrofit_flow_coupling_factor(self) -> Attribute:
@@ -166,12 +170,13 @@ class BiomassPlantCCS(RetrofittingTechnology):
 
         """
         ccs_cf_db = CCSConversionFactor(
-            settings=self.settings, source_path=self.source_path)
+            settings=self.settings, source_path=self.source_path
+        )
         base_tech = self.model.elements[self.base_technology_name]
         return ccs_cf_db.get_retrofit_flow_coupling_factor(
-            element=self, base_tech=base_tech)
+            element=self, base_tech=base_tech
+        )
 
-    
     def _set_capacity_existing(self) -> Attribute:
         """
         Sets the existing capacity of biomass plant CCS.
@@ -188,9 +193,7 @@ class BiomassPlantCCS(RetrofittingTechnology):
                 default_value=0,
                 df=None,
                 source=AssumptionInformation(
-                    description=(
-                        "We do not consider existing capacities."
-                    ),
+                    description=("We do not consider existing capacities."),
                 ),
             )
             return attr
@@ -216,7 +219,8 @@ class BiomassPlantCCS(RetrofittingTechnology):
         if not self.settings.investment.use_unbounded_capacity_addition_carbon:
             return attr
         iogp_projects = IOGPCarbonStorageProjects(
-                    settings=self.settings, source_path=self.source_path)
+            settings=self.settings, source_path=self.source_path
+        )
         data = iogp_projects.get_capacity_existing_data()
         median_add = data.median()
         return attr.set_data(
@@ -224,9 +228,9 @@ class BiomassPlantCCS(RetrofittingTechnology):
             unit="tCO2/h",
             source=SourceInformation(
                 description=(
-                    "The unbounded capacity addition of carbon storage is "
-                    "based on the median existing and future capacity from the IOGP report, "
-                    "divided by the number of nodes in the dataset."
+                    "The unbounded capacity addition of carbon storage is based on the "
+                    "median existing and future capacity from the IOGP report, divided "
+                    "by the number of nodes in the dataset."
                 ),
                 metadata=iogp_projects.metadata,
             ),

@@ -19,9 +19,9 @@ class DEAEnergyTransport(Dataset[pd.DataFrame]):
     Energy transport dataset class from the technology catalogue for energy
     transport of the Danish Energy Agency.
 
-    Hydrogen pipelines: from the data sheet of the main 
+    Hydrogen pipelines: from the data sheet of the main
     hydrogen distribution line (70 bar).
-    Natural gas pipelines: from the data sheet of the 
+    Natural gas pipelines: from the data sheet of the
     main natural gas distribution line (500-1000 MW).
     Power lines: Overhead AC lines,
 
@@ -43,9 +43,9 @@ class DEAEnergyTransport(Dataset[pd.DataFrame]):
         "hydrogen_pipeline": 2025,
         "natural_gas_pipeline": 2020,
     }
-    
+
     COST_PER_DISTANCE_UNIT = "Euro/MW/km"
-    HYDROGEN_PIPELINE_CAPACITY = 1.2 # GW for a 12 inch line at 90 bar
+    HYDROGEN_PIPELINE_CAPACITY = 1.2  # GW for a 12 inch line at 90 bar
     LIFETIMES = {
         "hydrogen_pipeline": 50,
         "natural_gas_pipeline": 50,
@@ -53,9 +53,9 @@ class DEAEnergyTransport(Dataset[pd.DataFrame]):
     }
     # transport losses per km, converted to losses per km in the getter
     TRANSPORT_LOSSES_PER_KM = {
-        "hydrogen_pipeline": 1.9/100/100, # 1.9% per 100 km
-        "natural_gas_pipeline": 0.1/100, # 0.1% per km
-        "power_line": 5/100/100, # 5% per 100 km
+        "hydrogen_pipeline": 1.9 / 100 / 100,  # 1.9% per 100 km
+        "natural_gas_pipeline": 0.1 / 100,  # 0.1% per km
+        "power_line": 5 / 100 / 100,  # 5% per 100 km
     }
     CONSTRUCTION_TIMES = {
         "hydrogen_pipeline": 2,
@@ -64,15 +64,15 @@ class DEAEnergyTransport(Dataset[pd.DataFrame]):
     }
     CAPEX_PER_DISTANCE = {
         # 0.7 Euro/MW/m -> 700 Euro/MW/km for a 500-1000 MW line
-        "natural_gas_pipeline": 0.7*1000,
+        "natural_gas_pipeline": 0.7 * 1000,
         # 0.75 kiloEuro/MW/km -> 750 Euro/MW/km for a 1000 MW line
-        "power_line": 0.75*1000, 
+        "power_line": 0.75 * 1000,
     }
     OPEX_FIXED_PER_DISTANCE = {
         # Euro/MW/km for a 500-1000 MW line # TODO seems low, check again
-        "natural_gas_pipeline": 0.13, 
+        "natural_gas_pipeline": 0.13,
         # 1.5% of the capex
-        "power_line": CAPEX_PER_DISTANCE["power_line"]*0.015, 
+        "power_line": CAPEX_PER_DISTANCE["power_line"] * 0.015,
     }
     SOURCE_SHEET = {
         "hydrogen_pipeline": "Pipeline transp. 90 bar (12 inch line)",
@@ -83,7 +83,8 @@ class DEAEnergyTransport(Dataset[pd.DataFrame]):
     def __init__(self, source_path: Path | str | None = None):
         super().__init__(source_path=source_path)
         self.get_inflation_rate = ECBInflation(
-            source_path=source_path).get_inflation_rate
+            source_path=source_path
+        ).get_inflation_rate
 
     def _set_metadata(self) -> MetaData:
         return MetaData(
@@ -94,7 +95,7 @@ class DEAEnergyTransport(Dataset[pd.DataFrame]):
             publication_year=2026,
             url=(
                 "https://ens.dk/en/analyses-and-statistics/technology-data-transport-energy"
-            )
+            ),
         )
 
     def _set_path(self) -> Path | None:
@@ -108,9 +109,9 @@ class DEAEnergyTransport(Dataset[pd.DataFrame]):
         return data
 
     # -------- methods ------------------------
-    def get_lifetime(self, 
-                     technology: TransportTechnology,
-                     proxy_element_name: str | None = None) -> Attribute:
+    def get_lifetime(
+        self, technology: TransportTechnology, proxy_element_name: str | None = None
+    ) -> Attribute:
         """
         Get the lifetime of a transport technology.
         """
@@ -138,39 +139,39 @@ class DEAEnergyTransport(Dataset[pd.DataFrame]):
             ),
         )
 
-    def get_construction_time(self,
-                technology: TransportTechnology,
-                proxy_element_name: str | None = None) -> Attribute:
-            """
-            Get the construction time of a transport technology.
-            """
-            if proxy_element_name is not None:
-                technology_name = proxy_element_name
-                proxy_str = f" (proxy for {technology.name})"
-            else:
-                technology_name = technology.name
-                proxy_str = ""
-            if technology_name not in self.CONSTRUCTION_TIMES:
-                raise ValueError(
-                    f"The construction time of technology '{technology_name}' is not "
-                    f"available in the dataset '{self.name}'."
-                )
-            attr = technology.construction_time
-            return attr.set_data(
-                default_value=self.CONSTRUCTION_TIMES[technology_name],
-                source=SourceInformation(
-                    description=(
-                        f"The construction time of {technology_name}{proxy_str} is based on "
-                        f"{self.SOURCE_SHEET[technology_name]} of the energy transport "
-                        "catalogue of the Danish Energy Agency."
-                    ),
-                    metadata=self.metadata,
-                ),
+    def get_construction_time(
+        self, technology: TransportTechnology, proxy_element_name: str | None = None
+    ) -> Attribute:
+        """
+        Get the construction time of a transport technology.
+        """
+        if proxy_element_name is not None:
+            technology_name = proxy_element_name
+            proxy_str = f" (proxy for {technology.name})"
+        else:
+            technology_name = technology.name
+            proxy_str = ""
+        if technology_name not in self.CONSTRUCTION_TIMES:
+            raise ValueError(
+                f"The construction time of technology '{technology_name}' is not "
+                f"available in the dataset '{self.name}'."
             )
+        attr = technology.construction_time
+        return attr.set_data(
+            default_value=self.CONSTRUCTION_TIMES[technology_name],
+            source=SourceInformation(
+                description=(
+                    f"The construction time of {technology_name}{proxy_str} is based "
+                    f"on {self.SOURCE_SHEET[technology_name]} of the energy transport "
+                    "catalogue of the Danish Energy Agency."
+                ),
+                metadata=self.metadata,
+            ),
+        )
 
     def get_transport_loss_factor_linear(
-            self, technology: TransportTechnology,
-            proxy_element_name: str | None = None) -> Attribute:
+        self, technology: TransportTechnology, proxy_element_name: str | None = None
+    ) -> Attribute:
         """
         Get the linear transport loss factor of a transport technology.
         """
@@ -192,38 +193,48 @@ class DEAEnergyTransport(Dataset[pd.DataFrame]):
             unit="1/km",
             source=SourceInformation(
                 description=(
-                    f"The transport losses of {technology_name}{proxy_str} are based on the "
-                    f"{self.SOURCE_SHEET[technology_name]} of the energy transport "
-                    "catalogue of the Danish Energy Agency."
+                    f"The transport losses of {technology_name}{proxy_str} are based "
+                    f"on the {self.SOURCE_SHEET[technology_name]} of the energy "
+                    "transport catalogue of the Danish Energy Agency."
                 ),
                 metadata=self.metadata,
             ),
         )
 
     def get_capex_per_distance_transport_onshore(
-            self, technology: TransportTechnology,
-            proxy_element_name: str | None = None) -> float:
+        self, technology: TransportTechnology, proxy_element_name: str | None = None
+    ) -> float:
         """
         Get the distance-specific capex of a transport technology, in Euro/MW/km.
         """
         return self._get_cost_per_distance(
-            self.CAPEX_PER_DISTANCE, technology, proxy_element_name,
-            variable="distance-specific capex")
+            self.CAPEX_PER_DISTANCE,
+            technology,
+            proxy_element_name,
+            variable="distance-specific capex",
+        )
 
     def get_opex_fixed_onshore(
-            self, technology: TransportTechnology,
-            proxy_element_name: str | None = None) -> float:
+        self, technology: TransportTechnology, proxy_element_name: str | None = None
+    ) -> float:
         """
         Get the distance-specific fixed opex of a transport technology, in
         Euro/MW/km.
         """
         return self._get_cost_per_distance(
-            self.OPEX_FIXED_PER_DISTANCE, technology, proxy_element_name,
-            variable="distance-specific fixed opex")
+            self.OPEX_FIXED_PER_DISTANCE,
+            technology,
+            proxy_element_name,
+            variable="distance-specific fixed opex",
+        )
 
     def _get_cost_per_distance(
-            self, costs: dict[str, float], technology: TransportTechnology,
-            proxy_element_name: str | None, variable: str) -> float:
+        self,
+        costs: dict[str, float],
+        technology: TransportTechnology,
+        proxy_element_name: str | None,
+        variable: str,
+    ) -> float:
         """
         Get a distance-specific cost, corrected for inflation.
         """

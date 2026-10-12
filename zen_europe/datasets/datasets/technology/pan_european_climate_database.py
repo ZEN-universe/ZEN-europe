@@ -13,9 +13,10 @@ import pandas as pd
 if TYPE_CHECKING:
     from zen_creator.utils.settings import Settings
 
+from zen_creator import Attribute
 from zen_creator.datasets.datasets.dataset import Dataset
 from zen_creator.datasets.datasets.metadata import MetaData, SourceInformation
-from zen_creator import Attribute
+
 from zen_europe.utils.constants import Constants
 
 
@@ -105,7 +106,7 @@ class PanEuropeanClimateDatabase(Dataset[pd.DataFrame]):
         },
         "run-of-river_hydro": {
             "variable": "hydropower_run_of_river_generation",
-            # "variable": "hydropower_run_of_river_with_pondage_generation", 
+            # "variable": "hydropower_run_of_river_with_pondage_generation",
             "technology": None,
             "energy_scenario": None,
             "spatial_resolution": "szon",
@@ -129,7 +130,9 @@ class PanEuropeanClimateDatabase(Dataset[pd.DataFrame]):
             "https://raw.githubusercontent.com/ecmwf-training/dss-notebooks/main/"
             "datasets/sis-energy-pecd/aggregation-pecd-regions-into-nut0/weights/"
             # "PECD4.2/Offshore_Existing_run.csv",
-            "PECD4.2/Offshore_Future_tech_runs.csv", # because the "Existing" has no data for countries without capacity in 2020 (e.g., IT)
+            # the "Existing" run has no data for countries without capacity in 2020
+            # (e.g., IT)
+            "PECD4.2/Offshore_Future_tech_runs.csv",
         ),
     }
 
@@ -141,7 +144,8 @@ class PanEuropeanClimateDatabase(Dataset[pd.DataFrame]):
         return MetaData(
             name=self.name,
             title=(
-                "Climate and energy related variables from the Pan-European Climate Database derived from reanalysis and climate projections"
+                "Climate and energy related variables from the Pan-European Climate "
+                "Database derived from reanalysis and climate projections"
             ),
             author=["Copernicus"],
             publication="Copernicus",
@@ -153,9 +157,7 @@ class PanEuropeanClimateDatabase(Dataset[pd.DataFrame]):
     def _set_path(self) -> Path | None:
         if self.source_path is None:
             raise ValueError("source_path must be set to load the dataset.")
-        return (Path(self.source_path)
-                / "03-technology"
-                / "climate_data")
+        return Path(self.source_path) / "03-technology" / "climate_data"
 
     def _set_data(self) -> dict[str, pd.DataFrame]:
         year = self.settings.time.year_time_series
@@ -176,8 +178,10 @@ class PanEuropeanClimateDatabase(Dataset[pd.DataFrame]):
         file per technology); subsequent calls just read that cache back.
         """
         cache_path = self.path / f"pecd_data_{technology}.feather"
-        if (cache_path.exists() 
-            and not self.settings.cache.overwrite_pan_european_climate_database):
+        if (
+            cache_path.exists()
+            and not self.settings.cache.overwrite_pan_european_climate_database
+        ):
             return pd.read_feather(cache_path).set_index("Date")
 
         zip_path = self.path / f"{technology}_{year}_raw.zip"
@@ -215,7 +219,8 @@ class PanEuropeanClimateDatabase(Dataset[pd.DataFrame]):
             ) from e
         try:
             logging.info(
-                f"Downloading PECD data for {request['variable']} in {year}...")
+                f"Downloading PECD data for {request['variable']} in {year}..."
+            )
             client.retrieve(self.CDS_DATASET, cds_request, str(dest))
         except HTTPError as e:
             raise HTTPError(
@@ -250,7 +255,9 @@ class PanEuropeanClimateDatabase(Dataset[pd.DataFrame]):
             return self._aggregate_hydro_to_nuts0(data)
         return self._aggregate_wind_to_nuts0(technology, data)
 
-    def _aggregate_wind_to_nuts0(self, technology: str, data: pd.DataFrame) -> pd.DataFrame:
+    def _aggregate_wind_to_nuts0(
+        self, technology: str, data: pd.DataFrame
+    ) -> pd.DataFrame:
         """Capacity-weighted average of PEON/PEOF regional columns into NUTS0
         columns -- the same `Weight_in_aggregation`/sum/divide procedure as
         ECMWF/ENTSO-E's own aggregation notebook (see class docstring)."""
@@ -295,7 +302,8 @@ class PanEuropeanClimateDatabase(Dataset[pd.DataFrame]):
         prefix into NUTS0-country columns (see class docstring for why summing,
         not weighting, is correct here)."""
         country = data.columns.str[:2].map(
-            lambda code: cls._HYDRO_COUNTRY_CODE_FIXUPS.get(code, code))
+            lambda code: cls._HYDRO_COUNTRY_CODE_FIXUPS.get(code, code)
+        )
         return data.T.groupby(country).sum().T
 
     @staticmethod
@@ -303,7 +311,6 @@ class PanEuropeanClimateDatabase(Dataset[pd.DataFrame]):
         request = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
         with urllib.request.urlopen(request) as response:
             dest.write_bytes(response.read())
-
 
     # -------- methods ------------------------
     def get_max_load(self, element) -> Attribute:
@@ -323,7 +330,8 @@ class PanEuropeanClimateDatabase(Dataset[pd.DataFrame]):
         data = self.data[element.name]
         capacity_nodes = element.capacity_limit.df.index
         capacity_nodes = capacity_nodes.intersection(
-            element.model.config.system.set_nodes)
+            element.model.config.system.set_nodes
+        )
         common_nodes = data.columns.intersection(capacity_nodes)
         missing_nodes = capacity_nodes.difference(common_nodes)
         if len(missing_nodes) > 0:
@@ -346,7 +354,7 @@ class PanEuropeanClimateDatabase(Dataset[pd.DataFrame]):
         data.index.name = "time"
         source = SourceInformation(
             description=(
-                f"The max load data for {element.name} is derived from the" 
+                f"The max load data for {element.name} is derived from the"
                 "Pan-European Climate Database (PECD 4.2) dataset."
             ),
             metadata=self.metadata,
@@ -373,8 +381,9 @@ class PanEuropeanClimateDatabase(Dataset[pd.DataFrame]):
         )
         data = self.data["run-of-river_hydro"]
         common_nodes = data.columns.intersection(element.model.config.system.set_nodes)
-        missing_nodes = set(
-            element.model.config.system.set_nodes).difference(common_nodes)
+        missing_nodes = set(element.model.config.system.set_nodes).difference(
+            common_nodes
+        )
         if len(missing_nodes) > 0:
             logging.info(
                 f"Missing nodes in PanEuropeanClimateDatabase data for {element.name}: "
@@ -404,8 +413,8 @@ class PanEuropeanClimateDatabase(Dataset[pd.DataFrame]):
         missing_nodes = set(set_nodes_capacity).difference(common_nodes)
         if len(missing_nodes) > 0:
             logging.warning(
-                "No reservoir inflow reported in the PanEuropeanClimateDatabase "
-                f"data for {sorted(missing_nodes)}, for which capacity data is available."
+                "No reservoir inflow reported in the PanEuropeanClimateDatabase data "
+                f"for {sorted(missing_nodes)}, for which capacity data is available."
             )
         data = self._convert_weekly_energy_to_hourly_flow(data[common_nodes])
         source = SourceInformation(
@@ -437,5 +446,3 @@ class PanEuropeanClimateDatabase(Dataset[pd.DataFrame]):
         data = data / hours_per_week / 1000
         data.index.name = "time"
         return data
-
-    

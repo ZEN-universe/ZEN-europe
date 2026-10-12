@@ -49,6 +49,7 @@ dev = [
     "ruff==0.14.13",
     "mypy==1.19.1",
     "types-PyYAML",
+    "types-pytz",
     "pandas-stubs",
     "types-geopandas",
     "types-docutils",
@@ -86,7 +87,21 @@ known-first-party = ["zen_europe"]
 #ignore_missing_imports = true
 #check_untyped_defs = false
 #disallow_untyped_defs = false
-python_version = "3.11"
 exclude = [
 
 ]
+
+# these dependencies ship no type information and have no stubs on PyPI
+[[tool.mypy.overrides]]
+module = [
+    "sklearn",
+    "sklearn.*",
+    "cdsapi",
+    "cdsapi.*",
+    "eurostat",
+    "eurostat.*",
+    "powerplantmatching",
+    "powerplantmatching.*",
+]
+ignore_missing_imports = true
+follow_untyped_imports = true

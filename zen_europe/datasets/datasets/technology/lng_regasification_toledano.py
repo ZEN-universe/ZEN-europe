@@ -60,8 +60,7 @@ class LNGRegasificationToledano(Dataset[pd.DataFrame]):
         return data
 
     # -------- methods ------------------------
-    def get_opex_specific_variable(
-            self, technology: ConversionTechnology) -> Attribute:
+    def get_opex_specific_variable(self, technology: ConversionTechnology) -> Attribute:
         """
         Get the variable operational cost of LNG terminals.
         """
@@ -70,7 +69,8 @@ class LNGRegasificationToledano(Dataset[pd.DataFrame]):
         vopex = vopex * ecb_dollar2euro.get_dollar2euro(self.MONEY_YEAR)
         inflation = ECBInflation(source_path=self.source_path)
         vopex = vopex * inflation.get_inflation_rate(
-            self.MONEY_YEAR, technology.settings.time.reference_year)
+            self.MONEY_YEAR, technology.settings.time.reference_year
+        )
         attr = technology.opex_specific_variable
         return attr.set_data(
             default_value=vopex,

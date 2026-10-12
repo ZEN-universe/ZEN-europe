@@ -9,11 +9,10 @@ if TYPE_CHECKING:
     from pathlib import Path
 
     from zen_creator.elements.carriers.carrier import Carrier
-from zen_creator.datasets.datasets.dataset import Dataset
-from zen_creator.datasets.datasets.metadata import MetaData
-
 import pandas as pd
 import requests
+from zen_creator.datasets.datasets.dataset import Dataset
+from zen_creator.datasets.datasets.metadata import MetaData
 
 from zen_europe.settings.cache import get_active_cache_settings
 from zen_europe.utils.constants import Constants
@@ -26,9 +25,33 @@ _JRC_IDEES_BASE_URL = (
     "https://jeodpp.jrc.ec.europa.eu/ftp/jrc-opendata/JRC-IDEES/JRC-IDEES-2023_v1/"
 )
 _JRC_IDEES_COUNTRIES = [
-    "AT", "BE", "BG", "CY", "CZ", "DE", "DK", "EE", "EL", "ES", "FI", "FR",
-    "HR", "HU", "IE", "IT", "LT", "LU", "LV", "MT", "NL", "PL", "PT", "RO",
-    "SE", "SI", "SK",
+    "AT",
+    "BE",
+    "BG",
+    "CY",
+    "CZ",
+    "DE",
+    "DK",
+    "EE",
+    "EL",
+    "ES",
+    "FI",
+    "FR",
+    "HR",
+    "HU",
+    "IE",
+    "IT",
+    "LT",
+    "LU",
+    "LV",
+    "MT",
+    "NL",
+    "PL",
+    "PT",
+    "RO",
+    "SE",
+    "SI",
+    "SK",
 ]
 # rows in the *_hh_tes sheets are already pre-aggregated across energy
 # carriers (i.e. "Space heating" is the sum of the fuel-specific rows below
@@ -40,6 +63,7 @@ _JRC_IDEES_TES_ROWS = {
     "Hot water": "water_heating",
 }
 _KTOE2GWH = 1 / Constants.TOE_PER_MWH  # ktoe (useful energy) -> GWh
+
 
 class JRCIDEES(Dataset[pd.DataFrame]):
     """
@@ -59,13 +83,14 @@ class JRCIDEES(Dataset[pd.DataFrame]):
             title=(
                 "JRC-IDEES-2023: the Integrated Database of the European Energy System"
             ),
-            author=["Mate Rozsai", 
-                    "Marc Jaxa-Rozen", 
-                    "Raffaele Salvucci",
-                    "Przemyslaw Sikora",
-                    "Juan Gea Bermudez",
-                    "Frederik Neuwahl"
-                    ],
+            author=[
+                "Mate Rozsai",
+                "Marc Jaxa-Rozen",
+                "Raffaele Salvucci",
+                "Przemyslaw Sikora",
+                "Juan Gea Bermudez",
+                "Frederik Neuwahl",
+            ],
             publication="JRC",
             publication_year=2026,
             url="https://publications.jrc.ec.europa.eu/repository/handle/JRC144707",
@@ -104,7 +129,8 @@ class JRCIDEES(Dataset[pd.DataFrame]):
 
         if cache_path.exists() and not get_active_cache_settings().overwrite_jrc_idees:
             logger.info(
-                f"Loading cached JRC-IDEES thermal energy service data from {cache_path}"
+                "Loading cached JRC-IDEES thermal energy service data from "
+                f"{cache_path}"
             )
             data = pd.read_feather(cache_path).set_index(["node", "sector", "category"])
             data.columns = data.columns.astype(int)
@@ -142,7 +168,9 @@ class JRCIDEES(Dataset[pd.DataFrame]):
                     pd.read_excel(file, sheet_name="SER_hh_tes")
                 )
 
-        data = pd.concat({"residential": residential, "tertiary": tertiary}, names=["sector"])
+        data = pd.concat(
+            {"residential": residential, "tertiary": tertiary}, names=["sector"]
+        )
         return pd.concat({country: data}, names=["node"])
 
     def _extract_tes_sheet(self, sheet: pd.DataFrame) -> pd.DataFrame:
@@ -152,7 +180,9 @@ class JRCIDEES(Dataset[pd.DataFrame]):
         category_col = sheet.columns[0]
         year_cols = [col for col in sheet.columns if isinstance(col, int)]
 
-        data = sheet[[category_col, *year_cols]].rename(columns={category_col: "category"})
+        data = sheet[[category_col, *year_cols]].rename(
+            columns={category_col: "category"}
+        )
         data = data[data["category"].isin(_JRC_IDEES_TES_ROWS)]
         data["category"] = data["category"].map(_JRC_IDEES_TES_ROWS)
         return data.set_index("category")[year_cols] * _KTOE2GWH
@@ -170,6 +200,7 @@ class JRCIDEES(Dataset[pd.DataFrame]):
         """
         data = self.data.copy()
         common_countries = data.index.get_level_values("node").isin(
-            element.model.config.system.set_nodes)
+            element.model.config.system.set_nodes
+        )
         data = data.loc[common_countries, element.settings.time.year_time_series]
         return data

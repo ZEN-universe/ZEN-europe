@@ -9,7 +9,10 @@ import pandas as pd
 from zen_creator.datasets.datasets.dataset import Dataset
 from zen_creator.datasets.datasets.metadata import MetaData
 
-from zen_europe.datasets.datasets.financial._cost_schema import INDEX_NAMES, VALUE_COLUMNS
+from zen_europe.datasets.datasets.financial._cost_schema import (
+    INDEX_NAMES,
+    VALUE_COLUMNS,
+)
 
 # internal technology name -> TYNDP technology label
 _TECHS: dict[str, str] = {
@@ -53,7 +56,10 @@ class TYNDPTechnologyCost(Dataset[pd.DataFrame]):
                 "https://2020.entsos-tyndp-scenarios.eu/wp-content/uploads/2020/07/"
                 "TYNDP_2020_Scenario_Building-Guidelines_03_Annex_2_Cost_Assumptions_final_report.pdf"
             ),
-            note="Cost figures transcribed into TYNDP_cost_assumptions.xlsx from the PDF above.",
+            note=(
+                "Cost figures transcribed into TYNDP_cost_assumptions.xlsx from the "
+                "PDF above."
+            ),
         )
 
     def _set_path(self) -> Path | None:
@@ -78,8 +84,9 @@ class TYNDPTechnologyCost(Dataset[pd.DataFrame]):
                         continue
                     unit_src = sel["Unit"].iloc[0]
                     assert unit_src == _SOURCE_UNIT, (
-                        f"Unexpected TYNDP unit '{unit_src}' for {tyndp_technology}/{tyndp_variable} "
-                        f"(expected '{_SOURCE_UNIT}')"
+                        f"Unexpected TYNDP unit '{unit_src}' for "
+                        f"{tyndp_technology}/{tyndp_variable} (expected "
+                        f"'{_SOURCE_UNIT}')"
                     )
                     for year in year_columns:
                         value_src = sel[year].iloc[0]
@@ -92,7 +99,9 @@ class TYNDPTechnologyCost(Dataset[pd.DataFrame]):
                                 scenario,
                                 variable,
                                 year,
-                                float(value_src),  # kEuro/MW == Euro/kW (and Euro/kW for fopex)
+                                float(
+                                    value_src
+                                ),  # kEuro/MW == Euro/kW (and Euro/kW for fopex)
                                 "Euro/kW" if variable == "capex" else "Euro/kW",
                                 _MONEY_YEAR_SRC,
                                 float(value_src),

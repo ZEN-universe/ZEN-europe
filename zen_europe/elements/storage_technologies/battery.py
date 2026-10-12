@@ -32,6 +32,7 @@ class Battery(StorageTechnology):
 
     name: str = "battery"
     ENTSOE_PSR = "B25"
+
     def __init__(self, model: Model, power_unit: str = "MW"):
         super().__init__(model=model, power_unit=power_unit)
 
@@ -68,7 +69,8 @@ class Battery(StorageTechnology):
         Sets the specific capex of the power capacity of battery.
         """
         tech_db = TechnologyCostDatabase(
-            settings=self.settings, source_path=self.source_path)
+            settings=self.settings, source_path=self.source_path
+        )
         return tech_db.get_capex_specific_storage(self)
 
     def _set_capex_specific_storage_energy(self) -> Attribute:
@@ -76,7 +78,8 @@ class Battery(StorageTechnology):
         Sets the specific capex of the energy capacity of battery.
         """
         tech_db = TechnologyCostDatabase(
-            settings=self.settings, source_path=self.source_path)
+            settings=self.settings, source_path=self.source_path
+        )
         return tech_db.get_capex_specific_storage_energy(self)
 
     def _set_opex_specific_fixed(self) -> Attribute:
@@ -84,7 +87,8 @@ class Battery(StorageTechnology):
         Sets the specific fixed opex of battery.
         """
         tech_db = TechnologyCostDatabase(
-            settings=self.settings, source_path=self.source_path)
+            settings=self.settings, source_path=self.source_path
+        )
         return tech_db.get_opex_specific_fixed(self)
 
     def _set_efficiency_charge(self) -> Attribute:

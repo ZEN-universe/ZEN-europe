@@ -9,7 +9,11 @@ from pathlib import Path
 import pandas as pd
 import requests
 from entsoe import EntsoeRawClient
-from entsoe.exceptions import InvalidBusinessParameterError, InvalidPSRTypeError, NoMatchingDataError
+from entsoe.exceptions import (
+    InvalidBusinessParameterError,
+    InvalidPSRTypeError,
+    NoMatchingDataError,
+)
 from entsoe.mappings import NEIGHBOURS as _SUBZONE_NEIGHBOURS
 from entsoe.parsers import parse_crossborder_flows, parse_generation, parse_loads
 from zen_creator.datasets.datasets.dataset import Dataset
@@ -34,9 +38,49 @@ _API_KEY_ENV_VAR = "ENTSOE_API_KEY"
 # Keyed using the country code used elsewhere in ZEN-europe (Greece = "EL"
 # and the United Kingdom = "UK", matching ENTSO-E's own "GR"/"GB").
 _NODES: list[str] = [
-    "AL", "AT", "BA", "BE", "BG", "BY", "CH", "CY", "CZ", "DE", "DK", "EE", "EL", "ES",
-    "FI", "FR", "GE", "HR", "HU", "IE", "IS", "IT", "LT", "LU", "LV", "MD", "ME", "MK",
-    "MT", "NL", "NO", "PL", "PT", "RO", "RS", "RU", "SE", "SI", "SK", "TR", "UA", "UK", "XK",
+    "AL",
+    "AT",
+    "BA",
+    "BE",
+    "BG",
+    "BY",
+    "CH",
+    "CY",
+    "CZ",
+    "DE",
+    "DK",
+    "EE",
+    "EL",
+    "ES",
+    "FI",
+    "FR",
+    "GE",
+    "HR",
+    "HU",
+    "IE",
+    "IS",
+    "IT",
+    "LT",
+    "LU",
+    "LV",
+    "MD",
+    "ME",
+    "MK",
+    "MT",
+    "NL",
+    "NO",
+    "PL",
+    "PT",
+    "RO",
+    "RS",
+    "RU",
+    "SE",
+    "SI",
+    "SK",
+    "TR",
+    "UA",
+    "UK",
+    "XK",
 ]
 _NODE_TO_ENTSOE_CODE: dict[str, str] = {"EL": "GR", "UK": "GB"}
 
@@ -49,15 +93,36 @@ def _entsoe_code(node: str) -> str:
 # (entsoe-py doesn't provide this, since several countries report more than
 # one bidding zone).
 _SUBZONE_TO_NODE: dict[str, str] = {
-    "DE_AT_LU": "DE", "DE_LU": "DE",
-    "GB": "UK", "NIE": "UK",
-    "GR": "EL", "IT_GR": "IT",
-    "NO_1": "NO", "NO_2": "NO", "NO_3": "NO", "NO_4": "NO", "NO_5": "NO",
-    "DK_1": "DK", "DK_2": "DK",
-    "SE_1": "SE", "SE_2": "SE", "SE_3": "SE", "SE_4": "SE",
-    "IT_NORD": "IT", "IT_NORD_AT": "IT", "IT_NORD_CH": "IT", "IT_NORD_FR": "IT",
-    "IT_CNOR": "IT", "IT_CSUD": "IT", "IT_SUD": "IT", "IT_SARD": "IT", "IT_SICI": "IT",
-    "IT_BRNN": "IT", "IT_CALA": "IT", "IT_FOGN": "IT", "IT_ROSN": "IT",
+    "DE_AT_LU": "DE",
+    "DE_LU": "DE",
+    "GB": "UK",
+    "NIE": "UK",
+    "GR": "EL",
+    "IT_GR": "IT",
+    "NO_1": "NO",
+    "NO_2": "NO",
+    "NO_3": "NO",
+    "NO_4": "NO",
+    "NO_5": "NO",
+    "DK_1": "DK",
+    "DK_2": "DK",
+    "SE_1": "SE",
+    "SE_2": "SE",
+    "SE_3": "SE",
+    "SE_4": "SE",
+    "IT_NORD": "IT",
+    "IT_NORD_AT": "IT",
+    "IT_NORD_CH": "IT",
+    "IT_NORD_FR": "IT",
+    "IT_CNOR": "IT",
+    "IT_CSUD": "IT",
+    "IT_SUD": "IT",
+    "IT_SARD": "IT",
+    "IT_SICI": "IT",
+    "IT_BRNN": "IT",
+    "IT_CALA": "IT",
+    "IT_FOGN": "IT",
+    "IT_ROSN": "IT",
     "IE_SEM": "IE",
     "RU_KGD": "RU",
 }
@@ -102,10 +167,12 @@ class ENTSOE(Dataset[pd.DataFrame]):
 
     name = "entsoe"
 
-    def __init__(self, 
-                 settings: Settings, 
-                 set_nodes: list[str], 
-                 source_path: Path | str | None = None):
+    def __init__(
+        self,
+        settings: Settings,
+        set_nodes: list[str],
+        source_path: Path | str | None = None,
+    ):
         self.settings = settings
         self.set_nodes = set_nodes
         self._client: EntsoeRawClient | None = None
@@ -140,11 +207,12 @@ class ENTSOE(Dataset[pd.DataFrame]):
             api_key = os.environ.get(_API_KEY_ENV_VAR)
             if not api_key:
                 raise RuntimeError(
-                    f"ENTSO-E API key not found. Set the {_API_KEY_ENV_VAR} environment "
-                    "variable to a security token generated at https://transparency.entsoe.eu/ "
-                    "(My Account -> Web API Access).\nThen, add the token to your " \
-                    "environment variables and restart the Python process." \
-                    "\nYou will not need the token if you have already have a cached dataset."
+                    f"ENTSO-E API key not found. Set the {_API_KEY_ENV_VAR} "
+                    "environment variable to a security token generated at "
+                    "https://transparency.entsoe.eu/ (My Account -> Web API "
+                    "Access).\nThen, add the token to your environment variables and "
+                    "restart the Python process.\nYou will not need the token if you "
+                    "have already have a cached dataset."
                 )
             self._client = EntsoeRawClient(api_key=api_key)
         return self._client
@@ -179,7 +247,8 @@ class ENTSOE(Dataset[pd.DataFrame]):
 
         is_series = isinstance(data, pd.Series)
         columns_are_int = not is_series and all(
-            isinstance(c, int) for c in data.columns)
+            isinstance(c, int) for c in data.columns
+        )
         reset = data.reset_index()
         reset.columns = reset.columns.astype(str)
 
@@ -219,8 +288,8 @@ class ENTSOE(Dataset[pd.DataFrame]):
         """
         year = year if year is not None else self.settings.time.reference_year
         generation = self._cached_query(
-            f"generation_{psr_type}_{year}", 
-            lambda: self._query_generation(psr_type, year)
+            f"generation_{psr_type}_{year}",
+            lambda: self._query_generation(psr_type, year),
         )
         generation = generation.astype(float).interpolate()
         generation = generation / 1000  # MW -> GW
@@ -228,7 +297,9 @@ class ENTSOE(Dataset[pd.DataFrame]):
         generation.index.name = "time"
         return generation
 
-    def get_capacity_existing(self, psr_type: str, year: int | None = None) -> pd.Series:
+    def get_capacity_existing(
+        self, psr_type: str, year: int | None = None
+    ) -> pd.Series:
         """Year-ahead installed generation capacity [GW] per country for a
         given production type, indexed by (node, year_construction).
 
@@ -238,8 +309,8 @@ class ENTSOE(Dataset[pd.DataFrame]):
         """
         year = year if year is not None else self.settings.time.reference_year
         capacity = self._cached_query(
-            f"capacity_{psr_type}_{year}", 
-            lambda: self._query_capacity_existing(psr_type, year)
+            f"capacity_{psr_type}_{year}",
+            lambda: self._query_capacity_existing(psr_type, year),
         )
         capacity = capacity.dropna()
         capacity = capacity[capacity != 0]
@@ -253,15 +324,18 @@ class ENTSOE(Dataset[pd.DataFrame]):
         direct NTC series and are not included; callers modeling such edges
         need to substitute their own assumption.
         """
-        year = self.settings.time.reference_year-1
+        year = self.settings.time.reference_year - 1
         monthly = self.settings.data_source.use_monthly_entsoe_ntc
-        cache_name = f"transmission_capacity_{'monthly' if monthly else 'yearly'}_{year}"
-        capacity = self._cached_query(cache_name, 
-                            lambda: self._query_transmission_capacity(year, monthly))
+        cache_name = (
+            f"transmission_capacity_{'monthly' if monthly else 'yearly'}_{year}"
+        )
+        capacity = self._cached_query(
+            cache_name, lambda: self._query_transmission_capacity(year, monthly)
+        )
         capacity = capacity.fillna(0).sort_index() / 1000  # MW -> GW
         capacity.index = pd.MultiIndex.from_arrays(
-            [capacity.index, [year] * len(capacity)], 
-            names=["edge", "year_construction"]
+            [capacity.index, [year] * len(capacity)],
+            names=["edge", "year_construction"],
         )
         return capacity.rename("capacity_existing").to_frame()
 
@@ -270,11 +344,13 @@ class ENTSOE(Dataset[pd.DataFrame]):
     def _query_demand(self) -> pd.DataFrame:
         year = self.settings.time.year_time_series
         start, end = self._year_bounds(year)
-        demand = pd.DataFrame(index=pd.date_range(
-            start, end, freq="1h", inclusive="left"))
+        demand = pd.DataFrame(
+            index=pd.date_range(start, end, freq="1h", inclusive="left")
+        )
         for idx, node in enumerate(self.set_nodes):
             logger.info(
-                f"Querying ENTSO-E demand for {node} - {idx + 1}/{len(self.set_nodes)}")
+                f"Querying ENTSO-E demand for {node} - {idx + 1}/{len(self.set_nodes)}"
+            )
             area = _entsoe_code(node)
             try:
                 xml_text = self._entsoe_client.query_load(area, start=start, end=end)
@@ -305,7 +381,8 @@ class ENTSOE(Dataset[pd.DataFrame]):
     def _query_generation(self, psr_type: str, year: int) -> pd.DataFrame:
         start, end = self._year_bounds(year)
         generation = pd.DataFrame(
-            index=pd.date_range(start, end, freq="1h", inclusive="left"))
+            index=pd.date_range(start, end, freq="1h", inclusive="left")
+        )
         for idx, node in enumerate(self.set_nodes):
             logger.info(
                 f"Querying ENTSO-E generation for {node} of type {psr_type}"
@@ -314,7 +391,8 @@ class ENTSOE(Dataset[pd.DataFrame]):
             area = _entsoe_code(node)
             try:
                 xml_text = self._entsoe_client.query_generation(
-                    area, start=start, end=end, psr_type=psr_type)
+                    area, start=start, end=end, psr_type=psr_type
+                )
             except _SKIP_ERRORS:
                 logger.info(f"No generation data found for {node} ({psr_type})")
                 continue
@@ -358,12 +436,17 @@ class ENTSOE(Dataset[pd.DataFrame]):
                 continue
             series.index = series.index.year
             series = series.groupby(series.index).sum()
-            capacity[node] = (float(series.loc[year]) 
-                              if year in series.index else float(series.iloc[-1]))
+            capacity[node] = (
+                float(series.loc[year])
+                if year in series.index
+                else float(series.iloc[-1])
+            )
         index = pd.MultiIndex.from_tuples(
-            [(node, year) for node in capacity], names=["node", "year_construction"])
+            [(node, year) for node in capacity], names=["node", "year_construction"]
+        )
         return pd.Series(
-            [capacity[node] for node, _ in index], index=index, name="capacity_existing")
+            [capacity[node] for node, _ in index], index=index, name="capacity_existing"
+        )
 
     def _query_transmission_capacity(self, year: int, monthly: bool) -> pd.Series:
         start, end = self._year_bounds(year)
@@ -380,37 +463,45 @@ class ENTSOE(Dataset[pd.DataFrame]):
                 f"{node_from} to {node_to} - {idx + 1}/{len(edges)}"
             )
             capacity[f"{node_from}-{node_to}"] = self._query_ntc(
-                node_from, node_to, start, end, monthly)
+                node_from, node_to, start, end, monthly
+            )
         return pd.Series(capacity, dtype=float)
 
     def _query_ntc(
-        self, 
-        node_from: str, 
-        node_to: str, 
-        start: pd.Timestamp, 
-        end: pd.Timestamp, 
-        monthly: bool
+        self,
+        node_from: str,
+        node_to: str,
+        start: pd.Timestamp,
+        end: pd.Timestamp,
+        monthly: bool,
     ) -> float:
         area_from = _entsoe_code(node_from)
         area_to = _entsoe_code(node_to)
         try:
             if monthly:
                 xml_text = self._entsoe_client.query_net_transfer_capacity_monthahead(
-                    country_code_from=area_from, 
-                    country_code_to=area_to, start=start, end=end
+                    country_code_from=area_from,
+                    country_code_to=area_to,
+                    start=start,
+                    end=end,
                 )
             else:
                 xml_text = self._entsoe_client.query_net_transfer_capacity_yearahead(
-                    country_code_from=area_from, 
-                    country_code_to=area_to, start=start, end=end
+                    country_code_from=area_from,
+                    country_code_to=area_to,
+                    start=start,
+                    end=end,
                 )
         except _SKIP_ERRORS:
-            logger.info(f"No transmission capacity data found"
-                        f"from {node_from} to {node_to}")
+            logger.info(
+                f"No transmission capacity data found" f"from {node_from} to {node_to}"
+            )
             return float("nan")
         except requests.RequestException as exc:
-            logger.warning(f"Transmission capacity query failed"
-                           f"from {node_from} to {node_to}: {exc}")
+            logger.warning(
+                f"Transmission capacity query failed"
+                f"from {node_from} to {node_to}: {exc}"
+            )
             return float("nan")
         series = parse_crossborder_flows(xml_text)
         if series.empty:

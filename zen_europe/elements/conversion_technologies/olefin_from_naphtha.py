@@ -41,16 +41,14 @@ class OlefinFromNaphtha(ConversionTechnology):
         electricity.
         """
         return Attribute(
-            name="input_carrier", default_value=["naphtha", "electricity"],
-            element=self)
+            name="input_carrier", default_value=["naphtha", "electricity"], element=self
+        )
 
     def _set_output_carrier(self) -> Attribute:
         """
         Set the output carrier of olefin from naphtha to olefin.
         """
-        return Attribute(
-            name="output_carrier", default_value=["olefin"], element=self
-        )
+        return Attribute(name="output_carrier", default_value=["olefin"], element=self)
 
     # ---------- Required methods that are called during object build ----------
 
@@ -70,7 +68,7 @@ class OlefinFromNaphtha(ConversionTechnology):
                     "to the lifetime of methanol from natural gas, "
                     "assuming a standard industrial technology lifetime."
                 ),
-                metadata=m_ng.lifetime.sources[-1].metadata
+                metadata=m_ng.lifetime.sources[-1].metadata,
             ),
         )
         return attr
@@ -93,7 +91,7 @@ class OlefinFromNaphtha(ConversionTechnology):
                         "from natural gas, assuming a standard "
                         "industrial construction timeline."
                     ),
-                    metadata=m_ng.construction_time.sources[-1].metadata
+                    metadata=m_ng.construction_time.sources[-1].metadata,
                 ),
             )
             return attr
@@ -109,8 +107,10 @@ class OlefinFromNaphtha(ConversionTechnology):
         aidres_dataset = Aidres(source_path=self.source_path)
         cf_dict = aidres_dataset.get_conversion_factors_aidres(self.name)
         cf = [
-            {carrier: {"default_value": value, "unit": "GWh/tproduct"}
-            for carrier, value in cf_dict.items()}
+            {
+                carrier: {"default_value": value, "unit": "GWh/tproduct"}
+                for carrier, value in cf_dict.items()
+            }
         ]
         source = SourceInformation(
             description=(
@@ -137,8 +137,8 @@ class OlefinFromNaphtha(ConversionTechnology):
         """
         if self.settings.investment.use_existing_capacities:
             olefin_dataset = OlefinDemand(
-                source_path=self.source_path,
-                settings=self.settings)
+                source_path=self.source_path, settings=self.settings
+            )
             return olefin_dataset.get_capacity_existing_olefin(self)
         else:
             attr = self.capacity_existing
@@ -146,9 +146,7 @@ class OlefinFromNaphtha(ConversionTechnology):
                 default_value=0,
                 df=None,
                 source=AssumptionInformation(
-                    description=(
-                        "We do not consider existing capacities."
-                    ),
+                    description=("We do not consider existing capacities."),
                 ),
             )
             return attr

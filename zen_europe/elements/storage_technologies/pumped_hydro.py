@@ -32,7 +32,7 @@ class PumpedHydro(StorageTechnology):
     name: str = "pumped_hydro"
 
     ENTSOE_PSR = "B10"
-    
+
     def __init__(self, model: Model, power_unit: str = "MW"):
         super().__init__(model=model, power_unit=power_unit)
 
@@ -70,7 +70,8 @@ class PumpedHydro(StorageTechnology):
         Sets the specific capex of the power capacity of pumped hydro.
         """
         tech_db = TechnologyCostDatabase(
-            settings=self.settings, source_path=self.source_path)
+            settings=self.settings, source_path=self.source_path
+        )
         return tech_db.get_capex_specific_storage(self)
 
     def _set_capex_specific_storage_energy(self) -> Attribute:
@@ -78,7 +79,8 @@ class PumpedHydro(StorageTechnology):
         Sets the specific capex of the energy capacity of pumped hydro.
         """
         tech_db = TechnologyCostDatabase(
-            settings=self.settings, source_path=self.source_path)
+            settings=self.settings, source_path=self.source_path
+        )
         return tech_db.get_capex_specific_storage_energy(self)
 
     def _set_opex_specific_fixed(self) -> Attribute:
@@ -86,7 +88,8 @@ class PumpedHydro(StorageTechnology):
         Sets the specific fixed opex of pumped hydro.
         """
         tech_db = TechnologyCostDatabase(
-            settings=self.settings, source_path=self.source_path)
+            settings=self.settings, source_path=self.source_path
+        )
         return tech_db.get_opex_specific_fixed(self)
 
     def _set_max_diffusion_rate(self) -> Attribute:
@@ -109,12 +112,14 @@ class PumpedHydro(StorageTechnology):
         Returns:
             Attribute: An Attribute object containing the existing capacity data.
         """
-        if (self.settings.investment.use_existing_capacities
-                or self.settings.investment.keep_existing_hydro_capacities):
+        if (
+            self.settings.investment.use_existing_capacities
+            or self.settings.investment.keep_existing_hydro_capacities
+        ):
             hydro_dataset = HydroExistingCapacity(
                 settings=self.settings,
                 source_path=self.source_path,
-                set_nodes=self.model.config.system.set_nodes
+                set_nodes=self.model.config.system.set_nodes,
             )
             if self.settings.data_source.use_plant_level_hydro_capacity:
                 attr = hydro_dataset.get_capacity_existing_plant_level_data(self)
@@ -127,13 +132,11 @@ class PumpedHydro(StorageTechnology):
                 default_value=0,
                 df=None,
                 source=AssumptionInformation(
-                    description=(
-                        "We do not consider existing capacities."
-                    ),
+                    description=("We do not consider existing capacities."),
                 ),
             )
             return attr
-        
+
     def _set_capacity_existing_energy(self) -> Attribute:
         """
         Sets the existing energy capacity of pumped hydro.
@@ -145,18 +148,21 @@ class PumpedHydro(StorageTechnology):
         Returns:
             Attribute: An Attribute object containing the existing capacity data.
         """
-        if (self.settings.investment.use_existing_capacities
-                or self.settings.investment.keep_existing_hydro_capacities):
+        if (
+            self.settings.investment.use_existing_capacities
+            or self.settings.investment.keep_existing_hydro_capacities
+        ):
             hydro_dataset = HydroExistingCapacity(
                 settings=self.settings,
                 source_path=self.source_path,
-                set_nodes=self.model.config.system.set_nodes
+                set_nodes=self.model.config.system.set_nodes,
             )
             if self.settings.data_source.use_plant_level_hydro_capacity:
-                attr = hydro_dataset.get_capacity_existing_plant_level_data(self,
-                                                                            power=False)
+                attr = hydro_dataset.get_capacity_existing_plant_level_data(
+                    self, power=False
+                )
             else:
-                attr = hydro_dataset.get_capacity_existing_pecd_data(self,power=False)
+                attr = hydro_dataset.get_capacity_existing_pecd_data(self, power=False)
             return attr
         else:
             attr = self.capacity_existing
@@ -164,13 +170,11 @@ class PumpedHydro(StorageTechnology):
                 default_value=0,
                 df=None,
                 source=AssumptionInformation(
-                    description=(
-                        "We do not consider existing capacities."
-                    ),
+                    description=("We do not consider existing capacities."),
                 ),
             )
             return attr
-    
+
     def _set_capacity_limit(self) -> Attribute:
         """
         Sets the capacity limit for pumped hydro.

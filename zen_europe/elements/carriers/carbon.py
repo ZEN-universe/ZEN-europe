@@ -16,7 +16,6 @@ class Carbon(Carrier):
     """
 
     name: str = "carbon"
-    
 
     def __init__(self, model: Model, power_unit: str = "tonCO2/h"):
         super().__init__(model=model, power_unit=power_unit)
@@ -29,8 +28,8 @@ class Carbon(Carrier):
 
         """
         return Attribute(
-                "availability_import",
-                default_value=0,
-                element=self,
-                unit=self.power_unit,
-            )
+            "availability_import",
+            default_value=0,
+            element=self,
+            unit=self.power_unit,
+        )

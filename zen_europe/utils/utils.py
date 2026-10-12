@@ -1,15 +1,38 @@
+import functools
 import logging
+from collections.abc import Callable
+from typing import Any, TypeVar, Union, cast
 
 import numpy as np
 import pandas as pd
-from typing import Union
 from zen_creator import Technology
 
 MIN_CAPACITY_ADDITION = 1e-5
 
+F = TypeVar("F", bound=Callable[..., Any])
+
+
+def instance_cache(method: F) -> F:
+    """Memoize a method per instance, keyed by its arguments."""
+
+    @functools.wraps(method)
+    def wrapper(self: Any, *args: Any, **kwargs: Any) -> Any:
+        try:
+            cache = self._instance_cache
+        except AttributeError:
+            cache = {}
+            self._instance_cache = cache
+        key = (method.__name__, args, tuple(sorted(kwargs.items())))
+        if key not in cache:
+            cache[key] = method(self, *args, **kwargs)
+        return cache[key]
+
+    return cast(F, wrapper)
+
+
 # maps the country names used in the raw source file to NUTS0 node codes,
 def convert_country_names(series: pd.Series) -> pd.Series:
-    """ this method converts a series of country names into the node names used here """
+    """this method converts a series of country names into the node names used here."""
     country_names = {
         "Austria": "AT",
         "Belgium": "BE",
@@ -47,11 +70,13 @@ def convert_country_names(series: pd.Series) -> pd.Series:
         "UK": "UK",
     }
     series_new = series.apply(
-        lambda el: country_names[el] if el in country_names.keys() else None)
+        lambda el: country_names[el] if el in country_names.keys() else None
+    )
     return series_new
 
+
 def convert_ISO3_to_ISO2(series: pd.Series):
-    """ this method converts a series of ISO3 country codes into ISO2 country codes """
+    """this method converts a series of ISO3 country codes into ISO2 country codes."""
     iso3_to_iso2 = {
         "AUT": "AT",
         "BEL": "BE",
@@ -79,26 +104,37 @@ def convert_ISO3_to_ISO2(series: pd.Series):
         "ROU": "RO",
         "SWE": "SE",
         "SVN": "SI",
-        "SVK": "SK", 
+        "SVK": "SK",
         "GBR": "UK",
-        "ISL": "IS", 
+        "ISL": "IS",
     }
     series_new = series.apply(
-        lambda el: iso3_to_iso2[el] if el in iso3_to_iso2.keys() else None)
+        lambda el: iso3_to_iso2[el] if el in iso3_to_iso2.keys() else None
+    )
     return series_new
 
+
 def link_lng_countries() -> dict:
-    lng_link = {"lng_russia": ["LNG Russia"],
-                "lng": ["LNG Middle East", "LNG North Africa", "LNG North America", "LNG Others"]}
+    lng_link = {
+        "lng_russia": ["LNG Russia"],
+        "lng": [
+            "LNG Middle East",
+            "LNG North Africa",
+            "LNG North America",
+            "LNG Others",
+        ],
+    }
     return lng_link
+
 
 def link_natural_gas_countries() -> dict:
     natural_gas_link = {
-        ("Algeria", "Libya"): ["ES", "IT"], 
+        ("Algeria", "Libya"): ["ES", "IT"],
         ("Azerbaijan", "Turkey", "Turkmenistan"): ["EL"],
-        ("Russia"): ["BG", "RO", "HU", "SK", "PL", "LT", "EE", "DE", "FI"],  
+        ("Russia"): ["BG", "RO", "HU", "SK", "PL", "LT", "EE", "DE", "FI"],
     }
     return natural_gas_link
+
 
 def interpolate_missing_years(df: pd.DataFrame) -> pd.DataFrame:
     """Interpolate missing years in a DataFrame.
@@ -111,29 +147,30 @@ def interpolate_missing_years(df: pd.DataFrame) -> pd.DataFrame:
     """
     if isinstance(df, pd.DataFrame):
         assert (
-            all(isinstance(col, int) for col in df.columns) 
-            and df.columns.dtype == "int64"), (
-            "All columns must be numeric (years).")
+            all(isinstance(col, int) for col in df.columns)
+            and df.columns.dtype == "int64"
+        ), "All columns must be numeric (years)."
         # Reindex the columns to include all years from min to max
         df = df.reindex(
             range(df.columns.min(), df.columns.max() + 1), axis=1
         ).interpolate(axis=1)
     elif isinstance(df, pd.Series):
         assert (
-            all(isinstance(idx, int) for idx in df.index) 
-            and df.index.dtype == "int64"), (
-            "All index values must be numeric (years).")
+            all(isinstance(idx, int) for idx in df.index) and df.index.dtype == "int64"
+        ), "All index values must be numeric (years)."
         # Reindex the index to include all years from min to max
-        df = df.reindex(
-            range(df.index.min(), df.index.max() + 1)
-        ).interpolate()
+        df = df.reindex(range(df.index.min(), df.index.max() + 1)).interpolate()
     else:
-        raise TypeError("Input must be a pandas DataFrame or Series,"
-                        f" but got {type(df).__name__}.")
+        raise TypeError(
+            "Input must be a pandas DataFrame or Series,"
+            f" but got {type(df).__name__}."
+        )
     return df
 
+
 def linearly_fill_missing_years(
-        df: pd.DataFrame, deg: int = 1, clip_to_zero: bool = True) -> pd.DataFrame:
+    df: pd.DataFrame, deg: int = 1, clip_to_zero: bool = True
+) -> pd.DataFrame:
     """Fill missing years by fitting a polynomial to each row.
 
     In contrast to :func:`interpolate_missing_years`, which only interpolates
@@ -152,20 +189,32 @@ def linearly_fill_missing_years(
     """
     df_filled = df.copy()
     fit_params = df.apply(
-        lambda row: np.polyfit(row.dropna().index, row.dropna(), deg=deg)
-        if len(row.dropna()) > 1 else None,
-        axis=1)
+        lambda row: (
+            np.polyfit(row.dropna().index, row.dropna(), deg=deg)
+            if len(row.dropna()) > 1
+            else None
+        ),
+        axis=1,
+    )
     df_fit = df.apply(
-        lambda row: np.polyval(fit_params.loc[row.name], row.index)
-        if fit_params.loc[row.name] is not None else row,
-        axis=1, result_type="expand")
+        lambda row: (
+            np.polyval(fit_params.loc[row.name], row.index)
+            if fit_params.loc[row.name] is not None
+            else row
+        ),
+        axis=1,
+        result_type="expand",
+    )
     df_fit.columns = df.columns
     df_filled[df_filled.isna()] = df_fit[df_filled.isna()]
     if clip_to_zero:
         df_filled = df_filled.clip(lower=0)
     return df_filled
 
-def calculate_capacity_addition_from_cumulative(df: pd.DataFrame, element: Technology) -> pd.DataFrame:
+
+def calculate_capacity_addition_from_cumulative(
+    df: pd.DataFrame, element: Technology
+) -> pd.DataFrame:
     """Calculate capacity addition from cumulative capacity data.
 
     Args:
@@ -178,15 +227,19 @@ def calculate_capacity_addition_from_cumulative(df: pd.DataFrame, element: Techn
     df = divide_evolution_of_cumulative_capacity(df)
     df = account_for_decommissioned_capacity(df, element)
     return df
-    
+
+
 def divide_evolution_of_cumulative_capacity(df: pd.DataFrame) -> pd.DataFrame:
     """Divide the evolution of the cumulative capacity into capacity additions.
-    We calculate the capacity addition by taking the difference between consecutive years.
-    We start at the last year and move backwards, so that we can account for decommissioned capacity.
+    We calculate the capacity addition by taking the difference between consecutive
+    years.
+    We start at the last year and move backwards, so that we can account for
+    decommissioned capacity.
     If the capacity diff is positive, it is a capacity addition. If it is negative,
-    it is a decommissioned capacity, which we subtract from the first year of the cumulative capacity data.
+    it is a decommissioned capacity, which we subtract from the first year of the
+    cumulative capacity data.
     The first year then represents the total capacity that was available in that year,
-    corrected for decommissioned capacity. 
+    corrected for decommissioned capacity.
     Args:
         df (pd.DataFrame): DataFrame with cumulative capacity data.
 
@@ -194,7 +247,7 @@ def divide_evolution_of_cumulative_capacity(df: pd.DataFrame) -> pd.DataFrame:
         pd.DataFrame: DataFrame with capacity addition data.
     """
     df = df.astype(float)
-    df = df.sort_index(axis=1,ascending=True)
+    df = df.sort_index(axis=1, ascending=True)
     # take difference
     df[df.columns[1:]] = df.diff(axis=1)[df.columns[1:]]
     # decommissioned capacity
@@ -215,13 +268,17 @@ def divide_evolution_of_cumulative_capacity(df: pd.DataFrame) -> pd.DataFrame:
 
     return df
 
-def account_for_decommissioned_capacity(df: pd.DataFrame, element: Technology) -> pd.DataFrame:
+
+def account_for_decommissioned_capacity(
+    df: pd.DataFrame, element: Technology
+) -> pd.DataFrame:
     """Account for decommissioned capacity.
-    The value in the first year of the capacity dataframe is assumed to have been built 
+    The value in the first year of the capacity dataframe is assumed to have been built
     steadily over the previous lifetime of the technology.
     Thus, we divide the value in the first year by the lifetime of the technology and
-    add this value to the previous years, so that we can account for decommissioned capacity.
-    Any capacity built in year x must be decommissioned in year x + lifetime, 
+    add this value to the previous years, so that we can account for decommissioned
+    capacity.
+    Any capacity built in year x must be decommissioned in year x + lifetime,
     so we add the decommissioned capacity to the dataframe, shifted by the lifetime.
 
     Args:
@@ -230,7 +287,7 @@ def account_for_decommissioned_capacity(df: pd.DataFrame, element: Technology) -
     Returns:
         pd.DataFrame: DataFrame with decommissioned capacity accounted for.
     """
-    
+
     df.columns = df.columns.astype(int)
     if df.columns.min() >= element.settings.time.reference_year:
         logging.warning(
@@ -247,15 +304,16 @@ def account_for_decommissioned_capacity(df: pd.DataFrame, element: Technology) -
     assert int(lifetime) == lifetime, "Lifetime must be an integer"
     lifetime = int(lifetime)
     relevant_lifetime = (
-        lifetime - 
-        element.settings.time.interval_between_years - 
-        int(element.construction_time.default_value))
+        lifetime
+        - element.settings.time.interval_between_years
+        - int(element.construction_time.default_value)
+    )
     lifetime_years = list(range((reference_year) - relevant_lifetime, reference_year))
-    earlier_years = list(range((start_year + 1) - relevant_lifetime,start_year+1))
+    earlier_years = list(range((start_year + 1) - relevant_lifetime, start_year + 1))
     combined_years = df.columns.union(earlier_years).sort_values()
     # allocate the existing units of years before the lifetime to first year of lifetime
     # extended capacity df
-    df_ext = pd.DataFrame(index=df.index,columns=combined_years,dtype=float)
+    df_ext = pd.DataFrame(index=df.index, columns=combined_years, dtype=float)
     df_ext[df.columns] = df
     # divide capacity in first year by lifetime
     df_ext[start_year] /= relevant_lifetime
@@ -265,15 +323,18 @@ def account_for_decommissioned_capacity(df: pd.DataFrame, element: Technology) -
     df_decom = df_ext.copy()
     df_decom.columns = df_ext.columns + lifetime
     # add decommissioned capacity
-    df_tot = df_ext.add(df_decom,fill_value=0)
+    df_tot = df_ext.add(df_decom, fill_value=0)
     # only choose lifetime years
     common_years = df_tot.columns.intersection(lifetime_years)
     df_tot = df_tot[common_years]
     # scale to match total capacity again
-    df_tot = df_tot[df_tot.sum(axis=1)!=0]
-    df = df[df.sum(axis=1)!=0]
-    df_tot = df_tot.mul(df.loc[:,:reference_year-1].sum(axis=1)/df_tot.sum(axis=1),axis=0)
+    df_tot = df_tot[df_tot.sum(axis=1) != 0]
+    df = df[df.sum(axis=1) != 0]
+    df_tot = df_tot.mul(
+        df.loc[:, : reference_year - 1].sum(axis=1) / df_tot.sum(axis=1), axis=0
+    )
     return df_tot
+
 
 def format_capacity_existing(df: Union[pd.DataFrame, pd.Series]) -> pd.Series:
     """Format the existing capacity data to match the expected format.
@@ -286,6 +347,6 @@ def format_capacity_existing(df: Union[pd.DataFrame, pd.Series]) -> pd.Series:
     if isinstance(df, pd.DataFrame):
         df = df.stack()
     df = df[df >= MIN_CAPACITY_ADDITION]
-    df.index.names = ["node","year_construction"]
+    df.index.names = ["node", "year_construction"]
     df.name = "capacity_existing"
     return df

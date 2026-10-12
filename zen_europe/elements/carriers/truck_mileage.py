@@ -29,15 +29,12 @@ class TruckMileage(Carrier):
         Return the demand for truck mileage.
 
         """
-        truck_mileage_dataset = TruckMileageDemand(
-            self.settings,
-            self.source_path
-        )
+        truck_mileage_dataset = TruckMileageDemand(self.settings, self.source_path)
         attr = truck_mileage_dataset.get_demand(self)
         if self.settings.scenario.sensitivity_demand:
             attr.add_scenarios(demand_sensitivity_scenarios(self.name))
         return attr
-    
+
     def _set_price_shed_demand(self) -> Attribute:
         """
         Return the price of shed demand of the carrier.
@@ -64,4 +61,3 @@ class TruckMileage(Carrier):
             element=self,
             unit="tkm/h",
         )
-

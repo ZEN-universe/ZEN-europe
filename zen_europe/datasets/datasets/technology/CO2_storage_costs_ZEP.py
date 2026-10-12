@@ -2,17 +2,17 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pandas as pd
 from zen_creator import Attribute, ConversionTechnology, SourceInformation
 from zen_creator.datasets.datasets.dataset import Dataset
 from zen_creator.datasets.datasets.metadata import MetaData
 
-import pandas as pd
-
 from zen_europe.datasets.datasets.financial.ECB import ECBInflation
+
 
 class CO2StorageCostsZEP(Dataset[pd.DataFrame]):
     """
-    Dataset class for the costs of carbon storage based on the ZEP 
+    Dataset class for the costs of carbon storage based on the ZEP
     (Zero Emissions Platform) report.
 
     """
@@ -26,9 +26,7 @@ class CO2StorageCostsZEP(Dataset[pd.DataFrame]):
     def _set_metadata(self) -> MetaData:
         return MetaData(
             name=self.name,
-            title=(
-                "The Costs of CO2 Storage: Post-Demonstration CCS in the EU"
-            ),
+            title=("The Costs of CO2 Storage: Post-Demonstration CCS in the EU"),
             author=["ZEP", "ieaghg"],
             publication="ZEP",
             publication_year=2011,
@@ -39,15 +37,15 @@ class CO2StorageCostsZEP(Dataset[pd.DataFrame]):
         return None
 
     def _set_data(self) -> dict[str, pd.Series]:
-        """ 
-        No data to be set
+        """
+        No data to be set.
         """
         data = {}
-        
+
         data = pd.Series(data)
         return data
 
-    # -------- methods ------------------------    
+    # -------- methods ------------------------
     def get_lifetime(self, element: ConversionTechnology) -> Attribute:
         """
         Returns the lifetime from the ZEP carbon storage report.
@@ -63,12 +61,13 @@ class CO2StorageCostsZEP(Dataset[pd.DataFrame]):
                     " (Table 4, Case 6, Medium)."
                 ),
                 metadata=self.metadata,
-            )
+            ),
         )
 
     def get_opex_specific_variable(self, element: ConversionTechnology) -> Attribute:
         """
-        Returns the specific variable operational expenditure (opex) from the ZEP carbon storage report.
+        Returns the specific variable operational expenditure (opex) from the ZEP carbon
+        storage report.
         """
         attr = element.opex_specific_variable
         opex = 4
@@ -88,5 +87,5 @@ class CO2StorageCostsZEP(Dataset[pd.DataFrame]):
                     " (Table 4, Case 6, Medium)."
                 ),
                 metadata=self.metadata,
-            )
+            ),
         )

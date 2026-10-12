@@ -29,7 +29,7 @@ class OilToGasolineConversion(ConversionTechnology):
     def __init__(self, model: Model, power_unit: str = "MW"):
         super().__init__(model=model, power_unit=power_unit)
         # set the inflation rate function from the ECB dataset
-        # TODO make the inflation rate function directly available in the model, 
+        # TODO make the inflation rate function directly available in the model,
         # so that it can be used by other elements as well
         ecb = ECBInflation(source_path=self.source_path)
         self.get_inflation_rate = ecb.get_inflation_rate
@@ -103,10 +103,9 @@ class OilToGasolineConversion(ConversionTechnology):
         return attr
 
     def _set_opex_specific_variable(self) -> Attribute:
-        """
-        Return the specific variable opex of oil to diesel conversion 
-        as the spread between oil and diesel
-        
+        """Return the specific variable opex of oil to gasoline conversion.
+
+        The opex is the spread between oil and gasoline.
         """
         if not self.settings.cost.assume_oil_price_for_diesel_and_gasoline:
             gasoline_diesel_price = GasolineDieselPrice(self.source_path)
@@ -121,8 +120,10 @@ class OilToGasolineConversion(ConversionTechnology):
         The refinery has to be able to supply the gasoline that the existing
         passenger cars burn.
         """
-        if not (self.settings.investment.use_existing_capacities
-                and self.settings.investment.use_existing_oil_to_x_capacities):
+        if not (
+            self.settings.investment.use_existing_capacities
+            and self.settings.investment.use_existing_oil_to_x_capacities
+        ):
             attr = self.capacity_existing
             attr.set_data(
                 default_value=0,
@@ -137,7 +138,8 @@ class OilToGasolineConversion(ConversionTechnology):
             return attr
 
         vehicle_capacity = ExistingVehicleCapacity(
-            settings=self.model.settings, source_path=self.source_path)
+            settings=self.model.settings, source_path=self.source_path
+        )
         return vehicle_capacity.get_existing_capacity_oil_conversion(element=self)
 
     def _set_max_diffusion_rate(self) -> Attribute:
@@ -147,8 +149,10 @@ class OilToGasolineConversion(ConversionTechnology):
         Without existing capacities the technology cannot grow from a zero
         base, so the diffusion rate is left unbounded.
         """
-        if (not self.settings.investment.use_diffusion_rates
-                or not self.settings.investment.use_existing_oil_to_x_capacities):
+        if (
+            not self.settings.investment.use_diffusion_rates
+            or not self.settings.investment.use_existing_oil_to_x_capacities
+        ):
             return self.max_diffusion_rate
         diffusion_rates = TechnologyDiffusionMannhardt(source_path=self.source_path)
         return diffusion_rates.get_max_diffusion_rate(self)

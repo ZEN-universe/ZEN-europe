@@ -19,7 +19,6 @@ class Olefin(Carrier):
     """
 
     name: str = "olefin"
-    
 
     def __init__(self, model: Model, power_unit: str = "tproduct/h"):
         super().__init__(model=model, power_unit=power_unit)
@@ -32,13 +31,12 @@ class Olefin(Carrier):
 
         """
         return Attribute(
-                "availability_import",
-                default_value=0,
-                element=self,
-                unit=self.power_unit,
-            )
-    
-    
+            "availability_import",
+            default_value=0,
+            element=self,
+            unit=self.power_unit,
+        )
+
     def _set_price_shed_demand(self) -> Attribute:
         """
         Return the price of shed demand of the carrier.
@@ -53,14 +51,15 @@ class Olefin(Carrier):
             )
         else:
             return self.price_shed_demand
-        
+
     def _set_demand(self) -> Attribute:
         """
         Return the demand of olefin.
 
         """
         olefin_demand = OlefinDemand(
-            source_path=self.model.source_path,settings=self.settings)
+            source_path=self.model.source_path, settings=self.settings
+        )
         attr = olefin_demand.get_olefin_demand(element=self)
         if self.settings.scenario.sensitivity_demand:
             attr.add_scenarios(demand_sensitivity_scenarios(self.name))

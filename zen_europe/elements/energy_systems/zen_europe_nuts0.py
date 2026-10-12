@@ -99,9 +99,7 @@ class EnergySystemNuts0(EnergySystem):
                 default_value=0,
                 unit="1",
                 source=AssumptionInformation(
-                    description=(
-                        "No market share is exempt from the diffusion limit."
-                    ),
+                    description=("No market share is exempt from the diffusion limit."),
                 ),
             )
         diffusion_rates = TechnologyDiffusionMannhardt(source_path=self.source_path)
@@ -134,8 +132,10 @@ class EnergySystemNuts0(EnergySystem):
         or if overshooting is allowed explicitly.
         """
         attr = self.price_carbon_emissions_annual_overshoot
-        if not (self.settings.emissions.use_EU_ETS_cap
-                or self.settings.emissions.use_annual_limit_overshoot):
+        if not (
+            self.settings.emissions.use_EU_ETS_cap
+            or self.settings.emissions.use_annual_limit_overshoot
+        ):
             return attr.set_data(
                 default_value=np.inf,
                 unit="Euro/tons",
@@ -171,9 +171,7 @@ class EnergySystemNuts0(EnergySystem):
             default_value=0.05,
             unit="1",
             source=AssumptionInformation(
-                description=(
-                    "The discount rate is set to 0.05."
-                ),
+                description=("The discount rate is set to 0.05."),
             ),
             scenarios=scenarios,
         )
@@ -195,7 +193,8 @@ class EnergySystemNuts0(EnergySystem):
                 ),
             )
         carbon_constraints = CarbonConstraints(
-            settings=self.settings, source_path=self.source_path)
+            settings=self.settings, source_path=self.source_path
+        )
         return carbon_constraints.calculate_carbon_budget(self)
 
     def _set_carbon_emissions_annual_limit(self) -> Attribute:
@@ -215,5 +214,6 @@ class EnergySystemNuts0(EnergySystem):
                 ),
             )
         carbon_constraints = CarbonConstraints(
-            settings=self.settings, source_path=self.source_path)
+            settings=self.settings, source_path=self.source_path
+        )
         return carbon_constraints.calculate_carbon_emissions_annual_limit(self)

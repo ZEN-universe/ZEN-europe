@@ -1,4 +1,19 @@
+import argparse
 import logging
+import os
+import subprocess
+import sys
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from pathlib import Path
+
+from zen_creator.utils.settings import ModelSet, Settings
+
+from zen_europe.model_creator import (
+    DEFAULT_CONFIG_PATH,
+    DEFAULT_OUTPUT_PATH,
+    create_model,
+    default_models_path,
+)
 
 COLOR_SUCCESS = "\033[92m"
 COLOR_WARNING = "\033[38;5;208m"  # orange
@@ -19,22 +34,6 @@ _handler = logging.StreamHandler()
 _handler.setFormatter(_ColorFormatter("%(levelname)s - %(message)s"))
 logging.basicConfig(level=logging.INFO, handlers=[_handler])
 logger = logging.getLogger(__name__)
-
-import argparse
-import os
-import subprocess
-import sys
-from concurrent.futures import ThreadPoolExecutor, as_completed
-from pathlib import Path
-
-from zen_creator.utils.settings import ModelSet, Settings
-
-from zen_europe.model_creator import (
-    DEFAULT_CONFIG_PATH,
-    DEFAULT_OUTPUT_PATH,
-    create_model,
-    default_models_path,
-)
 
 DEFAULT_JOBS = min(4, os.cpu_count() or 1)
 

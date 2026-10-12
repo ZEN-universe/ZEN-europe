@@ -7,12 +7,13 @@ from zen_europe.datasets.datasets.financial.ECB import ECBInflation
 if TYPE_CHECKING:
     from pathlib import Path
 
+import pandas as pd
 from zen_creator import Attribute, ConversionTechnology, SourceInformation
 from zen_creator.datasets.datasets.dataset import Dataset
 from zen_creator.datasets.datasets.metadata import MetaData
+
 from zen_europe.utils.constants import Constants
 
-import pandas as pd
 
 class ShippingTechnologiesKorberg(Dataset[pd.DataFrame]):
     """
@@ -24,7 +25,6 @@ class ShippingTechnologiesKorberg(Dataset[pd.DataFrame]):
     name = "shipping_technologies_korberg"
 
     MONEY_YEAR = 2021
-    
 
     def __init__(self, source_path: Path | str | None = None):
         super().__init__(source_path=source_path)
@@ -34,7 +34,8 @@ class ShippingTechnologiesKorberg(Dataset[pd.DataFrame]):
         return MetaData(
             name=self.name,
             title=(
-                "Techno-economic assessment of advanced fuels and propulsion systems in future fossil-free ships"
+                "Techno-economic assessment of advanced fuels and propulsion systems "
+                "in future fossil-free ships"
             ),
             author=["A.D. Korberg", "S. Brynolf", "M. Grahn", "I.R. Skov"],
             publication="Renewable and Sustainable Energy Reviews",
@@ -51,13 +52,15 @@ class ShippingTechnologiesKorberg(Dataset[pd.DataFrame]):
         data = {}
         return data
 
-    # -------- methods ------------------------    
+    # -------- methods ------------------------
     def get_shipping_conversion_factors(
-            self, technology: ConversionTechnology | str) -> dict[str, float]:
+        self, technology: ConversionTechnology | str
+    ) -> dict[str, float]:
         """
         Get the shipping conversion factors for a specific technology.
 
-        This method retrieves the conversion factors for the specified shipping technology
+        This method retrieves the conversion factors for the specified shipping
+        technology
         and returns them as a dictionary.
 
         Returns:
@@ -65,19 +68,23 @@ class ShippingTechnologiesKorberg(Dataset[pd.DataFrame]):
         """
         if isinstance(technology, ConversionTechnology):
             technology = technology.name
-        electricity_demand_LH2 = 6.78 # kWh/kg, https://www.sciencedirect.com/science/article/pii/S0306261917305457
+        electricity_demand_LH2 = 6.78  # kWh/kg, https://www.sciencedirect.com/science/article/pii/S0306261917305457
         conversion_factors = {
             "diesel_ICE_ship": {"diesel": 1 / 0.45},
-            "hydrogen_FC_ship": {"hydrogen":1 / 0.55, 
-                                 "electricity": (
-                                            1 / 0.55 * electricity_demand_LH2 
-                                            / Constants.HYDROGEN_KWH_PER_KG)}, 
+            "hydrogen_FC_ship": {
+                "hydrogen": 1 / 0.55,
+                "electricity": (
+                    1 / 0.55 * electricity_demand_LH2 / Constants.HYDROGEN_KWH_PER_KG
+                ),
+            },
             "methanol_ICE_ship": {"methanol": 1 / 0.45},
             "ammonia_ICE_ship": {"ammonia": 1 / 0.45},
         }
         if technology not in conversion_factors:
-            raise ValueError(f"Conversion factors for technology" 
-                             f"'{technology}' are not available.")
+            raise ValueError(
+                f"Conversion factors for technology"
+                f"'{technology}' are not available."
+            )
         return conversion_factors[technology]
 
     def get_lifetime(self, technology: ConversionTechnology) -> Attribute:
@@ -88,7 +95,8 @@ class ShippingTechnologiesKorberg(Dataset[pd.DataFrame]):
         and returns it as an Attribute.
 
         Returns:
-            An Attribute object representing the lifetime of the specified technology in years.
+            An Attribute object representing the lifetime of the specified technology in
+            years.
         """
         lifetimes = {
             "diesel_ICE_ship": 30,
@@ -98,14 +106,16 @@ class ShippingTechnologiesKorberg(Dataset[pd.DataFrame]):
         }
         if technology.name not in lifetimes:
             raise ValueError(
-                f"Lifetime for technology '{technology.name}' is not available.")
+                f"Lifetime for technology '{technology.name}' is not available."
+            )
         default_value = lifetimes[technology.name]
         attr = technology.lifetime
         attr.set_data(
             default_value=default_value,
             source=SourceInformation(
                 description=(
-                    f"The lifetime of {technology.name} is based on Korberg et al. (2021)."
+                    f"The lifetime of {technology.name} is based on Korberg et al. "
+                    "(2021)."
                 ),
                 metadata=self.metadata,
             ),
@@ -116,11 +126,13 @@ class ShippingTechnologiesKorberg(Dataset[pd.DataFrame]):
         """
         Get the fuel distribution cost for a specific shipping technology.
 
-        This method retrieves the fuel distribution cost for the specified shipping technology
+        This method retrieves the fuel distribution cost for the specified shipping
+        technology
         and returns it as a float.
 
         Returns:
-            A float representing the fuel distribution cost of the specified technology in Euro/GJ.
+            A float representing the fuel distribution cost of the specified technology
+            in Euro/GJ.
         """
         fuel_distribution_costs = {
             "diesel_ICE_ship": 0.2,
@@ -134,8 +146,9 @@ class ShippingTechnologiesKorberg(Dataset[pd.DataFrame]):
                 "is not available."
             )
         inflation = self.get_inflation_rate(
-            base_year=self.MONEY_YEAR, 
-            target_year=technology.settings.time.reference_year)
+            base_year=self.MONEY_YEAR,
+            target_year=technology.settings.time.reference_year,
+        )
         return fuel_distribution_costs[technology.name] * inflation
 
     def get_capex_specific(self, technology: ConversionTechnology) -> tuple[float, str]:
@@ -146,7 +159,8 @@ class ShippingTechnologiesKorberg(Dataset[pd.DataFrame]):
         and returns it as a float.
 
         Returns:
-            A float representing the specific capex of the specified technology in Euro/kW.
+            A float representing the specific capex of the specified technology in
+            Euro/kW.
         """
         specific_capex_values = {
             "diesel_ICE_ship": 460,
@@ -164,13 +178,15 @@ class ShippingTechnologiesKorberg(Dataset[pd.DataFrame]):
             raise ValueError(
                 f"Specific capex for technology '{technology.name}' is not available."
             )
-        
+
         inflation = self.get_inflation_rate(
-            base_year=self.MONEY_YEAR, 
-            target_year=technology.settings.time.reference_year)
+            base_year=self.MONEY_YEAR,
+            target_year=technology.settings.time.reference_year,
+        )
         return (
-            specific_capex_values[technology.name] * inflation, 
-            selected_technologies[technology.name])
+            specific_capex_values[technology.name] * inflation,
+            selected_technologies[technology.name],
+        )
 
     def get_opex_fixed(self, technology: ConversionTechnology) -> float:
         """
@@ -203,7 +219,8 @@ class ShippingTechnologiesKorberg(Dataset[pd.DataFrame]):
         and returns it as an Attribute.
 
         Returns:
-            An Attribute object representing the maximum load of the specified technology.
+            An Attribute object representing the maximum load of the specified
+            technology.
         """
         max_loads = {
             "diesel_ICE_ship": 0.75 * 5280 / Constants.HOURS_PER_YEAR,
@@ -230,5 +247,3 @@ class ShippingTechnologiesKorberg(Dataset[pd.DataFrame]):
             ),
         )
         return attr
-
-    

@@ -31,13 +31,12 @@ class Methanol(Carrier):
 
         """
         return Attribute(
-                "availability_import",
-                default_value=0,
-                element=self,
-                unit=self.power_unit,
-            )
-    
-    
+            "availability_import",
+            default_value=0,
+            element=self,
+            unit=self.power_unit,
+        )
+
     def _set_price_shed_demand(self) -> Attribute:
         """
         Return the price of shed demand of the carrier.
@@ -52,7 +51,7 @@ class Methanol(Carrier):
             )
         else:
             return self.price_shed_demand
-        
+
     def _set_demand(self) -> Attribute:
         """
         Return the demand of methanol.

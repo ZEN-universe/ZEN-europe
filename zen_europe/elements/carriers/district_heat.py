@@ -16,7 +16,6 @@ class DistrictHeat(Carrier):
     """
 
     name: str = "district_heat"
-    
 
     def __init__(self, model: Model, power_unit: str = "MW"):
         super().__init__(model=model, power_unit=power_unit)
@@ -29,20 +28,20 @@ class DistrictHeat(Carrier):
 
         """
         return Attribute(
-                "availability_import",
-                default_value=0,
-                element=self,
-                unit=self.power_unit,
-            )
-    
+            "availability_import",
+            default_value=0,
+            element=self,
+            unit=self.power_unit,
+        )
+
     def _set_availability_export(self) -> Attribute:
         """
         Return the export availability of district heat.
 
         """
         return Attribute(
-                "availability_export",
-                default_value=0,
-                element=self,
-                unit=self.power_unit,
-            )
+            "availability_export",
+            default_value=0,
+            element=self,
+            unit=self.power_unit,
+        )

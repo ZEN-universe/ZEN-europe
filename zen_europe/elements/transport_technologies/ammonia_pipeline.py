@@ -58,8 +58,8 @@ class AmmoniaPipeline(TransportTechnology):
             source_path=self.source_path,
         )
         return dea_energy_transport.get_construction_time(
-            self,
-            proxy_element_name="natural_gas_pipeline")
+            self, proxy_element_name="natural_gas_pipeline"
+        )
 
     def _set_transport_loss_factor_linear(self) -> Attribute:
         """

@@ -1,10 +1,9 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import json
 import logging
 import time
 from datetime import datetime
-from functools import cache
 from pathlib import Path
 
 import pandas as pd
@@ -13,7 +12,11 @@ from zen_creator.datasets.datasets.dataset import Dataset
 from zen_creator.datasets.datasets.metadata import MetaData
 from zen_creator.utils.settings import Settings
 
-from zen_europe.utils.utils import convert_country_names, linearly_fill_missing_years
+from zen_europe.utils.utils import (
+    convert_country_names,
+    instance_cache,
+    linearly_fill_missing_years,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -128,7 +131,7 @@ class UNECE(Dataset[dict[str, pd.DataFrame]]):
         )
 
     def _set_path(self) -> Path | None:
-        return None  
+        return None
 
     def _set_data(self) -> dict[str, pd.DataFrame]:
         return {table: self._load_raw_data(table) for table in _UNECE_TABLES}
@@ -161,7 +164,8 @@ class UNECE(Dataset[dict[str, pd.DataFrame]]):
         if cache_path.exists() and not self.settings.cache.overwrite_unece:
             logger.info(f"Loading cached UNECE data for '{table}' from {cache_path}")
             data = pd.read_feather(cache_path).set_index(
-                ["vehicle_type", "fuel_type", "country"])
+                ["vehicle_type", "fuel_type", "country"]
+            )
             data.columns = data.columns.astype(int)
             return data
 
@@ -181,22 +185,28 @@ class UNECE(Dataset[dict[str, pd.DataFrame]]):
         url = f"{_UNECE_API_BASE}/{table_id}"
         metadata = self._request(url).json()
         vehicle_types = next(
-            variable for variable in metadata["variables"]
-            if variable["code"] == "Type of Vehicle")
+            variable
+            for variable in metadata["variables"]
+            if variable["code"] == "Type of Vehicle"
+        )
 
         data = pd.concat(
             self._query_vehicle_type(url, vehicle_type)
-            for vehicle_type in vehicle_types["values"])
+            for vehicle_type in vehicle_types["values"]
+        )
         data = data.unstack("Year")
         data.columns = data.columns.astype(int)
-        data = data.rename_axis(index={
-            "Type of Vehicle": "vehicle_type",
-            "Fuel Type": "fuel_type",
-            "Country": "country",
-        })
+        data = data.rename_axis(
+            index={
+                "Type of Vehicle": "vehicle_type",
+                "Fuel Type": "fuel_type",
+                "Country": "country",
+            }
+        )
         data = data.reorder_levels(["vehicle_type", "fuel_type", "country"])
         data = data.rename(
-            index=lambda value: value.removeprefix("- "), level="fuel_type")
+            index=lambda value: value.removeprefix("- "), level="fuel_type"
+        )
         return data.sort_index()
 
     def _query_vehicle_type(self, url: str, vehicle_type: str) -> pd.Series:
@@ -246,11 +256,13 @@ class UNECE(Dataset[dict[str, pd.DataFrame]]):
                 return response
             backoff = _RETRY_BACKOFF * (attempt + 1)
             logger.info(
-                f"UNECE API rate-limited the request, retrying in {backoff:.0f}s")
+                f"UNECE API rate-limited the request, retrying in {backoff:.0f}s"
+            )
             time.sleep(backoff)
         raise RuntimeError(
             f"UNECE API kept rate-limiting the request to {url} after "
-            f"{_MAX_RETRIES} attempts.")
+            f"{_MAX_RETRIES} attempts."
+        )
 
     # -------- raw data ------------------
 
@@ -283,7 +295,8 @@ class UNECE(Dataset[dict[str, pd.DataFrame]]):
         data = data.loc[:, data.columns <= self.unece_year]
         if data.empty:
             raise ValueError(
-                f"The UNECE table '{table}' has no data up to {self.unece_year}.")
+                f"The UNECE table '{table}' has no data up to {self.unece_year}."
+            )
         return data.sort_index()
 
     # -------- outward-facing accessors ------------------
@@ -294,10 +307,11 @@ class UNECE(Dataset[dict[str, pd.DataFrame]]):
         if table not in _UNECE_TABLES:
             raise ValueError(
                 f"Unknown UNECE table '{table}', expected one of "
-                f"{sorted(_UNECE_TABLES)}.")
+                f"{sorted(_UNECE_TABLES)}."
+            )
         return self.data[table]
 
-    @cache
+    @instance_cache
     def get_registrations(self, hybrids_separate: bool = False) -> pd.DataFrame:
         """New passenger car registrations per technology, node and year.
 
@@ -311,11 +325,11 @@ class UNECE(Dataset[dict[str, pd.DataFrame]]):
             columns.
         """
         aggregated, total = self.get_passenger_vehicles(
-            "registrations", hybrids_separate)
-        return self._allocate_unassigned_vehicles(
-            aggregated, total, hybrids_separate)
+            "registrations", hybrids_separate
+        )
+        return self._allocate_unassigned_vehicles(aggregated, total, hybrids_separate)
 
-    @cache
+    @instance_cache
     def get_fleet(self, hybrids_separate: bool = False) -> pd.DataFrame:
         """Passenger car fleet per technology, node and year.
 
@@ -329,10 +343,9 @@ class UNECE(Dataset[dict[str, pd.DataFrame]]):
             columns.
         """
         aggregated, total = self.get_passenger_vehicles("fleet", hybrids_separate)
-        return self._allocate_unassigned_vehicles(
-            aggregated, total, hybrids_separate)
+        return self._allocate_unassigned_vehicles(aggregated, total, hybrids_separate)
 
-    @cache
+    @instance_cache
     def get_total_fleet(self, hybrids_separate: bool = False) -> pd.DataFrame:
         """Total passenger car fleet per node and year, excluding the
         drivetrains that are not modelled.
@@ -344,7 +357,7 @@ class UNECE(Dataset[dict[str, pd.DataFrame]]):
         aggregated, total = self.get_passenger_vehicles("fleet", hybrids_separate)
         return self._reconcile_total(aggregated, total)
 
-    @cache
+    @instance_cache
     def get_truck_registrations(self) -> pd.DataFrame:
         """New heavy-duty truck registrations per technology, node and year.
 
@@ -354,7 +367,7 @@ class UNECE(Dataset[dict[str, pd.DataFrame]]):
         """
         return self.get_trucks("registrations")[0]
 
-    @cache
+    @instance_cache
     def get_truck_fleet(self) -> pd.DataFrame:
         """Heavy-duty truck fleet per technology, node and year.
 
@@ -364,7 +377,7 @@ class UNECE(Dataset[dict[str, pd.DataFrame]]):
         """
         return self.get_trucks("fleet")[0]
 
-    @cache
+    @instance_cache
     def get_total_truck_fleet(self) -> pd.DataFrame:
         """Total heavy-duty truck fleet per node and year."""
         return self._reconcile_total(*self.get_trucks("fleet"))
@@ -398,13 +411,20 @@ class UNECE(Dataset[dict[str, pd.DataFrame]]):
         if hybrids_separate:
             aggregated = pd.concat(
                 [petrol, diesel, hybrid, plug_in_hybrid, electric],
-                keys=[_PETROL_CAR, _DIESEL_CAR, _HYBRID_CAR,
-                      _PLUG_IN_HYBRID_CAR, _ELECTRIC_CAR])
+                keys=[
+                    _PETROL_CAR,
+                    _DIESEL_CAR,
+                    _HYBRID_CAR,
+                    _PLUG_IN_HYBRID_CAR,
+                    _ELECTRIC_CAR,
+                ],
+            )
         else:
             petrol = petrol + hybrid + plug_in_hybrid
             aggregated = pd.concat(
                 [petrol, diesel, electric],
-                keys=[_PETROL_CAR, _DIESEL_CAR, _ELECTRIC_CAR])
+                keys=[_PETROL_CAR, _DIESEL_CAR, _ELECTRIC_CAR],
+            )
         # the drivetrains that are not modelled are excluded from the total
         total = data.loc[_TOTAL] - data.loc[_OTHER].groupby(level=1).sum()
 
@@ -429,20 +449,25 @@ class UNECE(Dataset[dict[str, pd.DataFrame]]):
         data = data.loc[:, data.notna().any(axis=0)]
 
         total = data.loc[_TOTAL]
-        diesel = pd.concat(
-            [total, data.loc[_DIESEL_INCLUDING_HYBRIDS]]).groupby(level=0).min()
+        diesel = (
+            pd.concat([total, data.loc[_DIESEL_INCLUDING_HYBRIDS]])
+            .groupby(level=0)
+            .min()
+        )
         electric = data.loc[_ELECTRIC].fillna(0)
         hydrogen = data.loc[_HYDROGEN].fillna(0)
 
         aggregated = pd.concat(
             [diesel, electric, hydrogen],
-            keys=[_DIESEL_TRUCK, _ELECTRIC_TRUCK, _HYDROGEN_TRUCK])
+            keys=[_DIESEL_TRUCK, _ELECTRIC_TRUCK, _HYDROGEN_TRUCK],
+        )
         aggregated.index.names = ["technology", "node"]
         total.index.name = "node"
 
         # correct the outlier in the UK electric-truck registrations in 2016
         for (technology, node, year), value in _TRUCK_CORRECTIONS.get(
-                table, {}).items():
+            table, {}
+        ).items():
             if (technology, node) in aggregated.index and year in aggregated:
                 aggregated.loc[(technology, node), year] = value
 
@@ -453,12 +478,12 @@ class UNECE(Dataset[dict[str, pd.DataFrame]]):
     # -------- helpers ------------------
 
     @staticmethod
-    def _reconcile_total(
-            aggregated: pd.DataFrame, total: pd.DataFrame) -> pd.DataFrame:
+    def _reconcile_total(aggregated: pd.DataFrame, total: pd.DataFrame) -> pd.DataFrame:
         """Return the total per node, raised to the sum over the technologies
         wherever the reported total falls short of it."""
-        return pd.concat(
-            [total, aggregated.groupby(level=1).sum()]).groupby(level=0).max()
+        return (
+            pd.concat([total, aggregated.groupby(level=1).sum()]).groupby(level=0).max()
+        )
 
     def _allocate_unassigned_vehicles(
         self,
@@ -485,5 +510,6 @@ class UNECE(Dataset[dict[str, pd.DataFrame]]):
                 aggregated.loc[_PLUG_IN_HYBRID_CAR, node] += delta.loc[node] / 2
             else:
                 aggregated.loc[_PETROL_CAR, node] = aggregated.loc[
-                    _PETROL_CAR, node].add(delta.loc[node], fill_value=0)
+                    _PETROL_CAR, node
+                ].add(delta.loc[node], fill_value=0)
         return aggregated.sort_index()

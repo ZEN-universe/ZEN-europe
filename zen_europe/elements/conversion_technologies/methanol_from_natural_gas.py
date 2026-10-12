@@ -41,8 +41,10 @@ class MethanolFromNaturalGas(ConversionTechnology):
         and electricity.
         """
         return Attribute(
-            name="input_carrier", default_value=["natural_gas", "electricity"],
-            element=self)
+            name="input_carrier",
+            default_value=["natural_gas", "electricity"],
+            element=self,
+        )
 
     def _set_output_carrier(self) -> Attribute:
         """
@@ -60,7 +62,8 @@ class MethanolFromNaturalGas(ConversionTechnology):
 
         """
         methanol_production_dataset = MethanolProductionCollodi(
-            source_path=self.source_path)
+            source_path=self.source_path
+        )
         return methanol_production_dataset.get_lifetime(element=self)
 
     def _set_construction_time(self) -> Attribute:
@@ -70,7 +73,8 @@ class MethanolFromNaturalGas(ConversionTechnology):
         """
         if self.settings.investment.use_construction_times:
             methanol_production_dataset = MethanolProductionCollodi(
-                source_path=self.source_path)
+                source_path=self.source_path
+            )
             return methanol_production_dataset.get_construction_time(element=self)
         else:
             return self.construction_time
@@ -81,7 +85,8 @@ class MethanolFromNaturalGas(ConversionTechnology):
 
         """
         methanol_production_dataset = MethanolProductionCollodi(
-            source_path=self.source_path)
+            source_path=self.source_path
+        )
         return methanol_production_dataset.get_conversion_factor(element=self)
 
     def _set_capex_specific_conversion(self) -> Attribute:
@@ -90,7 +95,8 @@ class MethanolFromNaturalGas(ConversionTechnology):
 
         """
         methanol_production_dataset = MethanolProductionCollodi(
-            source_path=self.source_path)
+            source_path=self.source_path
+        )
         return methanol_production_dataset.get_capex_specific(element=self)
 
     def _set_opex_specific_fixed(self) -> Attribute:
@@ -99,7 +105,8 @@ class MethanolFromNaturalGas(ConversionTechnology):
 
         """
         methanol_production_dataset = MethanolProductionCollodi(
-            source_path=self.source_path)
+            source_path=self.source_path
+        )
         return methanol_production_dataset.get_opex_specific_fixed(element=self)
 
     def _set_opex_specific_variable(self) -> Attribute:
@@ -108,7 +115,8 @@ class MethanolFromNaturalGas(ConversionTechnology):
 
         """
         methanol_production_dataset = MethanolProductionCollodi(
-            source_path=self.source_path)
+            source_path=self.source_path
+        )
         return methanol_production_dataset.get_opex_specific_variable(element=self)
 
     def _set_capacity_existing(self) -> Attribute:
@@ -117,8 +125,7 @@ class MethanolFromNaturalGas(ConversionTechnology):
 
         """
         if self.settings.investment.use_existing_capacities:
-            methanol_demand_dataset = MethanolDemand(
-                source_path=self.source_path)
+            methanol_demand_dataset = MethanolDemand(source_path=self.source_path)
             return methanol_demand_dataset.get_capacity_existing(element=self)
         else:
             attr = self.capacity_existing
@@ -126,13 +133,10 @@ class MethanolFromNaturalGas(ConversionTechnology):
                 default_value=0,
                 df=None,
                 source=AssumptionInformation(
-                    description=(
-                        "We do not consider existing capacities."
-                    ),
+                    description=("We do not consider existing capacities."),
                 ),
             )
             return attr
-    
 
     def _set_max_diffusion_rate(self) -> Attribute:
         """

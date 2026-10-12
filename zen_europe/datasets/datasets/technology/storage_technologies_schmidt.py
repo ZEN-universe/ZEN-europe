@@ -49,12 +49,24 @@ class StorageTechnologiesSchmidt(Dataset[pd.DataFrame]):
     # gets more expensive over time, since the favourable sites are built first.
     RELATIVE_COST: dict[str, dict[int, float]] = {
         "battery": {
-            2015: 1.00, 2020: 0.55, 2025: 0.34, 2030: 0.23,
-            2035: 0.18, 2040: 0.16, 2045: 0.15, 2050: 0.14,
+            2015: 1.00,
+            2020: 0.55,
+            2025: 0.34,
+            2030: 0.23,
+            2035: 0.18,
+            2040: 0.16,
+            2045: 0.15,
+            2050: 0.14,
         },
         "pumped_hydro": {
-            2015: 1.00, 2020: 1.00, 2025: 1.00, 2030: 1.00,
-            2035: 1.01, 2040: 1.01, 2045: 1.02, 2050: 1.02,
+            2015: 1.00,
+            2020: 1.00,
+            2025: 1.00,
+            2030: 1.00,
+            2035: 1.01,
+            2040: 1.01,
+            2045: 1.02,
+            2050: 1.02,
         },
     }
 
@@ -106,12 +118,20 @@ class StorageTechnologiesSchmidt(Dataset[pd.DataFrame]):
         for technology, costs in self.COST_2015.items():
             for variable, cost_2015 in costs.items():
                 for year, relative in self.RELATIVE_COST[technology].items():
-                    rows.append((
-                        technology, "M", "ref", variable, int(year),
-                        float(cost_2015 * relative), STANDARD_UNITS[variable],
-                        self.MONEY_YEAR, float(cost_2015 * relative),
-                        self._source_unit(variable),
-                    ))
+                    rows.append(
+                        (
+                            technology,
+                            "M",
+                            "ref",
+                            variable,
+                            int(year),
+                            float(cost_2015 * relative),
+                            STANDARD_UNITS[variable],
+                            self.MONEY_YEAR,
+                            float(cost_2015 * relative),
+                            self._source_unit(variable),
+                        )
+                    )
         data = pd.DataFrame(rows, columns=INDEX_NAMES + VALUE_COLUMNS)
         return data.set_index(INDEX_NAMES).sort_index()
 
@@ -131,7 +151,8 @@ class StorageTechnologiesSchmidt(Dataset[pd.DataFrame]):
         dollar2euro = ECBDollar2Euro(source_path=self.source_path)
         data = self.data.copy()
         data["value"] *= data["money_year_src"].map(
-            lambda money_year: dollar2euro.get_dollar2euro(int(money_year)))
+            lambda money_year: dollar2euro.get_dollar2euro(int(money_year))
+        )
         return data
 
     # -------- methods ------------------------
@@ -161,7 +182,8 @@ class StorageTechnologiesSchmidt(Dataset[pd.DataFrame]):
         Get the construction time of a storage technology.
         """
         construction_time = self._get_value(
-            self.CONSTRUCTION_TIMES, technology, "construction time")
+            self.CONSTRUCTION_TIMES, technology, "construction time"
+        )
         attr = technology.construction_time
         return attr.set_data(
             default_value=construction_time,
@@ -187,12 +209,14 @@ class StorageTechnologiesSchmidt(Dataset[pd.DataFrame]):
         return self._set_efficiency(technology, technology.efficiency_discharge)
 
     def _set_efficiency(
-            self, technology: StorageTechnology, attr: Attribute) -> Attribute:
+        self, technology: StorageTechnology, attr: Attribute
+    ) -> Attribute:
         """
         Set an efficiency attribute to half of the round-trip efficiency.
         """
         efficiency_round_trip = self._get_value(
-            self.EFFICIENCIES_ROUND_TRIP, technology, "round-trip efficiency")
+            self.EFFICIENCIES_ROUND_TRIP, technology, "round-trip efficiency"
+        )
         return attr.set_data(
             default_value=np.sqrt(efficiency_round_trip),
             unit="1",

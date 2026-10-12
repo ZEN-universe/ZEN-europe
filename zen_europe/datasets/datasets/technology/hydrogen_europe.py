@@ -2,15 +2,14 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pandas as pd
 from zen_creator.datasets.datasets.dataset import Dataset
 from zen_creator.datasets.datasets.metadata import MetaData
-
-import pandas as pd
 
 
 class HydrogenEurope(Dataset[pd.DataFrame]):
     """
-    EuroCalliope dataset class for potential capacity
+    EuroCalliope dataset class for potential capacity.
 
     """
 
@@ -22,9 +21,7 @@ class HydrogenEurope(Dataset[pd.DataFrame]):
     def _set_metadata(self) -> MetaData:
         return MetaData(
             name=self.name,
-            title=(
-                "Clean Hydrogen Monitor 2024"
-            ),
+            title=("Clean Hydrogen Monitor 2024"),
             author=["Hydrogen Europe"],
             publication="Clean Hydrogen Monitor 2024",
             publication_year=2024,
@@ -37,11 +34,12 @@ class HydrogenEurope(Dataset[pd.DataFrame]):
         return self.source_path / "03-technology" / "capacity_existing" / "electrolysis"
 
     def _set_data(self) -> dict[str, pd.Series]:
-        data = pd.read_excel(self.path / "extracted_capacity_additions.xlsx",
-                             sheet_name="final")
+        data = pd.read_excel(
+            self.path / "extracted_capacity_additions.xlsx", sheet_name="final"
+        )
         return data
 
-    # -------- methods ------------------------    
+    # -------- methods ------------------------
     def get_capacity_existing(self) -> pd.Series:
         """
         Get the existing capacity for electrolysis technologies.
@@ -50,6 +48,6 @@ class HydrogenEurope(Dataset[pd.DataFrame]):
             pd.Series: A pandas Series containing the existing capacity data.
         """
         capacity_existing = self.data
-        capacity_existing = capacity_existing.set_index(["node","year_construction"])
+        capacity_existing = capacity_existing.set_index(["node", "year_construction"])
         capacity_existing.name = "capacity_existing"
         return capacity_existing

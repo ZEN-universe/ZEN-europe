@@ -40,8 +40,7 @@ class ICE_diesel(ConversionTechnology):
         Sets the reference carrier of ICE diesel to passenger mileage.
         """
         return Attribute(
-            name="reference_carrier", default_value=["passenger_mileage"],
-            element=self
+            name="reference_carrier", default_value=["passenger_mileage"], element=self
         )
 
     def _set_input_carrier(self) -> Attribute:
@@ -90,7 +89,8 @@ class ICE_diesel(ConversionTechnology):
 
         """
         vehicle_capacity = ExistingVehicleCapacity(
-            settings=self.model.settings, source_path=self.source_path)
+            settings=self.model.settings, source_path=self.source_path
+        )
         return vehicle_capacity.get_capex_specific_conversion_passenger(element=self)
 
     def _set_capacity_existing(self) -> Attribute:
@@ -100,7 +100,8 @@ class ICE_diesel(ConversionTechnology):
         """
         if self.settings.investment.use_existing_capacities:
             vehicle_capacity = ExistingVehicleCapacity(
-                settings=self.model.settings, source_path=self.source_path)
+                settings=self.model.settings, source_path=self.source_path
+            )
             ex_cap = vehicle_capacity.get_existing_capacity_passenger(element=self)
             attr = self.capacity_existing
             return attr.set_data(
@@ -110,13 +111,13 @@ class ICE_diesel(ConversionTechnology):
                         "The existing capacity of ICE diesel is calculated from the "
                         "existing fleet of ICE diesel vehicles and the total passenger "
                         "mileage demand. The existing fleet is sourced from the UNECE "
-                        "dataset, and the total passenger mileage demand is sourced from the "
-                        "PassengerMileageDemand dataset."
-                        " The capacity is corrected for the peak demand share."
+                        "dataset, and the total passenger mileage demand is sourced "
+                        "from the PassengerMileageDemand dataset. The capacity is "
+                        "corrected for the peak demand share."
                     ),
-                    metadata=vehicle_capacity.metadata
+                    metadata=vehicle_capacity.metadata,
                 ),
-                unit="megavkm/h"
+                unit="megavkm/h",
             )
         else:
             attr = self.capacity_existing
@@ -124,9 +125,7 @@ class ICE_diesel(ConversionTechnology):
                 default_value=0,
                 df=None,
                 source=AssumptionInformation(
-                    description=(
-                        "We do not consider existing capacities."
-                    ),
+                    description=("We do not consider existing capacities."),
                 ),
             )
             return attr
@@ -137,7 +136,8 @@ class ICE_diesel(ConversionTechnology):
 
         """
         passenger_transport_db = PassengerMileageDemand(
-            settings=self.model.settings, source_path=self.source_path)
+            settings=self.model.settings, source_path=self.source_path
+        )
         return passenger_transport_db.get_max_load(element=self)
 
     def _set_max_diffusion_rate(self) -> Attribute:

@@ -5,16 +5,17 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from pathlib import Path
 
+import pandas as pd
 from zen_creator.datasets.datasets.dataset import Dataset
 from zen_creator.datasets.datasets.metadata import MetaData
 
-import pandas as pd
 
 class BritishGeologicalSurvey(Dataset[pd.DataFrame]):
     """
     British Geological Survey dataset class.
 
-    This class implements the specific behavior for the British Geological Survey dataset.
+    This class implements the specific behavior for the British Geological Survey
+    dataset.
     """
 
     name = "british_geological_survey"
@@ -25,18 +26,18 @@ class BritishGeologicalSurvey(Dataset[pd.DataFrame]):
     def _set_metadata(self) -> MetaData:
         return MetaData(
             name=self.name,
-            title=(
-                "World Mineral Production 2017 - 2021"
-            ),
-            author=["N E Idoine", 
-                    "E R Raycraft", 
-                    "F Price", 
-                    "S F Hobbs", 
-                    "E A Deady", 
-                    "P Everett",  
-                    "R A Shaw", 
-                    "E J Evans",
-                    "A J Mills "],
+            title=("World Mineral Production 2017 - 2021"),
+            author=[
+                "N E Idoine",
+                "E R Raycraft",
+                "F Price",
+                "S F Hobbs",
+                "E A Deady",
+                "P Everett",
+                "R A Shaw",
+                "E J Evans",
+                "A J Mills ",
+            ],
             publication="British Geological Survey",
             publication_year=2023,
             url="https://www.bgs.ac.uk/news/world-mineral-production-2017-to-2021-is-now-available/",
@@ -46,13 +47,11 @@ class BritishGeologicalSurvey(Dataset[pd.DataFrame]):
         return None
 
     def _set_data(self) -> pd.Series:
-        """ sets the manual data for the British Geological Survey dataset in kt/y
-        in 2021 """
-        return pd.Series({
-            "UK": 9008,
-            "CH": 4180,
-            "NO": 1780}
-        )
+        """Sets the manual data for the British Geological Survey dataset.
+
+        Values are in kt/y in 2021.
+        """
+        return pd.Series({"UK": 9008, "CH": 4180, "NO": 1780})
 
     # -------- methods ------------------------
     def get_manual_cement_demand(self, node: str) -> int:
@@ -71,5 +70,6 @@ class BritishGeologicalSurvey(Dataset[pd.DataFrame]):
             return self.data.loc[node]
         else:
             raise ValueError(
-                f"Node {node} not found in the manual values of the" 
-                f" British Geological Survey dataset.")
+                f"Node {node} not found in the manual values of the"
+                f" British Geological Survey dataset."
+            )

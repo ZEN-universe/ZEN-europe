@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 
+
 @dataclass(frozen=True)
 class Constants:
     """
@@ -18,7 +19,7 @@ class Constants:
     HOURS_PER_DAY: float = 24
 
     HOURS_PER_WEEK: float = 168
-    
+
     GJ_PER_MWH: float = 3.6
     """1 MWh = 3.6 GJ, from the definition 1 Wh = 3600 J."""
 
@@ -32,7 +33,8 @@ class Constants:
     """Energy content of natural gas, GWh per billion cubic metre (bcm)."""
 
     LNG_GCV_KWH_PER_M3: float = 11.65
-    """Gross calorific value of LNG, kWh per m3 (most common value in the SciGRID database)."""
+    """Gross calorific value of LNG, kWh per m3 (most common value in the SciGRID
+    database)."""
 
     NATURAL_GAS_EJ_PER_BKG: float = 0.0381
     """Energy content of natural gas, EJ per billion kg.
@@ -51,19 +53,24 @@ class Constants:
     BIOCHAR_GWH_PER_TON: float = 25 / 3600
     """ https://ens.dk/en/analyses-and-statistics/technology-data-renewable-fuels"""
 
-    DIESEL_KWH_PER_LITER: float = 36/3.6
+    DIESEL_KWH_PER_LITER: float = 36 / 3.6
     """lhv, from MJ/l to KWH/l, https://www.engineeringtoolbox.com/fuels-higher-calorific-values-d_169.html"""
 
     DENSITY_OIL: float = 800
-    """kg/m3. https://static-content.springer.com/esm/art%3A10.1038%2Fs41558-021-01175-7/MediaObjects/41558_2021_1175_MOESM1_ESM.pdf p. 17"""
+    """kg/m3, p. 17 of
+    https://static-content.springer.com/esm/art%3A10.1038%2Fs41558-021-01175-7/MediaObjects/41558_2021_1175_MOESM1_ESM.pdf
+    """
 
     DENSITY_NATURAL_GAS: float = 150
-    """kg/m3, under storage-reservoir conditions. https://static-content.springer.com/esm/art%3A10.1038%2Fs41558-021-01175-7/MediaObjects/41558_2021_1175_MOESM1_ESM.pdf p. 17"""
+    """kg/m3, under storage-reservoir conditions, p. 17 of
+    https://static-content.springer.com/esm/art%3A10.1038%2Fs41558-021-01175-7/MediaObjects/41558_2021_1175_MOESM1_ESM.pdf
+    """
 
     DENSITY_CO2: float = 700
-    """kg/m3, supercritical CO2 under typical storage conditions. https://static-content.springer.com/esm/art%3A10.1038%2Fs41558-021-01175-7/MediaObjects/41558_2021_1175_MOESM1_ESM.pdf p. 17"""
+    """kg/m3, supercritical CO2 under typical storage conditions, p. 17 of
+    https://static-content.springer.com/esm/art%3A10.1038%2Fs41558-021-01175-7/MediaObjects/41558_2021_1175_MOESM1_ESM.pdf
+    """
 
     DUIVEN_CAPTURE_CAPACITY: float = 0.1e6
-    """tCO2/year captured by the Duiven plant, the size of a single first-of-a-kind carbon capture project."""
-
-    
+    """tCO2/year captured by the Duiven plant, the size of a single
+    first-of-a-kind carbon capture project."""

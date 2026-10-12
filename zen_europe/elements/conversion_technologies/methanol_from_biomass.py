@@ -39,8 +39,7 @@ class MethanolFromBiomass(ConversionTechnology):
         """
         Sets the input carrier of methanol from biomass to biomass.
         """
-        return Attribute(
-            name="input_carrier", default_value=["biomass"], element=self)
+        return Attribute(name="input_carrier", default_value=["biomass"], element=self)
 
     def _set_output_carrier(self) -> Attribute:
         """
@@ -48,8 +47,9 @@ class MethanolFromBiomass(ConversionTechnology):
         district heat.
         """
         return Attribute(
-            name="output_carrier", default_value=["methanol", "district_heat"],
-            element=self
+            name="output_carrier",
+            default_value=["methanol", "district_heat"],
+            element=self,
         )
 
     # ---------- Required methods that are called during object build ----------
@@ -60,7 +60,8 @@ class MethanolFromBiomass(ConversionTechnology):
 
         """
         tech_db = TechnologyCostDatabase(
-            settings=self.settings, source_path=self.source_path)
+            settings=self.settings, source_path=self.source_path
+        )
         return tech_db.get_lifetime(self)
 
     def _set_conversion_factor(self) -> Attribute:
@@ -89,7 +90,8 @@ class MethanolFromBiomass(ConversionTechnology):
         """
         if self.settings.investment.use_construction_times:
             tech_db = TechnologyCostDatabase(
-                    settings=self.settings, source_path=self.source_path)
+                settings=self.settings, source_path=self.source_path
+            )
             return tech_db.get_construction_time(self)
         else:
             return self.construction_time
@@ -103,7 +105,8 @@ class MethanolFromBiomass(ConversionTechnology):
             Attribute: An Attribute object containing the specific capex data.
         """
         tech_db = TechnologyCostDatabase(
-                    settings=self.settings, source_path=self.source_path)
+            settings=self.settings, source_path=self.source_path
+        )
         return tech_db.get_capex_specific_conversion(self)
 
     def _set_opex_specific_fixed(self) -> Attribute:
@@ -115,7 +118,8 @@ class MethanolFromBiomass(ConversionTechnology):
             Attribute: An Attribute object containing the specific fixed opex data.
         """
         tech_db = TechnologyCostDatabase(
-            settings=self.settings, source_path=self.source_path)
+            settings=self.settings, source_path=self.source_path
+        )
         return tech_db.get_opex_specific_fixed(self)
 
     def _set_opex_specific_variable(self) -> Attribute:
@@ -127,7 +131,8 @@ class MethanolFromBiomass(ConversionTechnology):
             Attribute: An Attribute object containing the specific variable opex data.
         """
         tech_db = TechnologyCostDatabase(
-            settings=self.settings, source_path=self.source_path)
+            settings=self.settings, source_path=self.source_path
+        )
         return tech_db.get_opex_specific_variable(self)
 
     # TODO: capacity_existing has no ported data source for methanol from

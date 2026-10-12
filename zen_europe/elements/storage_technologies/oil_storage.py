@@ -29,9 +29,7 @@ class OilStorage(StorageTechnology):
         """
         Sets the reference carrier of oil storage to oil.
         """
-        return Attribute(
-            name="reference_carrier", default_value=["oil"], element=self
-        )
+        return Attribute(name="reference_carrier", default_value=["oil"], element=self)
 
     # ---------- Required methods that are called during object build ----------
 

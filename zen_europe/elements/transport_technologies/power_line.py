@@ -69,7 +69,7 @@ class PowerLine(TransportTechnology):
             source_path=self.source_path,
         )
         return dea_energy_transport.get_construction_time(self)
-    
+
     def _set_transport_loss_factor_linear(self) -> Attribute:
         """
         Sets the linear transport loss factor of power line.
@@ -127,14 +127,15 @@ class PowerLine(TransportTechnology):
         # model, so only the edges of the model are kept
         set_edges = self.model.energy_system.set_edges.df
         capacity_existing = capacity_existing[
-            capacity_existing.index.get_level_values("edge").isin(set_edges.index)]
+            capacity_existing.index.get_level_values("edge").isin(set_edges.index)
+        ]
         # DE-LU and LU-DE are not in the ENTSO-E Transparency Platform, as the
         # two countries share a bidding zone, so they get the highest value of
         # all edges
         max_capacity = capacity_existing["capacity_existing"].max()
         year = capacity_existing.index.get_level_values("year_construction").max()
-        capacity_existing.loc[("DE-LU",year), "capacity_existing"] = max_capacity
-        capacity_existing.loc[("LU-DE",year), "capacity_existing"] = max_capacity
+        capacity_existing.loc[("DE-LU", year), "capacity_existing"] = max_capacity
+        capacity_existing.loc[("LU-DE", year), "capacity_existing"] = max_capacity
         capacity_existing = capacity_existing.sort_index()
         attr = self.capacity_existing
         return attr.set_data(
@@ -163,9 +164,7 @@ class PowerLine(TransportTechnology):
             return attr.set_data(
                 default_value=np.inf,
                 source=AssumptionInformation(
-                    description=(
-                        "We do not limit the capacity of the power lines."
-                    ),
+                    description=("We do not limit the capacity of the power lines."),
                 ),
             )
         capacity_limit = PowerLineCapacityLimit(

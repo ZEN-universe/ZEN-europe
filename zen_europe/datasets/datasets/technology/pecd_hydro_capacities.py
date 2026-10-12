@@ -63,9 +63,7 @@ class PECDHydroCapacities(Dataset[pd.DataFrame]):
     def _set_path(self) -> Path | None:
         if self.source_path is None:
             raise ValueError("source_path must be set to load the dataset.")
-        return (Path(self.source_path)
-                / "03-technology"
-                / "capacity_existing")
+        return Path(self.source_path) / "03-technology" / "capacity_existing"
 
     def _set_data(self) -> pd.DataFrame:
         file_path = self.path / "PECD-hydro-capacities.csv"
@@ -86,13 +84,15 @@ class PECDHydroCapacities(Dataset[pd.DataFrame]):
         capacities["power_pumping"] = capacities["power_pumping"].abs() / 1000
 
         pumped_open, reservoir_open = self._split_open_loop(
-            capacities.loc["Pump Storage - Open Loop"])
+            capacities.loc["Pump Storage - Open Loop"]
+        )
         data_agg = pd.concat(
             [
                 capacities.loc["Run-of-River and pondage"],
                 capacities.loc["Reservoir"].add(reservoir_open, fill_value=0),
                 capacities.loc["Pump Storage - Closed Loop"].add(
-                    pumped_open, fill_value=0),
+                    pumped_open, fill_value=0
+                ),
             ],
             keys=["run-of-river_hydro", "reservoir_hydro", "pumped_hydro"],
             names=["technology", "node"],
@@ -101,11 +101,11 @@ class PECDHydroCapacities(Dataset[pd.DataFrame]):
             columns={
                 "power": "capacity_existing",
                 "energy": "capacity_existing_energy",
-            })
+            }
+        )
 
     @staticmethod
-    def _split_open_loop(
-            open_loop: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
+    def _split_open_loop(open_loop: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
         """
         Split open loop pumped storage into a pumped and a reservoir hydro share.
 
@@ -147,10 +147,9 @@ class PECDHydroCapacities(Dataset[pd.DataFrame]):
             attr = element.capacity_existing_energy
             unit = "GWh"
 
-        
         set_nodes = element.model.config.system.set_nodes
         data = data[data.index.isin(set_nodes)]
-        data = data[data>0]
+        data = data[data > 0]
         year_construction = element.settings.time.reference_year - 1
         data = pd.concat({year_construction: data}, names=["year_construction"])
         data = data.swaplevel(0, 1).sort_index()

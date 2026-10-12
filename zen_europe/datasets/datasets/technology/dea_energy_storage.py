@@ -96,7 +96,8 @@ class DEAEnergyStorage(Dataset[pd.DataFrame]):
         return self._set_efficiency(technology, technology.efficiency_discharge)
 
     def _set_efficiency(
-            self, technology: StorageTechnology, attr: Attribute) -> Attribute:
+        self, technology: StorageTechnology, attr: Attribute
+    ) -> Attribute:
         """
         Set an efficiency attribute to half of the round-trip efficiency.
         """

@@ -71,8 +71,7 @@ class Edges(DatasetCollection):
             ),
         )
 
-    def get_edges_offshore(
-            self, element: Element, set_nodes: list[str]) -> pd.Index:
+    def get_edges_offshore(self, element: Element, set_nodes: list[str]) -> pd.Index:
         """
         Gets the edges of the energy system that cross the sea.
 
@@ -93,8 +92,7 @@ class Edges(DatasetCollection):
         edges_offshore.name = "edge"
         return edges_offshore
 
-    def get_capacity_limit_offshore(
-            self, element: TransportTechnology) -> Attribute:
+    def get_capacity_limit_offshore(self, element: TransportTechnology) -> Attribute:
         """
         Gets the capacity limit of a transport technology that cannot be built
         offshore.
@@ -103,12 +101,14 @@ class Edges(DatasetCollection):
         default value of the attribute applies on all other edges.
         """
         edges_offshore = self.get_edges_offshore(
-            element, element.model.config.system.set_nodes)
+            element, element.model.config.system.set_nodes
+        )
         attr = element.capacity_limit
         if edges_offshore.empty:
             return attr
         capacity_limit = pd.Series(
-            data=0.0, index=edges_offshore, name="capacity_limit")
+            data=0.0, index=edges_offshore, name="capacity_limit"
+        )
         return attr.set_data(
             df=capacity_limit,
             source=SourceInformation(

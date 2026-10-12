@@ -4,8 +4,10 @@ from typing import TYPE_CHECKING, Any, Dict, cast
 
 import pandas as pd
 
-from zen_europe.utils.utils import calculate_capacity_addition_from_cumulative, format_capacity_existing
-
+from zen_europe.utils.utils import (
+    calculate_capacity_addition_from_cumulative,
+    format_capacity_existing,
+)
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -20,6 +22,7 @@ from zen_creator.utils.settings import Settings
 from zen_europe.datasets.datasets.carrier.aidres import Aidres
 from zen_europe.datasets.datasets.carrier.eurostat import Eurostat
 from zen_europe.utils.constants import Constants
+
 
 class OlefinDemand(DatasetCollection):
     """Extracting olefin demand data."""
@@ -38,15 +41,16 @@ class OlefinDemand(DatasetCollection):
 
         return {
             "aidres": Aidres(self.source_path),
-            "eurostat": Eurostat(source_path=self.source_path,settings=self.settings),
+            "eurostat": Eurostat(source_path=self.source_path, settings=self.settings),
         }
 
     def get_olefin_demand(self, element: Element) -> Attribute:
         """
         Get the demand for olefin.
 
-        The idea is to use the naphtha demand from Eurostat as a proxy for olefin demand, 
-        since naphtha is a key feedstock for olefin production. 
+        The idea is to use the naphtha demand from Eurostat as a proxy for olefin
+        demand,
+        since naphtha is a key feedstock for olefin production.
         The function retrieves the naphtha demand data
          and processes it to obtain the olefin demand.
         """
@@ -54,29 +58,32 @@ class OlefinDemand(DatasetCollection):
         eurostat_dataset = cast(Eurostat, self.data["eurostat"])
         eurostat_data = eurostat_dataset.get_naphtha_demand()
         common_countries = eurostat_data.index.intersection(
-            element.model.config.system.set_nodes)
+            element.model.config.system.set_nodes
+        )
         missing_countries = pd.Index(element.model.config.system.set_nodes).difference(
-            eurostat_data.index)
+            eurostat_data.index
+        )
         d = eurostat_data.loc[common_countries, eurostat_dataset.eurostat_year]
         for country in missing_countries:
             if country == "CH":
-                d.loc[country] = 0 # no olefin demand in Switzerland
+                d.loc[country] = 0  # no olefin demand in Switzerland
             else:
                 raise ValueError(f"Missing olefin demand data for country {country}.")
-        d = d/Constants.HOURS_PER_YEAR # convert from GWh/a to GWh/h
+        d = d / Constants.HOURS_PER_YEAR  # convert from GWh/a to GWh/h
 
         naphtha2olefin = aidres_dataset.get_conversion_factors_aidres(
-            "olefin_from_naphtha")["naphtha"]
-        
-        d = d / naphtha2olefin # [GWh/h/[GWh/t]] = [t/h]
-        
+            "olefin_from_naphtha"
+        )["naphtha"]
+
+        d = d / naphtha2olefin  # [GWh/h/[GWh/t]] = [t/h]
+
         d.index.name = "node"
         d.name = "demand"
 
         source = SourceInformation(
             description=(
                 "Olefin demand derived from naphtha demand from Eurostat, "
-                "with conversion factors from the Aidres dataset." \
+                "with conversion factors from the Aidres dataset."
                 "The naphtha demand is used as a proxy for olefin demand, "
                 "since naphtha is a key feedstock for olefin production."
             ),
@@ -87,7 +94,7 @@ class OlefinDemand(DatasetCollection):
             df=d,
             unit="tproduct/h",
         )
-    
+
     def get_capacity_existing_olefin(self, element: Element) -> Attribute:
         """
         Get the existing olefin production capacity.
@@ -102,27 +109,34 @@ class OlefinDemand(DatasetCollection):
         """
         eurostat_dataset = cast(Eurostat, self.data["eurostat"])
         eurostat_data = eurostat_dataset.get_naphtha_demand()
-        eurostat_data = eurostat_data / Constants.HOURS_PER_YEAR # convert from GWh/a to GWh/h
+        eurostat_data = (
+            eurostat_data / Constants.HOURS_PER_YEAR
+        )  # convert from GWh/a to GWh/h
 
         cf = element.conversion_factor.default_value
         cf_n = next((item for item in cf if "naphtha" in item), None)
         if cf_n is None:
-            raise ValueError("Conversion factor for naphtha not found in the conversion factor list.")
-        
+            raise ValueError(
+                "Conversion factor for naphtha not found in the conversion factor list."
+            )
+
         naphtha2olefin = cf_n["naphtha"]["default_value"]
-        
-        olefin_demand = eurostat_data / naphtha2olefin # [GWh/h/[GWh/t]] = [t/h]
+
+        olefin_demand = eurostat_data / naphtha2olefin  # [GWh/h/[GWh/t]] = [t/h]
 
         existing_capacity = calculate_capacity_addition_from_cumulative(
-            olefin_demand, element)
+            olefin_demand, element
+        )
         existing_capacity = format_capacity_existing(existing_capacity)
         common_nodes = existing_capacity.index.get_level_values(0).intersection(
-            element.model.config.system.set_nodes)
+            element.model.config.system.set_nodes
+        )
         existing_capacity = existing_capacity.loc[common_nodes]
         source = SourceInformation(
             description=(
-                "Existing olefin production capacity derived from the naphtha demand data. "
-                "We assume that currently all olefin production is based on naphtha."
+                "Existing olefin production capacity derived from the naphtha demand "
+                "data. We assume that currently all olefin production is based on "
+                "naphtha."
             ),
             metadata=self.metadata,
         )

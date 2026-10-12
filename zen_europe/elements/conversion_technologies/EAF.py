@@ -40,8 +40,10 @@ class EAF(ConversionTechnology):
         Sets the input carrier of EAF to electricity and hard coal.
         """
         return Attribute(
-            name="input_carrier", default_value=["electricity", "hard_coal"],
-            element=self)
+            name="input_carrier",
+            default_value=["electricity", "hard_coal"],
+            element=self,
+        )
 
     def _set_output_carrier(self) -> Attribute:
         """
@@ -88,7 +90,7 @@ class EAF(ConversionTechnology):
         """
         agora_dataset = AgoraIndustrySteel(source_path=self.source_path)
         return agora_dataset.get_carbon_intensity_technology(self)
-    
+
     def _set_capex_specific_conversion(self) -> Attribute:
         """
         Sets the specific capital expenditure (capex) for EAF.
@@ -115,9 +117,7 @@ class EAF(ConversionTechnology):
                 default_value=0,
                 df=None,
                 source=AssumptionInformation(
-                    description=(
-                        "We do not consider existing capacities."
-                    ),
+                    description=("We do not consider existing capacities."),
                 ),
             )
             return attr

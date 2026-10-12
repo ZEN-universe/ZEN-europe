@@ -6,8 +6,10 @@ import pandas as pd
 
 from zen_europe.datasets.datasets.carrier.material_economics import MaterialEconomics
 from zen_europe.utils.constants import Constants
-from zen_europe.utils.utils import calculate_capacity_addition_from_cumulative, format_capacity_existing
-
+from zen_europe.utils.utils import (
+    calculate_capacity_addition_from_cumulative,
+    format_capacity_existing,
+)
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -24,10 +26,13 @@ from zen_creator import (
 from zen_creator.utils.attribute import SourceInformation
 
 from zen_europe.datasets.datasets.carrier.aidres import Aidres
-from zen_europe.datasets.datasets.carrier.british_geological_survey import BritishGeologicalSurvey
+from zen_europe.datasets.datasets.carrier.british_geological_survey import (
+    BritishGeologicalSurvey,
+)
 from zen_europe.datasets.datasets.technology.ecra_technology_papers import (
     ECRATechnologyPapers,
 )
+
 
 class ClinkerData(DatasetCollection):
     """Extracting clinker data data."""
@@ -67,20 +72,23 @@ class ClinkerData(DatasetCollection):
         """
         aidres_dataset = cast(Aidres, self.data["aidres"])
         data = aidres_dataset.get_demand(element)
-        bgs_dataset = cast(BritishGeologicalSurvey, self.data["british_geological_survey"])
-        
+        bgs_dataset = cast(
+            BritishGeologicalSurvey, self.data["british_geological_survey"]
+        )
+
         missing_countries = pd.Index(element.model.config.system.set_nodes).difference(
-            data.index)
-        
+            data.index
+        )
+
         for country in missing_countries:
             data.loc[country] = bgs_dataset.get_manual_cement_demand(country)
-    
+
         data = data.sort_index() / 8.76 * aidres_dataset.get_CEM2_clinker_ratio()
-        
+
         data.index.name = "node"
         data.name = "demand"
         return data
-    
+
     def get_clinker_demand(self, element: Element) -> Attribute:
         """
         Get the demand for clinker.
@@ -91,10 +99,10 @@ class ClinkerData(DatasetCollection):
 
         source = SourceInformation(
             description=(
-                "Clinker demand data is derived from the Aidres dataset, which provides "
-                "demand data for various industrial sectors. "
-                "For countries not covered in the Aidres dataset, "
-                " cement demand data from the British Geological Survey is used."
+                "Clinker demand data is derived from the Aidres dataset, which "
+                "provides demand data for various industrial sectors. For countries "
+                "not covered in the Aidres dataset,  cement demand data from the "
+                "British Geological Survey is used."
             ),
             metadata=self.metadata,
         )
@@ -105,14 +113,16 @@ class ClinkerData(DatasetCollection):
         )
 
     def get_conversion_factor_cement_kiln(
-            self, 
-            element: ConversionTechnology) -> Attribute:
+        self, element: ConversionTechnology
+    ) -> Attribute:
         """
         Get the conversion factor for cement.
 
-        This function retrieves the cement conversion factor data for the specified element.
+        This function retrieves the cement conversion factor data for the specified
+        element.
 
-        The reference cement fuel is hard coal, which can be substituted by other fuels in the model. 
+        The reference cement fuel is hard coal, which can be substituted by other fuels
+        in the model.
         """
         attr = element.conversion_factor
         aidres_dataset = cast(Aidres, self.data["aidres"])
@@ -120,17 +130,22 @@ class ClinkerData(DatasetCollection):
         cement_to_clinker = aidres_dataset.get_CEM2_clinker_ratio()
         fuel_consumption_kiln = me_dataset.get_fuel_consumption_cement_kiln()
         cf = [
-            {"electricity": {
-                "default_value": (
-                    0.29 / 
-                    (Constants.GJ_PER_MWH * 1000) / 
-                    cement_to_clinker), 
-                    "unit": "GWh/tproduct"}},
-            {"fuel_for_cement": {
-                "default_value": (
-                    fuel_consumption_kiln / 
-                    (Constants.GJ_PER_MWH * 1000)), 
-                "unit": "GWh/tproduct"}},
+            {
+                "electricity": {
+                    "default_value": (
+                        0.29 / (Constants.GJ_PER_MWH * 1000) / cement_to_clinker
+                    ),
+                    "unit": "GWh/tproduct",
+                }
+            },
+            {
+                "fuel_for_cement": {
+                    "default_value": (
+                        fuel_consumption_kiln / (Constants.GJ_PER_MWH * 1000)
+                    ),
+                    "unit": "GWh/tproduct",
+                }
+            },
         ]
         attr.set_data(
             default_value=cf,
@@ -151,7 +166,8 @@ class ClinkerData(DatasetCollection):
         return attr
 
     def get_retrofit_flow_coupling_factor(
-            self, element: RetrofittingTechnology) -> Attribute:
+        self, element: RetrofittingTechnology
+    ) -> Attribute:
         """
         Get the retrofit flow coupling factor for cement fuel.
 
@@ -162,15 +178,15 @@ class ClinkerData(DatasetCollection):
         """
         attr = element.retrofit_flow_coupling_factor
         me_dataset = cast(MaterialEconomics, self.data["material_economics"])
-        ecra_dataset = cast(
-            ECRATechnologyPapers, self.data["ecra_technology_papers"])
+        ecra_dataset = cast(ECRATechnologyPapers, self.data["ecra_technology_papers"])
         fuel_consumption_kiln = me_dataset.get_fuel_consumption_cement_kiln()
         substitution_potential = ecra_dataset.get_substitution_potential(element.name)
         attr.set_data(
             default_value=(
-                substitution_potential *
-                fuel_consumption_kiln /
-                (Constants.GJ_PER_MWH * 1000)),
+                substitution_potential
+                * fuel_consumption_kiln
+                / (Constants.GJ_PER_MWH * 1000)
+            ),
             unit="GWh/tproduct",
             source=SourceInformation(
                 description=(
@@ -187,7 +203,8 @@ class ClinkerData(DatasetCollection):
         return attr
 
     def get_capacity_existing_cement_fuel(
-            self, element: ConversionTechnology) -> Attribute:
+        self, element: ConversionTechnology
+    ) -> Attribute:
         """
         Get the existing capacity for cement fuel.
 
@@ -197,15 +214,19 @@ class ClinkerData(DatasetCollection):
         aidres_dataset = cast(Aidres, self.data["aidres"])
         me_dataset = cast(MaterialEconomics, self.data["material_economics"])
         share = aidres_dataset.get_share_capacity_existing_cement_fuel()
-        assert element.name in share, f"Existing capacity share for {element.name} not found."
+        assert (
+            element.name in share
+        ), f"Existing capacity share for {element.name} not found."
         clinker_element = element.model.carriers["clinker"]
         capacity_existing = self._calculate_clinker_demand(clinker_element)
-        clinker2fuel = me_dataset.get_fuel_consumption_cement_kiln() / 3600 # GWh/t
+        clinker2fuel = me_dataset.get_fuel_consumption_cement_kiln() / 3600  # GWh/t
         capacity_existing = capacity_existing.rename(
-            {"demand": element.settings.time.reference_year - 1},axis=1)
+            {"demand": element.settings.time.reference_year - 1}, axis=1
+        )
         capacity_existing *= clinker2fuel * share[element.name]
         capacity_existing = calculate_capacity_addition_from_cumulative(
-            capacity_existing, element)
+            capacity_existing, element
+        )
         capacity_existing = format_capacity_existing(capacity_existing)
         attr.set_data(
             df=capacity_existing,

@@ -24,9 +24,7 @@ from zen_creator import (
 
 
 class Electrolysis(ConversionTechnology):
-    """Class containing all data and assumptions for electrolysis.
-    
-    """
+    """Class containing all data and assumptions for electrolysis."""
 
     name: str = "electrolysis"
 
@@ -48,17 +46,15 @@ class Electrolysis(ConversionTechnology):
         Sets the input carrier of electrolysis to natural gas.
         """
         return Attribute(
-            name="input_carrier", default_value=["electricity"], element=self)
+            name="input_carrier", default_value=["electricity"], element=self
+        )
 
     def _set_output_carrier(self) -> Attribute:
         """
         Set the output carrier of electrolysis to hydrogen.
         """
         return Attribute(
-            name="output_carrier", 
-            default_value=[
-                "hydrogen"], 
-            element=self
+            name="output_carrier", default_value=["hydrogen"], element=self
         )
 
     # ---------- Required methods that are called during object build ----------
@@ -69,8 +65,8 @@ class Electrolysis(ConversionTechnology):
 
         """
         tech_db = TechnologyCostDatabase(
-            settings=self.settings, 
-            source_path=self.source_path)
+            settings=self.settings, source_path=self.source_path
+        )
         return tech_db.get_lifetime(self)
 
     def _set_conversion_factor(self) -> Attribute:
@@ -90,7 +86,7 @@ class Electrolysis(ConversionTechnology):
         )
         attr.set_data(default_value=cf, source=source)
         return attr
-    
+
     def _set_construction_time(self) -> Attribute:
         """
         Sets the construction time of electrolysis.
@@ -98,11 +94,12 @@ class Electrolysis(ConversionTechnology):
         """
         if self.settings.investment.use_construction_times:
             tech_db = TechnologyCostDatabase(
-                    settings=self.settings, source_path=self.source_path)
+                settings=self.settings, source_path=self.source_path
+            )
             return tech_db.get_construction_time(self)
         else:
             return self.construction_time
-        
+
     def _set_capex_specific_conversion(self) -> Attribute:
         """
         Sets the specific capital expenditure (capex) for electrolysis.
@@ -111,13 +108,14 @@ class Electrolysis(ConversionTechnology):
             Attribute: An Attribute object containing the specific capex data.
         """
         tech_db = TechnologyCostDatabase(
-                    settings=self.settings, source_path=self.source_path)
+            settings=self.settings, source_path=self.source_path
+        )
         cf = self.conversion_factor.default_value[0]["electricity"]["default_value"]
         attr = tech_db.get_capex_specific_conversion(self)
         data = attr.df * cf
-        attr.set_data(df=data,source=attr.sources[-1])
+        attr.set_data(df=data, source=attr.sources[-1])
         return attr
-    
+
     def _set_opex_specific_fixed(self) -> Attribute:
         """
         Sets the specific fixed operational expenditure (opex) for electrolysis.
@@ -126,13 +124,14 @@ class Electrolysis(ConversionTechnology):
             Attribute: An Attribute object containing the specific fixed opex data.
         """
         tech_db = TechnologyCostDatabase(
-            settings=self.settings, source_path=self.source_path)
+            settings=self.settings, source_path=self.source_path
+        )
         cf = self.conversion_factor.default_value[0]["electricity"]["default_value"]
         attr = tech_db.get_opex_specific_fixed(self)
         data = attr.df * cf
-        attr.set_data(df=data,source=attr.sources[-1])
+        attr.set_data(df=data, source=attr.sources[-1])
         return attr
-    
+
     def _set_opex_specific_variable(self) -> Attribute:
         """
         Sets the specific variable operational expenditure (opex) for electrolysis.
@@ -141,11 +140,12 @@ class Electrolysis(ConversionTechnology):
             Attribute: An Attribute object containing the specific variable opex data.
         """
         tech_db = TechnologyCostDatabase(
-            settings=self.settings, source_path=self.source_path)
+            settings=self.settings, source_path=self.source_path
+        )
         cf = self.conversion_factor.default_value[0]["electricity"]["default_value"]
         attr = tech_db.get_opex_specific_variable(self)
         data = attr.default_value * cf
-        attr.set_data(default_value=data,source=attr.sources[-1])
+        attr.set_data(default_value=data, source=attr.sources[-1])
         return attr
 
     def _set_capacity_existing(self) -> Attribute:
@@ -164,13 +164,13 @@ class Electrolysis(ConversionTechnology):
             attr = self.capacity_existing
             source = SourceInformation(
                 description=(
-                    "The existing capacity of electrolysis is based on data from Hydrogen Europe (2024). "
-                    "The data is reported in electricity units, so we convert it to H2 "
-                    "quantities."
+                    "The existing capacity of electrolysis is based on data from "
+                    "Hydrogen Europe (2024). The data is reported in electricity "
+                    "units, so we convert it to H2 quantities."
                 ),
                 metadata=hydrogen_europe_dataset.metadata,
             )
-            attr.set_data(df=capacity_existing, source=source,unit="MW")
+            attr.set_data(df=capacity_existing, source=source, unit="MW")
             return attr
         else:
             attr = self.capacity_existing
@@ -178,9 +178,7 @@ class Electrolysis(ConversionTechnology):
                 default_value=0,
                 df=None,
                 source=AssumptionInformation(
-                    description=(
-                        "We do not consider existing capacities."
-                    ),
+                    description=("We do not consider existing capacities."),
                 ),
             )
             return attr

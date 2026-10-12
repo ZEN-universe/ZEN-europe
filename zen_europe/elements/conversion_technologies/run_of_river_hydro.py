@@ -71,10 +71,10 @@ class RunOfRiverHydro(ConversionTechnology):
     def _set_lifetime(self) -> Attribute:
         """
         Sets the lifetime of run-of-river hydro.
-        
-        Per default, we assume a lifetime of 200 years to keep 
+
+        Per default, we assume a lifetime of 200 years to keep
         the existing capacities in the model. Otherwise, we use the real
-        lifetime of the technology. 
+        lifetime of the technology.
 
         """
         if self.settings.investment.use_200y_lifetime_hydro:
@@ -90,8 +90,8 @@ class RunOfRiverHydro(ConversionTechnology):
             )
         else:
             lifetime_expectation = LifetimeExpectation(
-                settings=self.settings, 
-                source_path=self.source_path)
+                settings=self.settings, source_path=self.source_path
+            )
             return lifetime_expectation.get_lifetime(self)
 
     def _set_construction_time(self) -> Attribute:
@@ -101,11 +101,12 @@ class RunOfRiverHydro(ConversionTechnology):
         """
         if self.settings.investment.use_construction_times:
             tech_db = TechnologyCostDatabase(
-                        settings=self.settings, source_path=self.source_path)
+                settings=self.settings, source_path=self.source_path
+            )
             return tech_db.get_construction_time(self)
         else:
             return self.construction_time
-        
+
     def _set_conversion_factor(self) -> Attribute:
         """
         Return the conversion factor of run-of-river hydro.
@@ -131,9 +132,10 @@ class RunOfRiverHydro(ConversionTechnology):
             Attribute: An Attribute object containing the specific capex data.
         """
         tech_db = TechnologyCostDatabase(
-            settings=self.settings, source_path=self.source_path)
+            settings=self.settings, source_path=self.source_path
+        )
         return tech_db.get_capex_specific_conversion(self)
-    
+
     def _set_opex_specific_fixed(self) -> Attribute:
         """
         Sets the specific fixed operational expenditure (opex) for run-of-river hydro.
@@ -142,18 +144,21 @@ class RunOfRiverHydro(ConversionTechnology):
             Attribute: An Attribute object containing the specific fixed opex data.
         """
         tech_db = TechnologyCostDatabase(
-            settings=self.settings, source_path=self.source_path)
+            settings=self.settings, source_path=self.source_path
+        )
         return tech_db.get_opex_specific_fixed(self)
-    
+
     def _set_opex_specific_variable(self) -> Attribute:
         """
-        Sets the specific variable operational expenditure (opex) for run-of-river hydro.
+        Sets the specific variable operational expenditure (opex) for run-of-river
+        hydro.
 
         Returns:
             Attribute: An Attribute object containing the specific variable opex data.
         """
         tech_db = TechnologyCostDatabase(
-            settings=self.settings, source_path=self.source_path)
+            settings=self.settings, source_path=self.source_path
+        )
         return tech_db.get_opex_specific_variable(self)
 
     def _set_capacity_limit(self) -> Attribute:
@@ -191,12 +196,14 @@ class RunOfRiverHydro(ConversionTechnology):
         Returns:
             Attribute: An Attribute object containing the existing capacity data.
         """
-        if (self.settings.investment.use_existing_capacities
-                or self.settings.investment.keep_existing_hydro_capacities):
+        if (
+            self.settings.investment.use_existing_capacities
+            or self.settings.investment.keep_existing_hydro_capacities
+        ):
             hydro_capacity = HydroExistingCapacity(
                 settings=self.settings,
                 source_path=self.source_path,
-                set_nodes=self.model.config.system.set_nodes
+                set_nodes=self.model.config.system.set_nodes,
             )
             if self.settings.data_source.use_plant_level_hydro_capacity:
                 attr = hydro_capacity.get_capacity_existing_plant_level_data(self)
@@ -209,9 +216,7 @@ class RunOfRiverHydro(ConversionTechnology):
                 default_value=0,
                 df=None,
                 source=AssumptionInformation(
-                    description=(
-                        "We do not consider existing capacities."
-                    ),
+                    description=("We do not consider existing capacities."),
                 ),
             )
             return attr
@@ -226,7 +231,7 @@ class RunOfRiverHydro(ConversionTechnology):
         ror_max_load = RunOfRiverHydroMaxLoad(
             settings=self.settings,
             source_path=self.source_path,
-            set_nodes=self.model.config.system.set_nodes
+            set_nodes=self.model.config.system.set_nodes,
         )
         return ror_max_load.get_max_load(self)
 

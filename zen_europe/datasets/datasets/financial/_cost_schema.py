@@ -7,7 +7,8 @@ can concatenate and average across agencies without agency-specific logic.
 
 Index (5-level MultiIndex): ``technology, plant_size, scenario, variable, year``
     - ``technology``: internal ZEN-europe technology name (or a source-specific
-      sub-type not modeled as its own technology yet, e.g. ``wind_offshore_near_shore``).
+      sub-type not modeled as its own technology yet, e.g.
+      ``wind_offshore_near_shore``).
     - ``plant_size``: one of :data:`PLANT_SIZES`. Agencies without a size
       dimension in their source data report everything under ``"M"``.
     - ``scenario``: one of :data:`SCENARIOS`.

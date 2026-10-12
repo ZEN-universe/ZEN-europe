@@ -71,10 +71,9 @@ class TransportTechnologiesCosts(DatasetCollection):
         "natural_gas_pipeline": "ammonia_pipelines_galimova",
     }
 
-    def __init__(self,
-                 settings: Settings,
-                 source_path: Path | str,
-                 set_nodes: list[str]):
+    def __init__(
+        self, settings: Settings, source_path: Path | str, set_nodes: list[str]
+    ):
         self.settings = settings
         self.set_nodes = set_nodes
         super().__init__(source_path=source_path)
@@ -86,22 +85,23 @@ class TransportTechnologiesCosts(DatasetCollection):
             raise ValueError("source_path must be set to load the dataset collection.")
 
         return {
-            "dea_energy_transport": DEAEnergyTransport(
-                source_path=self.source_path),
-            "dea_carbon_transport": DEACarbonTransport(
-                source_path=self.source_path),
+            "dea_energy_transport": DEAEnergyTransport(source_path=self.source_path),
+            "dea_carbon_transport": DEACarbonTransport(source_path=self.source_path),
             "ammonia_pipelines_galimova": AmmoniaPipelinesGalimova(
-                source_path=self.source_path),
+                source_path=self.source_path
+            ),
             "hydrogen_pipelines_miao": HydrogenPipelinesMiao(
-                source_path=self.source_path),
+                source_path=self.source_path
+            ),
             "methanol_pipelines_galimova": MethanolPipelinesGalimova(
-                source_path=self.source_path),
+                source_path=self.source_path
+            ),
         }
 
     # -------- outward-facing accessors ------------------
     def get_capex_per_distance_transport(
-            self, technology: TransportTechnology,
-            proxy_element_name: str | None = None) -> Attribute:
+        self, technology: TransportTechnology, proxy_element_name: str | None = None
+    ) -> Attribute:
         """Get the distance-specific capex of a transport technology."""
         return self._set_cost_per_distance(
             technology,
@@ -113,8 +113,8 @@ class TransportTechnologiesCosts(DatasetCollection):
         )
 
     def get_opex_specific_fixed_per_distance(
-            self, technology: TransportTechnology,
-            proxy_element_name: str | None = None) -> Attribute:
+        self, technology: TransportTechnology, proxy_element_name: str | None = None
+    ) -> Attribute:
         """Get the distance-specific fixed opex of a transport technology.
 
         The cost is set on opex_specific_fixed, which ZEN-garden reads per unit
@@ -132,9 +132,14 @@ class TransportTechnologiesCosts(DatasetCollection):
 
     # -------- cost internals ------------------
     def _set_cost_per_distance(
-            self, technology: TransportTechnology, attr: Attribute,
-            onshore_method: str, offshore_method: str, description: str,
-            proxy_element_name: str | None = None) -> Attribute:
+        self,
+        technology: TransportTechnology,
+        attr: Attribute,
+        onshore_method: str,
+        offshore_method: str,
+        description: str,
+        proxy_element_name: str | None = None,
+    ) -> Attribute:
         """Set a distance-specific cost attribute of a transport technology.
 
         The onshore cost is the default value of the attribute, while the
@@ -143,13 +148,13 @@ class TransportTechnologiesCosts(DatasetCollection):
         dataset = self._get_source(technology)
         multiplier, unit = self._get_rebasing(technology)
         onshore_cost = multiplier * self._get_cost(
-            dataset, onshore_method, technology, proxy_element_name)
+            dataset, onshore_method, technology, proxy_element_name
+        )
 
         notes = []
         metadata: Dict[str, MetadataTree] = {dataset.name: dataset.metadata}
         if proxy_element_name is not None:
-            notes.append(
-                f"The cost of {proxy_element_name} is used as a proxy.")
+            notes.append(f"The cost of {proxy_element_name} is used as a proxy.")
         if multiplier != 1.0:
             notes.append(
                 f"The cost is rebased from the transported power onto the "
@@ -158,15 +163,23 @@ class TransportTechnologiesCosts(DatasetCollection):
             )
 
         offshore_cost, offshore_dataset = self._get_offshore_cost(
-            technology, dataset, offshore_method, proxy_element_name,
-            onshore_cost, multiplier)
+            technology,
+            dataset,
+            offshore_method,
+            proxy_element_name,
+            onshore_cost,
+            multiplier,
+        )
         offshore_df = None
         if offshore_cost is not None:
             offshore_edges = self._get_offshore_edges(technology)
             if not offshore_edges.empty:
                 offshore_df = pd.Series(
-                    data=offshore_cost, index=offshore_edges, name=attr.name,
-                    dtype=float)
+                    data=offshore_cost,
+                    index=offshore_edges,
+                    name=attr.name,
+                    dtype=float,
+                )
                 notes.append(
                     f"On the {len(offshore_edges)} edges that do not connect "
                     f"two adjacent countries, the offshore cost of "
@@ -185,7 +198,8 @@ class TransportTechnologiesCosts(DatasetCollection):
                 [
                     f"The {description} of {technology.name} is based on "
                     f"{cast(Any, dataset.metadata).title}."
-                ] + notes
+                ]
+                + notes
             ),
             metadata=metadata if len(metadata) > 1 else dataset.metadata,
         )
@@ -205,8 +219,7 @@ class TransportTechnologiesCosts(DatasetCollection):
             )
         return self.data[self.SOURCES[technology.name]]
 
-    def _get_rebasing(
-            self, technology: TransportTechnology) -> tuple[float, str]:
+    def _get_rebasing(self, technology: TransportTechnology) -> tuple[float, str]:
         """Get the multiplier and the unit of the cost of a technology.
 
         The cost is expressed per unit of the capacity the technology is sized
@@ -216,10 +229,14 @@ class TransportTechnologiesCosts(DatasetCollection):
         return multiplier, f"Euro/({technology.power_unit})/km"
 
     def _get_offshore_cost(
-            self, technology: TransportTechnology, dataset: Dataset[Any],
-            offshore_method: str, proxy_element_name: str | None,
-            onshore_cost: float,
-            multiplier: float) -> tuple[float | None, Dataset[Any] | None]:
+        self,
+        technology: TransportTechnology,
+        dataset: Dataset[Any],
+        offshore_method: str,
+        proxy_element_name: str | None,
+        onshore_cost: float,
+        multiplier: float,
+    ) -> tuple[float | None, Dataset[Any] | None]:
         """Get the offshore cost of a transport technology, and its source.
 
         Returns no cost if offshore transport is not accounted for, or if
@@ -230,12 +247,13 @@ class TransportTechnologiesCosts(DatasetCollection):
             return None, None
         if hasattr(dataset, offshore_method):
             return (
-                multiplier * self._get_cost(
-                    dataset, offshore_method, technology, proxy_element_name),
+                multiplier
+                * self._get_cost(
+                    dataset, offshore_method, technology, proxy_element_name
+                ),
                 dataset,
             )
-        proxy_dataset_name = self.OFFSHORE_COST_INCREASE_PROXY.get(
-            technology.name)
+        proxy_dataset_name = self.OFFSHORE_COST_INCREASE_PROXY.get(technology.name)
         if proxy_dataset_name is None:
             return None, None
         proxy_dataset = self.data[proxy_dataset_name]
@@ -249,8 +267,11 @@ class TransportTechnologiesCosts(DatasetCollection):
 
     @staticmethod
     def _get_cost(
-            dataset: Dataset[Any], method: str, technology: TransportTechnology,
-            proxy_element_name: str | None) -> float:
+        dataset: Dataset[Any],
+        method: str,
+        technology: TransportTechnology,
+        proxy_element_name: str | None,
+    ) -> float:
         """Get a cost of a transport technology from one of the datasets."""
         getter = getattr(cast(Any, dataset), method)
         if proxy_element_name is None:

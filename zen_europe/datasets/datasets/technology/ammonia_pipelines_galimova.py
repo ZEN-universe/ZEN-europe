@@ -7,12 +7,15 @@ from zen_europe.datasets.datasets.financial.ECB import ECBInflation
 if TYPE_CHECKING:
     from pathlib import Path
 
-from zen_creator import Attribute, ConversionTechnology, SourceInformation, TransportTechnology
+import pandas as pd
+from zen_creator import (
+    Attribute,
+    SourceInformation,
+    TransportTechnology,
+)
 from zen_creator.datasets.datasets.dataset import Dataset
 from zen_creator.datasets.datasets.metadata import MetaData
-from zen_europe.utils.constants import Constants
 
-import pandas as pd
 
 class AmmoniaPipelinesGalimova(Dataset[pd.DataFrame]):
     """
@@ -29,7 +32,8 @@ class AmmoniaPipelinesGalimova(Dataset[pd.DataFrame]):
     def __init__(self, source_path: Path | str | None = None):
         super().__init__(source_path=source_path)
         self.get_inflation_rate = ECBInflation(
-            source_path=source_path).get_inflation_rate
+            source_path=source_path
+        ).get_inflation_rate
 
     def _set_metadata(self) -> MetaData:
         return MetaData(
@@ -38,7 +42,12 @@ class AmmoniaPipelinesGalimova(Dataset[pd.DataFrame]):
                 "Feasibility of green ammonia trading via pipelines and shipping: "
                 "Cases of Europe, North Africa, and South America"
             ),
-            author=["Tansu Galimova", "Mahdi Fasihi", "Dmitrii Bogdanov", "Christian Breyer"],
+            author=[
+                "Tansu Galimova",
+                "Mahdi Fasihi",
+                "Dmitrii Bogdanov",
+                "Christian Breyer",
+            ],
             publication="Journal of Cleaner Production",
             publication_year=2023,
             url="https://www.sciencedirect.com/science/article/pii/S095965262303370X",
@@ -54,7 +63,7 @@ class AmmoniaPipelinesGalimova(Dataset[pd.DataFrame]):
         return data
 
     # -------- methods ------------------------
-    @staticmethod    
+    @staticmethod
     def get_offshore_cost_increase() -> float:
         """
         Get the offshore cost increase factor for offshore pipelines.
@@ -65,8 +74,8 @@ class AmmoniaPipelinesGalimova(Dataset[pd.DataFrame]):
         return 1.4
 
     def _check_technology(
-            self, technology: TransportTechnology,
-            proxy_element_name: str | None = None) -> str:
+        self, technology: TransportTechnology, proxy_element_name: str | None = None
+    ) -> str:
         """
         Check that the dataset covers the technology and return the proxy note.
 
@@ -86,23 +95,8 @@ class AmmoniaPipelinesGalimova(Dataset[pd.DataFrame]):
         return f" (proxy for {technology.name})"
 
     def get_capex_per_distance_transport_onshore(
-            self, technology: TransportTechnology,
-            proxy_element_name: str | None = None) -> float:
-        """
-        Get the distance-specific capex of a transport technology.
-
-        Args:
-            technology (TransportTechnology): The transport technology.
-            proxy_element_name (str | None): The technology used as a proxy.
-        """
-        self._check_technology(technology, proxy_element_name)
-        return 0.617*self.get_inflation_rate(
-            base_year=self.MONEY_YEAR,
-            target_year=technology.settings.time.reference_year)*1000 # Euro/km/MW
-
-    def get_capex_per_distance_transport_offshore(
-            self, technology: TransportTechnology,
-            proxy_element_name: str | None = None) -> float:
+        self, technology: TransportTechnology, proxy_element_name: str | None = None
+    ) -> float:
         """
         Get the distance-specific capex of a transport technology.
 
@@ -112,13 +106,35 @@ class AmmoniaPipelinesGalimova(Dataset[pd.DataFrame]):
         """
         self._check_technology(technology, proxy_element_name)
         return (
-            self.get_offshore_cost_increase()*
-            self.get_capex_per_distance_transport_onshore(
-                technology, proxy_element_name))
+            0.617
+            * self.get_inflation_rate(
+                base_year=self.MONEY_YEAR,
+                target_year=technology.settings.time.reference_year,
+            )
+            * 1000
+        )  # Euro/km/MW
+
+    def get_capex_per_distance_transport_offshore(
+        self, technology: TransportTechnology, proxy_element_name: str | None = None
+    ) -> float:
+        """
+        Get the distance-specific capex of a transport technology.
+
+        Args:
+            technology (TransportTechnology): The transport technology.
+            proxy_element_name (str | None): The technology used as a proxy.
+        """
+        self._check_technology(technology, proxy_element_name)
+        return (
+            self.get_offshore_cost_increase()
+            * self.get_capex_per_distance_transport_onshore(
+                technology, proxy_element_name
+            )
+        )
 
     def get_opex_fixed_onshore(
-            self, technology: TransportTechnology,
-            proxy_element_name: str | None = None) -> float:
+        self, technology: TransportTechnology, proxy_element_name: str | None = None
+    ) -> float:
         """
         Get the fixed opex of an ammonia pipeline for onshore transmission.
 
@@ -127,12 +143,16 @@ class AmmoniaPipelinesGalimova(Dataset[pd.DataFrame]):
             proxy_element_name (str | None): The technology used as a proxy.
         """
         self._check_technology(technology, proxy_element_name)
-        return self.get_capex_per_distance_transport_onshore(
-            technology, proxy_element_name) * 0.03 # 3% of capex per year
+        return (
+            self.get_capex_per_distance_transport_onshore(
+                technology, proxy_element_name
+            )
+            * 0.03
+        )  # 3% of capex per year
 
     def get_opex_fixed_offshore(
-            self, technology: TransportTechnology,
-            proxy_element_name: str | None = None) -> float:
+        self, technology: TransportTechnology, proxy_element_name: str | None = None
+    ) -> float:
         """
         Get the fixed opex of an ammonia pipeline for offshore transmission.
 
@@ -141,12 +161,16 @@ class AmmoniaPipelinesGalimova(Dataset[pd.DataFrame]):
             proxy_element_name (str | None): The technology used as a proxy.
         """
         self._check_technology(technology, proxy_element_name)
-        return self.get_capex_per_distance_transport_offshore(
-            technology, proxy_element_name) * 0.03 # 3% of capex per year
+        return (
+            self.get_capex_per_distance_transport_offshore(
+                technology, proxy_element_name
+            )
+            * 0.03
+        )  # 3% of capex per year
 
     def get_lifetime(
-            self, technology: TransportTechnology,
-            proxy_element_name: str | None = None) -> Attribute:
+        self, technology: TransportTechnology, proxy_element_name: str | None = None
+    ) -> Attribute:
         """
         Get the lifetime of a transport technology.
         """
@@ -164,15 +188,15 @@ class AmmoniaPipelinesGalimova(Dataset[pd.DataFrame]):
         )
 
     def get_transport_loss_factor_linear(
-            self, technology: TransportTechnology,
-            proxy_element_name: str | None = None) -> Attribute:
+        self, technology: TransportTechnology, proxy_element_name: str | None = None
+    ) -> Attribute:
         """
         Get the losses of a transport technology.
         """
         proxy_str = self._check_technology(technology, proxy_element_name)
         attr = technology.transport_loss_factor_linear
         return attr.set_data(
-            default_value=0.1/100/1000, # 0.1% per 1000 km
+            default_value=0.1 / 100 / 1000,  # 0.1% per 1000 km
             unit="1/km",
             source=SourceInformation(
                 description=(

@@ -7,6 +7,7 @@ from zen_creator import Attribute, SourceInformation, StorageTechnology
 from zen_creator.datasets.datasets.dataset import Dataset
 from zen_creator.datasets.datasets.metadata import MetaData
 
+
 class SelfDischargeAlt(Dataset[pd.DataFrame]):
     """
     Self discharge rates of batteries from Alt et al. (2026).
@@ -20,9 +21,7 @@ class SelfDischargeAlt(Dataset[pd.DataFrame]):
     def _set_metadata(self) -> MetaData:
         return MetaData(
             name=self.name,
-            title=(
-                "Quantifying the self-discharge of solid-state batteries"
-            ),
+            title=("Quantifying the self-discharge of solid-state batteries"),
             author=[
                 "Christoph Alt",
                 "Jürgen Janek",
@@ -45,13 +44,15 @@ class SelfDischargeAlt(Dataset[pd.DataFrame]):
         Get the self discharge rate for a given storage technology.
 
         Args:
-            element (StorageTechnology): 
+            element (StorageTechnology):
                 The storage technology for which to get the self discharge rate.
         """
-        assert element.name == "battery", "Self discharge rate is only available for batteries."
+        assert (
+            element.name == "battery"
+        ), "Self discharge rate is only available for batteries."
         attr = element.self_discharge
         # batteries in automotive applications must have SDR < 2%
-        monthly_SDR = 2/100
+        monthly_SDR = 2 / 100
         hourly_SDR = 1 - (1 - monthly_SDR) ** (1 / (30 * 24))
         attr.set_data(
             default_value=hourly_SDR,

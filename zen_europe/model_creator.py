@@ -3,6 +3,9 @@ from pathlib import Path
 from zen_creator import Model
 from zen_creator.utils.settings import ModelSet, Settings
 
+# import settings categories to register them in the registry (side effect)
+from . import settings  # noqa: F401
+
 # import custom element classes to register them in the registry (side effect)
 from .elements.carriers import Biomass, Electricity  # noqa: F401
 from .elements.conversion_technologies import Photovoltaics  # noqa: F401
@@ -12,11 +15,7 @@ from .elements.sectors import ElectricitySector  # noqa: F401
 from .elements.storage_technologies import PumpedHydro  # noqa: F401
 from .elements.transport_technologies import PowerLine  # noqa: F401
 from .global_scenarios import define_global_scenarios
-
-# import settings categories to register them in the registry (side effect)
-from . import settings  # noqa: F401
 from .settings.cache import set_active_cache_settings
-
 
 # the data folder of the repository, which holds the configuration, the models
 # file, the raw data and the generated datasets

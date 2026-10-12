@@ -1,16 +1,16 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
-from inspect import Attribute
 from pathlib import Path
 
+import pandas as pd
 from zen_creator import ConversionTechnology, SourceInformation
 from zen_creator.datasets.datasets.dataset import Dataset
 from zen_creator.datasets.datasets.metadata import MetaData
-
-import pandas as pd
+from zen_creator.utils.attribute import Attribute
 
 from zen_europe.datasets.datasets.financial.ECB import ECBInflation
 from zen_europe.utils.constants import Constants
+
 
 class MethanolProductionCollodi(Dataset[pd.DataFrame]):
     """
@@ -28,9 +28,15 @@ class MethanolProductionCollodi(Dataset[pd.DataFrame]):
         return MetaData(
             name=self.name,
             title=(
-                "Demonstrating Large Scale Industrial CCS through CCU - A Case Study for Methanol Production"
+                "Demonstrating Large Scale Industrial CCS through CCU - A Case Study "
+                "for Methanol Production"
             ),
-            author=["Guido Collodi", "Giuliana Azzaro", "Noemi Ferrari", "Stanley Santos"],
+            author=[
+                "Guido Collodi",
+                "Giuliana Azzaro",
+                "Noemi Ferrari",
+                "Stanley Santos",
+            ],
             publication="Energy Procedia",
             publication_year=2017,
             url="https://www.sciencedirect.com/science/article/pii/S1876610217313280",
@@ -43,23 +49,23 @@ class MethanolProductionCollodi(Dataset[pd.DataFrame]):
         return self.source_path
 
     def _set_data(self) -> dict[str, pd.Series]:
-        """ 
-        No data to be set
+        """
+        No data to be set.
         """
         data = {}
-        
+
         data = pd.Series(data)
         return data
 
-    # -------- methods ------------------------    
-    def get_lifetime(self,element: ConversionTechnology) -> Attribute:
+    # -------- methods ------------------------
+    def get_lifetime(self, element: ConversionTechnology) -> Attribute:
         """
         Get the lifetime for methanol from natural gas technologies.
 
         Returns:
             Attribute: An Attribute object containing the lifetime data.
         """
-        
+
         attr = element.lifetime
         attr.set_data(
             default_value=25,
@@ -73,28 +79,28 @@ class MethanolProductionCollodi(Dataset[pd.DataFrame]):
         )
         return attr
 
-    def get_construction_time(self,element: ConversionTechnology) -> Attribute:
+    def get_construction_time(self, element: ConversionTechnology) -> Attribute:
         """
         Get the construction time for methanol from natural gas technologies.
 
         Returns:
             Attribute: An Attribute object containing the construction time data.
         """
-        
+
         attr = element.construction_time
         attr.set_data(
             default_value=3,
             source=SourceInformation(
                 description=(
-                    "The construction time for methanol from natural gas technologies is based "
-                    "on the work of Collodi et al. (2017)."
+                    "The construction time for methanol from natural gas technologies "
+                    "is based on the work of Collodi et al. (2017)."
                 ),
                 metadata=self.metadata,
             ),
         )
         return attr
 
-    def get_conversion_factor(self,element: ConversionTechnology) -> Attribute:
+    def get_conversion_factor(self, element: ConversionTechnology) -> Attribute:
         """
         Get the conversion factor for methanol from natural gas technologies.
 
@@ -110,8 +116,8 @@ class MethanolProductionCollodi(Dataset[pd.DataFrame]):
             default_value=cf,
             source=SourceInformation(
                 description=(
-                    "The conversion factor for methanol from natural gas technologies is based "
-                    "on the work of Collodi et al. (2017)."
+                    "The conversion factor for methanol from natural gas technologies "
+                    "is based on the work of Collodi et al. (2017)."
                 ),
                 metadata=self.metadata,
             ),
@@ -133,21 +139,21 @@ class MethanolProductionCollodi(Dataset[pd.DataFrame]):
             * 1000
         )  # kW
         return methanol_production
-    
-    def get_capex_specific(self,element: ConversionTechnology) -> Attribute:
+
+    def get_capex_specific(self, element: ConversionTechnology) -> Attribute:
         """
-        Get the specific capital expenditure (capex) for methanol from natural gas technologies.
+        Get the specific capital expenditure (capex) for methanol from natural gas
+        technologies.
 
         The total capex comes from Table 4
         Returns:
             Attribute: An Attribute object containing the specific capex data.
         """
         attr = element.capex_specific_conversion
-        capex_total = 693.7 * 1e6 # Euro
+        capex_total = 693.7 * 1e6  # Euro
         methanol_production = self._calculate_hourly_methanol_production()
         inflation = ECBInflation(source_path=self.source_path).get_inflation_rate(
-            base_year=self.MONEY_YEAR, 
-            target_year=element.settings.time.reference_year
+            base_year=self.MONEY_YEAR, target_year=element.settings.time.reference_year
         )
         capex_specific = capex_total / methanol_production * inflation
         attr.set_data(
@@ -155,30 +161,30 @@ class MethanolProductionCollodi(Dataset[pd.DataFrame]):
             unit="Euro/kW",
             source=SourceInformation(
                 description=(
-                    "The specific capex for methanol from natural gas technologies is based "
-                    "on the work of Collodi et al. (2017)."
+                    "The specific capex for methanol from natural gas technologies is "
+                    "based on the work of Collodi et al. (2017)."
                 ),
                 metadata=self.metadata,
             ),
         )
         return attr
 
-    def get_opex_specific_variable(self,element: ConversionTechnology) -> Attribute:
+    def get_opex_specific_variable(self, element: ConversionTechnology) -> Attribute:
         """
-        Get the specific variable operational expenditure (opex) for methanol from natural gas technologies.
+        Get the specific variable operational expenditure (opex) for methanol from
+        natural gas technologies.
 
         The total opex comes from Table 5
         Returns:
             Attribute: An Attribute object containing the specific variable opex data.
         """
         attr = element.opex_specific_variable
-        opex_variable = 342042100 # Euro
+        opex_variable = 342042100  # Euro
         annual_production = (
-            self._calculate_hourly_methanol_production() * 
-            Constants.HOURS_PER_YEAR) / 1000 # MWh/year
+            self._calculate_hourly_methanol_production() * Constants.HOURS_PER_YEAR
+        ) / 1000  # MWh/year
         inflation = ECBInflation(source_path=self.source_path).get_inflation_rate(
-            base_year=self.MONEY_YEAR, 
-            target_year=element.settings.time.reference_year
+            base_year=self.MONEY_YEAR, target_year=element.settings.time.reference_year
         )
         opex_specific = opex_variable / annual_production * inflation
         attr.set_data(
@@ -186,28 +192,28 @@ class MethanolProductionCollodi(Dataset[pd.DataFrame]):
             unit="Euro/MWh",
             source=SourceInformation(
                 description=(
-                    "The specific variable opex for methanol from natural gas technologies is based "
-                    "on the work of Collodi et al. (2017)."
+                    "The specific variable opex for methanol from natural gas "
+                    "technologies is based on the work of Collodi et al. (2017)."
                 ),
                 metadata=self.metadata,
             ),
         )
         return attr
 
-    def get_opex_specific_fixed(self,element: ConversionTechnology) -> Attribute:
+    def get_opex_specific_fixed(self, element: ConversionTechnology) -> Attribute:
         """
-        Get the specific fixed operational expenditure (opex) for methanol from natural gas technologies.
+        Get the specific fixed operational expenditure (opex) for methanol from natural
+        gas technologies.
 
         The total opex comes from Table 5
         Returns:
             Attribute: An Attribute object containing the specific fixed opex data.
         """
         attr = element.opex_specific_fixed
-        opex_fixed = 26677400 # Euro
+        opex_fixed = 26677400  # Euro
         methanol_production = self._calculate_hourly_methanol_production()
         inflation = ECBInflation(source_path=self.source_path).get_inflation_rate(
-            base_year=self.MONEY_YEAR, 
-            target_year=element.settings.time.reference_year
+            base_year=self.MONEY_YEAR, target_year=element.settings.time.reference_year
         )
         opex_specific = opex_fixed / methanol_production * inflation
         attr.set_data(
@@ -215,8 +221,8 @@ class MethanolProductionCollodi(Dataset[pd.DataFrame]):
             unit="Euro/kW",
             source=SourceInformation(
                 description=(
-                    "The specific fixed opex for methanol from natural gas technologies is based "
-                    "on the work of Collodi et al. (2017)."
+                    "The specific fixed opex for methanol from natural gas "
+                    "technologies is based on the work of Collodi et al. (2017)."
                 ),
                 metadata=self.metadata,
             ),

@@ -78,8 +78,11 @@ class IoSNCandidateUnits(Dataset[pd.DataFrame]):
         """
         candidates = self.data[
             self.data["node_from"].isin(set_nodes)
-            & self.data["node_to"].isin(set_nodes)]
-        increase = candidates.groupby(
-            ["node_from", "node_to"])[self.CAPACITY_COLUMN].sum() / 1000
+            & self.data["node_to"].isin(set_nodes)
+        ]
+        increase = (
+            candidates.groupby(["node_from", "node_to"])[self.CAPACITY_COLUMN].sum()
+            / 1000
+        )
         increase.name = "capacity_limit"
         return increase

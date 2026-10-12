@@ -2,14 +2,14 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pandas as pd
 from zen_creator.datasets.datasets.dataset import Dataset
 from zen_creator.datasets.datasets.metadata import MetaData
 
-import pandas as pd
 
 class EuroCalliope(Dataset[pd.DataFrame]):
     """
-    EuroCalliope dataset class for potential capacity
+    EuroCalliope dataset class for potential capacity.
 
     """
 
@@ -22,9 +22,15 @@ class EuroCalliope(Dataset[pd.DataFrame]):
         return MetaData(
             name=self.name,
             title=(
-                "Trade-Offs between Geographic Scale, Cost, and Infrastructure Requirements for Fully Renewable Electricity in Europe"
+                "Trade-Offs between Geographic Scale, Cost, and Infrastructure "
+                "Requirements for Fully Renewable Electricity in Europe"
             ),
-            author=["Tim Tröndle", "Johan Lilliestam", "Stefano Marelli", "Stefan Pfenninger"],
+            author=[
+                "Tim Tröndle",
+                "Johan Lilliestam",
+                "Stefano Marelli",
+                "Stefan Pfenninger",
+            ],
             publication="Joule",
             publication_year=2020,
             url="https://www.sciencedirect.com/science/article/pii/S2542435120303366",
@@ -35,10 +41,10 @@ class EuroCalliope(Dataset[pd.DataFrame]):
         return None
 
     def _set_data(self) -> dict[str, pd.Series]:
-        """ 
+        """
         Set the data for the EuroCalliope dataset.
-        Note: The PV is roof-top PV, not ground-mounted PV. 
-        Ground-mounted PV is competing with wind onshore. 
+        Note: The PV is roof-top PV, not ground-mounted PV.
+        Ground-mounted PV is competing with wind onshore.
         Onshore wind is "wind_onshore_monopoly".
 
         """
@@ -52,7 +58,7 @@ class EuroCalliope(Dataset[pd.DataFrame]):
         data = pd.Series(data, name="potential_capacity_gw")
         return data
 
-    # -------- methods ------------------------    
+    # -------- methods ------------------------
     def get_capacity_limit(self, element, node) -> pd.Series:
         """
         Get the potential capacity for renewable technologies.
@@ -65,6 +71,7 @@ class EuroCalliope(Dataset[pd.DataFrame]):
         """
         if (element.name, node) not in self.data.index:
             raise ValueError(
-                f"Potential capacity data for {element.name} in {node} is not available in the EuroCalliope dataset."
+                f"Potential capacity data for {element.name} in {node} is not "
+                "available in the EuroCalliope dataset."
             )
         return self.data.loc[(element.name, node)]

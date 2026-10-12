@@ -80,12 +80,17 @@ class LNGTerminalsBrauers(Dataset[pd.DataFrame]):
         Get the specific investment cost of LNG terminals.
         """
         # convert the send-out capacity from bcm per year to kW
-        capacity = (self.CAPACITY * Constants.NATURAL_GAS_GWH_PER_BCM
-                    / Constants.HOURS_PER_YEAR * 1e6)
+        capacity = (
+            self.CAPACITY
+            * Constants.NATURAL_GAS_GWH_PER_BCM
+            / Constants.HOURS_PER_YEAR
+            * 1e6
+        )
         capex_specific = self.CAPEX_TOTAL / capacity  # Euro/kW
         inflation = ECBInflation(source_path=self.source_path)
         capex_specific = capex_specific * inflation.get_inflation_rate(
-            self.MONEY_YEAR, technology.settings.time.reference_year)
+            self.MONEY_YEAR, technology.settings.time.reference_year
+        )
         attr = technology.capex_specific_conversion
         return attr.set_data(
             default_value=capex_specific,

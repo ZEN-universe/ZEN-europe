@@ -43,7 +43,8 @@ class BF_BOF(ConversionTechnology):
         Sets the input carrier of BF-BOF to hard coal.
         """
         return Attribute(
-            name="input_carrier", default_value=["hard_coal"], element=self)
+            name="input_carrier", default_value=["hard_coal"], element=self
+        )
 
     def _set_output_carrier(self) -> Attribute:
         """
@@ -117,13 +118,10 @@ class BF_BOF(ConversionTechnology):
                 default_value=0,
                 df=None,
                 source=AssumptionInformation(
-                    description=(
-                        "We do not consider existing capacities."
-                    ),
+                    description=("We do not consider existing capacities."),
                 ),
             )
             return attr
-    
 
     def _set_max_diffusion_rate(self) -> Attribute:
         """

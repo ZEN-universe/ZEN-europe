@@ -30,14 +30,13 @@ class PassengerMileage(Carrier):
 
         """
         passenger_mileage_dataset = PassengerMileageDemand(
-            self.settings,
-            self.source_path
+            self.settings, self.source_path
         )
         attr = passenger_mileage_dataset.get_demand(self)
         if self.settings.scenario.sensitivity_demand:
             attr.add_scenarios(demand_sensitivity_scenarios(self.name))
         return attr
-    
+
     def _set_price_shed_demand(self) -> Attribute:
         """
         Return the price of shed demand of the carrier.
@@ -64,4 +63,3 @@ class PassengerMileage(Carrier):
             element=self,
             unit="vkm/h",
         )
-

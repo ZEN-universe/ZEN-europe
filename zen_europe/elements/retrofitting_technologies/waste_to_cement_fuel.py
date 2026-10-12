@@ -41,8 +41,7 @@ class WasteToCementFuel(RetrofittingTechnology):
         """
         Sets the input carrier of waste to cement fuel to waste.
         """
-        return Attribute(
-            name="input_carrier", default_value=["waste"], element=self)
+        return Attribute(name="input_carrier", default_value=["waste"], element=self)
 
     def _set_output_carrier(self) -> Attribute:
         """
@@ -58,8 +57,9 @@ class WasteToCementFuel(RetrofittingTechnology):
         cement.
         """
         return Attribute(
-            name="retrofit_reference_carrier", default_value=["fuel_for_cement"],
-            element=self
+            name="retrofit_reference_carrier",
+            default_value=["fuel_for_cement"],
+            element=self,
         )
 
     # ---------- Required methods that are called during object build ----------
@@ -130,9 +130,7 @@ class WasteToCementFuel(RetrofittingTechnology):
                 default_value=0,
                 df=None,
                 source=AssumptionInformation(
-                    description=(
-                        "We do not consider existing capacities."
-                    ),
+                    description=("We do not consider existing capacities."),
                 ),
             )
             return attr

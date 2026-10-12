@@ -16,19 +16,19 @@ from zen_creator.utils.settings import Settings
 
 from zen_europe.datasets.datasets.carrier.eurostat import Eurostat
 from zen_europe.datasets.datasets.carrier.standard_load_profiles import (
-    StandardLoadProfiles)
-from zen_europe.datasets.datasets.carrier.statistical_pocketbook_transport import (
-    StatisticalPocketbookTransport
+    StandardLoadProfiles,
 )
+from zen_europe.datasets.datasets.carrier.statistical_pocketbook_transport import (
+    StatisticalPocketbookTransport,
+)
+
 
 class PassengerMileageDemand(DatasetCollection):
     """Extracting passenger mileage demand data."""
 
     name = "passenger_mileage_demand"
 
-    def __init__(self,  
-                settings: Settings,
-                source_path: Path | str):
+    def __init__(self, settings: Settings, source_path: Path | str):
         self.settings = settings
         super().__init__(source_path=source_path)
 
@@ -41,7 +41,8 @@ class PassengerMileageDemand(DatasetCollection):
         return {
             "eurostat": Eurostat(self.settings, self.source_path),
             "statistical_pocketbook_transport": StatisticalPocketbookTransport(
-                self.settings, self.source_path),
+                self.settings, self.source_path
+            ),
             "standard_load_profiles": StandardLoadProfiles(self.source_path),
         }
 
@@ -54,15 +55,16 @@ class PassengerMileageDemand(DatasetCollection):
 
         source = SourceInformation(
             description=(
-                "Total passenger mileage demand is derived from the Statistical Pocketbook "
-                "Transport dataset, which provides data on passenger and truck mileage "
-                "in the EU. The total passenger mileage is adjusted for vehicle occupancy "
-                "using data from Eurostat. The standard load profiles for urban, suburban, "
-                "and rural areas are obtained from the Standard Load Profiles dataset, "
-                "which provides hourly load profiles for different types of days "
-                "and region types. The final passenger mileage demand is calculated by "
-                "multiplying the total passenger mileage by the weighted standard load "
-                "profiles based on the share of the population in each region type."
+                "Total passenger mileage demand is derived from the Statistical "
+                "Pocketbook Transport dataset, which provides data on passenger and "
+                "truck mileage in the EU. The total passenger mileage is adjusted for "
+                "vehicle occupancy using data from Eurostat. The standard load "
+                "profiles for urban, suburban, and rural areas are obtained from the "
+                "Standard Load Profiles dataset, which provides hourly load profiles "
+                "for different types of days and region types. The final passenger "
+                "mileage demand is calculated by multiplying the total passenger "
+                "mileage by the weighted standard load profiles based on the share of "
+                "the population in each region type."
             ),
             metadata=self.metadata,
         )
@@ -71,7 +73,7 @@ class PassengerMileageDemand(DatasetCollection):
             df=slp,
             unit="megavkm/hour",
         )
-    
+
     def _get_hourly_demand(self, element: Carrier) -> pd.DataFrame:
         """
         Get the hourly passenger mileage demand for the specified element.
@@ -83,17 +85,15 @@ class PassengerMileageDemand(DatasetCollection):
         year_time_series = element.settings.time.year_time_series
         share_regions = share_regions[year_time_series].unstack()
         common_nodes = pd.Index(share_regions.columns).intersection(
-            set(element.model.config.system.set_nodes))
+            set(element.model.config.system.set_nodes)
+        )
         share_regions = share_regions.loc[:, common_nodes]
         share_regions = share_regions.rename(
-            index={
-                "cities": "urban", "towns_and_suburbs": "suburban", "rural": "rural"}
+            index={"cities": "urban", "towns_and_suburbs": "suburban", "rural": "rural"}
         )
         # add load profiles
         slp_dataset = cast(StandardLoadProfiles, self.data["standard_load_profiles"])
-        slp = (
-            slp_dataset.
-                get_standard_load_profiles(share_regions,element))
+        slp = slp_dataset.get_standard_load_profiles(share_regions, element)
         # total demand
         total_demand = self._get_total_demand(element)
 
@@ -146,10 +146,11 @@ class PassengerMileageDemand(DatasetCollection):
         Corrects for vehicle occupancy to convert from passenger-km to vehicle-km.
         """
         spt_dataset = cast(
-            StatisticalPocketbookTransport, 
-            self.data["statistical_pocketbook_transport"])
+            StatisticalPocketbookTransport,
+            self.data["statistical_pocketbook_transport"],
+        )
         total_demand = spt_dataset.get_total_mileage(element)
         eurostat_dataset = cast(Eurostat, self.data["eurostat"])
         vehicle_occupancy = eurostat_dataset.get_vehicle_occupancy()
-        total_demand = total_demand / vehicle_occupancy # from pkm to vkm
+        total_demand = total_demand / vehicle_occupancy  # from pkm to vkm
         return total_demand

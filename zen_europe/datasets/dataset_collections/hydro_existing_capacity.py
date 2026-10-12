@@ -1,9 +1,13 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Dict, cast
+
 import pandas as pd
+
 from zen_europe.datasets.datasets.technology.glohydrores import GloHydroRes
-from zen_europe.datasets.datasets.technology.pecd_hydro_capacities import PECDHydroCapacities
+from zen_europe.datasets.datasets.technology.pecd_hydro_capacities import (
+    PECDHydroCapacities,
+)
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -13,23 +17,26 @@ if TYPE_CHECKING:
 
 from zen_creator import Attribute, DatasetCollection
 from zen_creator.utils.attribute import SourceInformation
-from zen_europe.datasets.datasets.technology.powerplantmatching import (
-    PowerPlantMatching)
-from zen_europe.datasets.datasets.technology.jrc_hydro_db import (
-    JRCHydroPowerDatabase)
-from zen_europe.datasets.datasets.carrier.entsoe import ENTSOE
 from zen_creator.utils.settings import Settings
+
+from zen_europe.datasets.datasets.carrier.entsoe import ENTSOE
+from zen_europe.datasets.datasets.technology.jrc_hydro_db import JRCHydroPowerDatabase
+from zen_europe.datasets.datasets.technology.powerplantmatching import (
+    PowerPlantMatching,
+)
+
 
 class HydroExistingCapacity(DatasetCollection):
     """Extracting existing capacity data for hydro technologies."""
 
     name = "hydro_existing_capacity"
 
-    def __init__(self, 
-                 settings: Settings, 
-                 set_nodes: list[str],
-                 source_path: Path | None = None,
-                 ):
+    def __init__(
+        self,
+        settings: Settings,
+        set_nodes: list[str],
+        source_path: Path | None = None,
+    ):
 
         self.settings = settings
         self.set_nodes = set_nodes
@@ -47,8 +54,9 @@ class HydroExistingCapacity(DatasetCollection):
             "powerplantmatching": PowerPlantMatching(self.source_path),
             "entsoe": ENTSOE(
                 settings=self.settings,
-                set_nodes=self.set_nodes, 
-                source_path=self.source_path),
+                set_nodes=self.set_nodes,
+                source_path=self.source_path,
+            ),
             "glohydrores": GloHydroRes(self.source_path),
             "pecd_hydro_capacity": PECDHydroCapacities(self.source_path),
         }
@@ -58,14 +66,15 @@ class HydroExistingCapacity(DatasetCollection):
         """
         Get the existing capacity for hydro technologies based on ENTSOE data.
 
-        This function retrieves the existing capacity data for the specified element from the ENTSOE dataset.
+        This function retrieves the existing capacity data for the specified element
+        from the ENTSOE dataset.
         Args:
             element (Element): The element for which to retrieve the existing capacity.
         """
         entsoe_dataset = cast(ENTSOE, self.data["entsoe"])
         data_entsoe = entsoe_dataset.get_capacity_existing(
-            psr_type=element.ENTSOE_PSR, 
-            year=element.settings.time.year_time_series)
+            psr_type=element.ENTSOE_PSR, year=element.settings.time.year_time_series
+        )
         data_entsoe = data_entsoe.droplevel(1)
         data_entsoe.name = "capacity_existing"
 
@@ -83,29 +92,33 @@ class HydroExistingCapacity(DatasetCollection):
         return attr
 
     def get_capacity_existing_pecd_data(
-            self, element: Element, power: bool = True) -> Attribute:
+        self, element: Element, power: bool = True
+    ) -> Attribute:
         """
         Get the existing capacity for hydro technologies based on the pecd data.
 
-        This function retrieves the existing capacity data for the specified element from the PECD dataset.
+        This function retrieves the existing capacity data for the specified element
+        from the PECD dataset.
         Args:
             element (Element): The element for which to retrieve the existing capacity.
-            power (bool): If True, returns the power capacity; if False, returns the energy capacity.
+            power (bool): If True, returns the power capacity; if False, returns the
+                energy capacity.
         """
         pecd_dataset = cast(PECDHydroCapacities, self.data["pecd_hydro_capacity"])
         return pecd_dataset.get_capacity_existing(element, power=power)
-    
+
     def get_capacity_existing_plant_level_data(
-            self, 
-            element: Element,
-            power: bool = True) -> Attribute:
+        self, element: Element, power: bool = True
+    ) -> Attribute:
         """
-        Get the existing capacity for hydro technologies based on plant-level data from the PowerPlantMatching and GloHydroRes datasets.
+        Get the existing capacity for hydro technologies based on plant-level data from
+        the PowerPlantMatching and GloHydroRes datasets.
 
         This function retrieves the existing capacity data for the specified element.
         Args:
             element (Element): The element for which to retrieve the existing capacity.
-            power (bool): If True, returns the power capacity; if False, returns the energy capacity.
+            power (bool): If True, returns the power capacity; if False, returns the
+                energy capacity.
         """
         if not power:
             raise NotImplementedError(
@@ -116,9 +129,10 @@ class HydroExistingCapacity(DatasetCollection):
         glohydrores_dataset = cast(GloHydroRes, self.data["glohydrores"])
         data_ppm = ppm_dataset.get_capacity_existing(element).df
         data_glohydrores = glohydrores_dataset.get_capacity_existing(element)
-        data_combined = pd.concat([data_ppm,data_glohydrores],axis=1).max(axis=1)
+        data_combined = pd.concat([data_ppm, data_glohydrores], axis=1).max(axis=1)
         data_combined.index = data_combined.index.set_names(
-            ["node", "year_construction"])
+            ["node", "year_construction"]
+        )
         data_combined = data_combined.sort_index()
         data_combined.name = "capacity_existing"
 
@@ -155,33 +169,39 @@ class HydroExistingCapacity(DatasetCollection):
         data_ppm = ppm_dataset.get_capacity_existing(element).df
         total_capacity_ppm = data_ppm.groupby(level=0).sum()
         data_entsoe = entsoe_dataset.get_capacity_existing(
-            psr_type=element.ENTSOE_PSR, 
-            year=element.settings.time.year_time_series)
+            psr_type=element.ENTSOE_PSR, year=element.settings.time.year_time_series
+        )
         data_entsoe = data_entsoe.droplevel(1)
         data_glohydrores = glohydrores_dataset.get_capacity_existing(element)
         total_capacity_glohydrores = data_glohydrores.groupby(level=0).sum()
-        data_combined = pd.concat([data_ppm,data_glohydrores],axis=1).max(axis=1)
+        data_combined = pd.concat([data_ppm, data_glohydrores], axis=1).max(axis=1)
         lifetime = element.lifetime.default_value
         year_retirement = element.settings.time.year_time_series - lifetime
         data_combined_retired = data_combined[
-            data_combined.index.get_level_values(1) <= year_retirement]
-        total_capacity_combined = data_combined.groupby(level=0).sum()  
+            data_combined.index.get_level_values(1) <= year_retirement
+        ]
+        total_capacity_combined = data_combined.groupby(level=0).sum()
         total_capacity_combined_retired = data_combined_retired.groupby(level=0).sum()
 
-        total_capacity = pd.concat([
-            data_jrc, 
-            total_capacity_ppm, 
-            data_entsoe, 
-            total_capacity_glohydrores, 
-            total_capacity_combined, 
-            total_capacity_combined_retired], axis=1,
+        total_capacity = pd.concat(
+            [
+                data_jrc,
+                total_capacity_ppm,
+                data_entsoe,
+                total_capacity_glohydrores,
+                total_capacity_combined,
+                total_capacity_combined_retired,
+            ],
+            axis=1,
             keys=[
-                "jrc", 
-                "ppm", 
-                "entsoe", 
-                "glohydrores", 
-                "ppm + glohydrores", 
-                "ppm + glohydrores (without retired)"])
+                "jrc",
+                "ppm",
+                "entsoe",
+                "glohydrores",
+                "ppm + glohydrores",
+                "ppm + glohydrores (without retired)",
+            ],
+        )
         total_capacity = total_capacity.loc[element.model.config.system.set_nodes]
         # imported here because matplotlib is slow to import and this is the
         # only use of it
@@ -189,7 +209,7 @@ class HydroExistingCapacity(DatasetCollection):
 
         fig, ax = plt.subplots(figsize=(12, 6))
         total_capacity.plot.bar(
-            stacked=False, 
-            title=f"Existing {element.name} Capacity by Source")
+            stacked=False, title=f"Existing {element.name} Capacity by Source"
+        )
         ax.set_ylabel("Capacity (GW)")
         ax.set_xlabel("Country")

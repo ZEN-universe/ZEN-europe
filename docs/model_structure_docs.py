@@ -2,6 +2,7 @@
 
 import logging
 import shutil
+from collections.abc import Sequence
 from pathlib import Path
 
 from zen_creator import Model, model_structure
@@ -66,9 +67,9 @@ def links(names: list[str], prefix: str, known=None) -> str:
 def flow_diagram(
     tech_names: list[str],
     structure: dict,
-    carriers: list[str] = (),
+    carriers: Sequence[str] = (),
     own_elements: list[str] | None = None,
-    highlight: list[str] = (),
+    highlight: Sequence[str] = (),
 ) -> list[str]:
     """Return the body of a mermaid flowchart of the carrier flows of technologies.
 
@@ -124,7 +125,7 @@ def flow_diagram(
 
 
 def node_lines(
-    node: str, node_type: str, own_elements: list[str] | None, highlight: list[str]
+    node: str, node_type: str, own_elements: list[str] | None, highlight: Sequence[str]
 ) -> list[str]:
     """Return the mermaid lines that declare and style a node."""
     node_id = f"c_{node}" if node_type == "carrier" else f"t_{node}"
@@ -145,11 +146,14 @@ def mermaid(body: list[str], zoom: bool = False, indent: str = "") -> list[str]:
 
 
 def carrier_flow_diagram(structure: dict) -> list[str]:
-    """Return the body of a mermaid flowchart of the carriers converted into each other."""
+    """Return the body of a mermaid flowchart of the carriers converted into each
+    other."""
     lines = ["flowchart LR"]
     for name in sort_names(structure["carriers"]):
         lines += node_lines(name, "carrier", None, ())
-    lines += [f"  c_{source} --> c_{target}" for source, target in structure["carrier_flows"]]
+    lines += [
+        f"  c_{source} --> c_{target}" for source, target in structure["carrier_flows"]
+    ]
     return lines
 
 
@@ -281,7 +285,9 @@ def render_technologies(structure: dict) -> str:
             tech = technologies[name]
             if tech["type"] != technology_type:
                 continue
-            diagram = flow_diagram([name], structure, highlight=tech["reference_carrier"])
+            diagram = flow_diagram(
+                [name], structure, highlight=tech["reference_carrier"]
+            )
             lines += [
                 f".. _tech-{name}:",
                 "",
@@ -295,8 +301,10 @@ def render_technologies(structure: dict) -> str:
             ]
             if "input_carrier" in tech:
                 lines += [
-                    f":Input carriers: {links(tech['input_carrier'], 'carrier', carriers)}",
-                    f":Output carriers: {links(tech['output_carrier'], 'carrier', carriers)}",
+                    ":Input carriers: "
+                    f"{links(tech['input_carrier'], 'carrier', carriers)}",
+                    ":Output carriers: "
+                    f"{links(tech['output_carrier'], 'carrier', carriers)}",
                 ]
             if "base_technology" in tech:
                 lines += [

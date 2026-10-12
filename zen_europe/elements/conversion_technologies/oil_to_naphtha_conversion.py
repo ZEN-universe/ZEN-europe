@@ -37,9 +37,7 @@ class OilToNaphthaConversion(ConversionTechnology):
         """
         Set the output carrier of oil to naphtha conversion to naphtha.
         """
-        return Attribute(
-            name="output_carrier", default_value=["naphtha"], element=self
-        )
+        return Attribute(name="output_carrier", default_value=["naphtha"], element=self)
 
     # ---------- Required methods that are called during object build ----------
 

@@ -44,8 +44,7 @@ class OilBoilerDH(ConversionTechnology):
         """
         Sets the input carrier of district heating oil boilers to oil.
         """
-        return Attribute(
-            name="input_carrier", default_value=["oil"], element=self)
+        return Attribute(name="input_carrier", default_value=["oil"], element=self)
 
     def _set_output_carrier(self) -> Attribute:
         """
@@ -63,8 +62,8 @@ class OilBoilerDH(ConversionTechnology):
 
         """
         tech_db = TechnologyCostDatabase(
-            settings=self.settings, 
-            source_path=self.source_path)
+            settings=self.settings, source_path=self.source_path
+        )
         return tech_db.get_lifetime(self)
 
     def _set_conversion_factor(self) -> Attribute:
@@ -74,24 +73,21 @@ class OilBoilerDH(ConversionTechnology):
         """
         attr = self.conversion_factor
         tech_db = TechnologyCostDatabase(
-            settings=self.settings, 
-            source_path=self.source_path)
+            settings=self.settings, source_path=self.source_path
+        )
         eff, agencies = tech_db.get_efficiency(self)
         eff = eff.loc[self.settings.time.reference_year]
-        cf = [{"oil": {
-            "default_value": 1/eff, "unit": "GW/GW"
-            }
-            }
-        ]
+        cf = [{"oil": {"default_value": 1 / eff, "unit": "GW/GW"}}]
         source = SourceInformation(
             description=(
-                f"The conversion factor of district heating oil boilers is based on data from {', '.join(agencies)}. "
+                "The conversion factor of district heating oil boilers is based on "
+                f"data from {', '.join(agencies)}. "
             ),
             metadata=tech_db.metadata,
         )
         attr.set_data(default_value=cf, source=source)
         return attr
-    
+
     def _set_construction_time(self) -> Attribute:
         """
         Sets the construction time of district heating oil boilers.
@@ -102,14 +98,15 @@ class OilBoilerDH(ConversionTechnology):
             source = AssumptionInformation(
                 description=(
                     "The construction time of DH oil boilers is assumed to be 0 years, "
-                    "as they can be installed quickly and do not require extensive construction work."
+                    "as they can be installed quickly and do not require extensive "
+                    "construction work."
                 )
             )
             attr.set_data(default_value=0, source=source)
             return attr
         else:
             return self.construction_time
-        
+
     def _set_capex_specific_conversion(self) -> Attribute:
         """
         Sets the specific capital expenditure (capex) for district heating oil boilers.
@@ -118,31 +115,36 @@ class OilBoilerDH(ConversionTechnology):
             Attribute: An Attribute object containing the specific capex data.
         """
         tech_db = TechnologyCostDatabase(
-                    settings=self.settings, source_path=self.source_path)
+            settings=self.settings, source_path=self.source_path
+        )
         return tech_db.get_capex_specific_conversion(self)
-    
+
     def _set_opex_specific_fixed(self) -> Attribute:
         """
-        Sets the specific fixed operational expenditure (opex) for district heating oil boilers.
+        Sets the specific fixed operational expenditure (opex) for district heating oil
+        boilers.
 
         Returns:
             Attribute: An Attribute object containing the specific fixed opex data.
         """
         tech_db = TechnologyCostDatabase(
-            settings=self.settings, source_path=self.source_path)
+            settings=self.settings, source_path=self.source_path
+        )
         return tech_db.get_opex_specific_fixed(self)
-    
+
     def _set_opex_specific_variable(self) -> Attribute:
         """
-        Sets the specific variable operational expenditure (opex) for district heating oil boilers.
+        Sets the specific variable operational expenditure (opex) for district heating
+        oil boilers.
 
         Returns:
             Attribute: An Attribute object containing the specific variable opex data.
         """
         tech_db = TechnologyCostDatabase(
-            settings=self.settings, source_path=self.source_path)
+            settings=self.settings, source_path=self.source_path
+        )
         return tech_db.get_opex_specific_variable(self)
-    
+
     def _set_capacity_existing(self) -> Attribute:
         """
         Sets the existing capacity for district heating oil boilers.
@@ -152,17 +154,16 @@ class OilBoilerDH(ConversionTechnology):
         """
         if self.settings.investment.use_existing_capacities:
             heat_demand_dataset = HeatDemand(
-                settings=self.settings, source_path=self.source_path)
-            return heat_demand_dataset.get_capacity_existing(self,is_dh=True)
+                settings=self.settings, source_path=self.source_path
+            )
+            return heat_demand_dataset.get_capacity_existing(self, is_dh=True)
         else:
             attr = self.capacity_existing
             attr.set_data(
                 default_value=0,
                 df=None,
                 source=AssumptionInformation(
-                    description=(
-                        "We do not consider existing capacities."
-                    ),
+                    description=("We do not consider existing capacities."),
                 ),
             )
             return attr

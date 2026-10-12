@@ -118,7 +118,7 @@ class LNGTerminal(ConversionTechnology):
         """
         lng_terminals = LNGTerminalsBrauers(source_path=self.source_path)
         return lng_terminals.get_capex_specific(self)
-    
+
     def _set_capacity_existing(self) -> Attribute:
         """
         Sets the existing capacity for LNG terminals.
@@ -138,8 +138,7 @@ class LNGTerminal(ConversionTechnology):
                 ),
                 metadata=gie_lng_map.metadata,
             )
-            attr.set_data(
-                df=capacity_existing, source=source, unit="GW")
+            attr.set_data(df=capacity_existing, source=source, unit="GW")
             return attr
         else:
             attr = self.capacity_existing
@@ -147,9 +146,7 @@ class LNGTerminal(ConversionTechnology):
                 default_value=0,
                 df=None,
                 source=AssumptionInformation(
-                    description=(
-                        "We do not consider existing capacities."
-                    ),
+                    description=("We do not consider existing capacities."),
                 ),
             )
             return attr

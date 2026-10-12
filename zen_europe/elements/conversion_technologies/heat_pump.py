@@ -37,24 +37,21 @@ class HeatPump(ConversionTechnology):
         """
         Sets the reference carrier of heat pumps to heat.
         """
-        return Attribute(
-            name="reference_carrier", default_value=["heat"], element=self
-        )
+        return Attribute(name="reference_carrier", default_value=["heat"], element=self)
 
     def _set_input_carrier(self) -> Attribute:
         """
         Sets the input carrier of heat pumps to electricity.
         """
         return Attribute(
-            name="input_carrier", default_value=["electricity"], element=self)
+            name="input_carrier", default_value=["electricity"], element=self
+        )
 
     def _set_output_carrier(self) -> Attribute:
         """
         Set the output carrier of heat pumps to heat.
         """
-        return Attribute(
-            name="output_carrier", default_value=["heat"], element=self
-        )
+        return Attribute(name="output_carrier", default_value=["heat"], element=self)
 
     # ---------- Required methods that are called during object build ----------
 
@@ -64,8 +61,8 @@ class HeatPump(ConversionTechnology):
 
         """
         tech_db = TechnologyCostDatabase(
-            settings=self.settings, 
-            source_path=self.source_path)
+            settings=self.settings, source_path=self.source_path
+        )
         return tech_db.get_lifetime(self)
 
     def _set_conversion_factor(self) -> Attribute:
@@ -75,29 +72,24 @@ class HeatPump(ConversionTechnology):
         """
         attr = self.conversion_factor
         when2heat_dataset = When2Heat(
-            settings=self.settings, 
-            source_path=self.source_path)
+            settings=self.settings, source_path=self.source_path
+        )
         cop_data = when2heat_dataset.get_COP()
-        cop = cop_data.xs("floor",level=1,axis=1)
+        cop = cop_data.xs("floor", level=1, axis=1)
         cop.index.name = "time"
-        cf = [{"electricity": {
-            "default_value": 1/cop.mean().mean(), "unit": "GW/GW"
-            }
-            }
+        cf = [
+            {"electricity": {"default_value": 1 / cop.mean().mean(), "unit": "GW/GW"}}
         ]
         source = SourceInformation(
             description=(
-                "The conversion factor of heat pumps is based on data from "
-                "When2Heat. We assume that the heat pump shows the COP of a floor heat pump."
+                "The conversion factor of heat pumps is based on data from When2Heat. "
+                "We assume that the heat pump shows the COP of a floor heat pump."
             ),
             metadata=when2heat_dataset.metadata,
         )
-        attr.set_data(
-            default_value=cf, 
-            df=1/cop,
-            source=source)
+        attr.set_data(default_value=cf, df=1 / cop, source=source)
         return attr
-    
+
     def _set_construction_time(self) -> Attribute:
         """
         Sets the construction time of heat pumps.
@@ -107,15 +99,16 @@ class HeatPump(ConversionTechnology):
             attr = self.construction_time
             source = AssumptionInformation(
                 description=(
-                    "The construction time of heat pumps is assumed to be 0 years, "
-                    "as they can be installed quickly and do not require extensive construction work."
+                    "The construction time of heat pumps is assumed to be 0 years, as "
+                    "they can be installed quickly and do not require extensive "
+                    "construction work."
                 )
             )
             attr.set_data(default_value=0, source=source)
             return attr
         else:
             return self.construction_time
-        
+
     def _set_capex_specific_conversion(self) -> Attribute:
         """
         Sets the specific capital expenditure (capex) for heat pumps.
@@ -124,9 +117,10 @@ class HeatPump(ConversionTechnology):
             Attribute: An Attribute object containing the specific capex data.
         """
         tech_db = TechnologyCostDatabase(
-                    settings=self.settings, source_path=self.source_path)
+            settings=self.settings, source_path=self.source_path
+        )
         return tech_db.get_capex_specific_conversion(self)
-    
+
     def _set_opex_specific_fixed(self) -> Attribute:
         """
         Sets the specific fixed operational expenditure (opex) for heat pumps.
@@ -135,9 +129,10 @@ class HeatPump(ConversionTechnology):
             Attribute: An Attribute object containing the specific fixed opex data.
         """
         tech_db = TechnologyCostDatabase(
-            settings=self.settings, source_path=self.source_path)
+            settings=self.settings, source_path=self.source_path
+        )
         return tech_db.get_opex_specific_fixed(self)
-    
+
     def _set_opex_specific_variable(self) -> Attribute:
         """
         Sets the specific variable operational expenditure (opex) for heat pumps.
@@ -146,9 +141,10 @@ class HeatPump(ConversionTechnology):
             Attribute: An Attribute object containing the specific variable opex data.
         """
         tech_db = TechnologyCostDatabase(
-            settings=self.settings, source_path=self.source_path)
+            settings=self.settings, source_path=self.source_path
+        )
         return tech_db.get_opex_specific_variable(self)
-    
+
     def _set_capacity_existing(self) -> Attribute:
         """
         Sets the existing capacity for heat pumps.
@@ -158,7 +154,8 @@ class HeatPump(ConversionTechnology):
         """
         if self.settings.investment.use_existing_capacities:
             heat_demand_dataset = HeatDemand(
-                settings=self.settings, source_path=self.source_path)
+                settings=self.settings, source_path=self.source_path
+            )
             return heat_demand_dataset.get_capacity_existing(self)
         else:
             attr = self.capacity_existing
@@ -166,9 +163,7 @@ class HeatPump(ConversionTechnology):
                 default_value=0,
                 df=None,
                 source=AssumptionInformation(
-                    description=(
-                        "We do not consider existing capacities."
-                    ),
+                    description=("We do not consider existing capacities."),
                 ),
             )
             return attr
@@ -181,7 +176,8 @@ class HeatPump(ConversionTechnology):
             Attribute: An Attribute object containing the maximum load data.
         """
         heat_demand_dataset = HeatDemand(
-            settings=self.settings, source_path=self.source_path)
+            settings=self.settings, source_path=self.source_path
+        )
 
         return heat_demand_dataset.get_max_load(self)
 

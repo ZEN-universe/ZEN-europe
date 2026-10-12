@@ -8,5 +8,5 @@ class MaxLoadSettings(SettingsCategory):
 
     name: ClassVar[str] = "max_load"
 
-    use_seasonal_nuclear_max_load: bool = True 
-    use_nodal_nuclear_max_load: bool = True 
+    use_seasonal_nuclear_max_load: bool = True
+    use_nodal_nuclear_max_load: bool = True

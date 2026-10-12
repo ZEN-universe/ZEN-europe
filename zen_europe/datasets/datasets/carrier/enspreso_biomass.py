@@ -16,9 +16,10 @@ from zen_creator.utils.attribute import Attribute, SourceInformation
 from zen_europe.utils.constants import Constants
 from zen_europe.utils.utils import interpolate_missing_years
 
+
 class EnspresoBiomass(Dataset[pd.DataFrame]):
     """Dataset class for the ENSPRESO biomass data.
-    
+
     This class provides methods to extract biomass availability and price
     """
 
@@ -42,11 +43,12 @@ class EnspresoBiomass(Dataset[pd.DataFrame]):
         if self.source_path is None:
             raise ValueError("source_path must be set to load the dataset.")
         return self.source_path / "02-carrier" / "biomass" / "ENSPRESO_BIOMASS.xlsx"
-    
+
+
 class EnspresoBiomassAvailability(EnspresoBiomass):
     """Dataset class for the ENSPRESO biomass potential data.
-    
-    This class inherits from EnspresoBiomass and 
+
+    This class inherits from EnspresoBiomass and
     provides methods to extract biomass availability"""
 
     name = "enspreso_biomass_availability"
@@ -60,10 +62,7 @@ class EnspresoBiomassAvailability(EnspresoBiomass):
     # -------- methods ------------------------
 
     def get_availability_import(
-        self,
-        element: Carrier,
-        biomass_types: list[str],
-        scenario: str = "ENS_Med"
+        self, element: Carrier, biomass_types: list[str], scenario: str = "ENS_Med"
     ) -> Attribute:
         """
         Compute the import availability of a biomass carrier from ENSPRESO potentials.
@@ -73,8 +72,9 @@ class EnspresoBiomassAvailability(EnspresoBiomass):
         reference-year value per node plus its yearly variation relative to
         that reference year.
 
-        :param element: The Carrier element for which to compute the import availability.
-        :param biomass_types: 
+        :param element: The Carrier element for which to compute the import
+        availability.
+        :param biomass_types:
             List of biomass energy-commodity codes to filter the ENSPRESO data.
         :param scenario: The scenario for which to compute the import availability.
 
@@ -153,10 +153,12 @@ class EnspresoBiomassAvailability(EnspresoBiomass):
                 its yearly variation relative to that reference year.
         """
         potential = self._get_availability_import(
-            biomass_types=biomass_types,
-            scenario=scenario)
+            biomass_types=biomass_types, scenario=scenario
+        )
         potential = potential.groupby(["NUTS0", "Year"]).sum()["Value"].unstack()
-        potential = potential / Constants.GJ_PER_MWH * 1000 / Constants.HOURS_PER_YEAR  # PJ/a -> GW
+        potential = (
+            potential / Constants.GJ_PER_MWH * 1000 / Constants.HOURS_PER_YEAR
+        )  # PJ/a -> GW
         potential = interpolate_missing_years(potential)
 
         nodes = pd.Index(element.model.config.system.set_nodes)
@@ -173,19 +175,18 @@ class EnspresoBiomassAvailability(EnspresoBiomass):
         return reference_year_values, yearly_variation
 
     def get_availability_import_yearly(
-        self,
-        element: Carrier,
-        biomass_types: list[str],
-        scenario: str = "ENS_Med"
+        self, element: Carrier, biomass_types: list[str], scenario: str = "ENS_Med"
     ) -> Attribute:
         """
-        Compute the yearly import availability of a biomass carrier from ENSPRESO potentials.
+        Compute the yearly import availability of a biomass carrier from ENSPRESO
+        potentials.
 
         Filters the ENSPRESO NUTS0 energy-commodity potentials to the given
         scenario and energy-commodity codes, converts to GWh
 
-        :param element: The Carrier element for which to compute the import availability.
-        :param biomass_types: 
+        :param element: The Carrier element for which to compute the import
+        availability.
+        :param biomass_types:
             List of biomass energy-commodity codes to filter the ENSPRESO data.
         :param scenario: The scenario for which to compute the import availability.
 
@@ -194,8 +195,8 @@ class EnspresoBiomassAvailability(EnspresoBiomass):
                 with the computed data.
         """
         potential = self._get_availability_import(
-            biomass_types=biomass_types, 
-            scenario=scenario)
+            biomass_types=biomass_types, scenario=scenario
+        )
         potential = potential.groupby(["NUTS0", "Year"]).sum()["Value"].unstack()
         potential = potential / Constants.GJ_PER_MWH * 1000  # PJ/a -> GWh
         potential = interpolate_missing_years(potential)
@@ -222,11 +223,9 @@ class EnspresoBiomassAvailability(EnspresoBiomass):
             df=potential,
             unit="GWh",
         )
-    
+
     def _get_availability_import(
-        self,
-        biomass_types: list[str], 
-        scenario: str = "ENS_Med"
+        self, biomass_types: list[str], scenario: str = "ENS_Med"
     ) -> pd.DataFrame:
         """
         Compute the import availability of a biomass carrier from ENSPRESO potentials.
@@ -234,7 +233,7 @@ class EnspresoBiomassAvailability(EnspresoBiomass):
         Filters the ENSPRESO NUTS0 energy-commodity potentials to the given
         scenario and energy-commodity codes.
 
-        :param biomass_types: 
+        :param biomass_types:
             List of biomass energy-commodity codes to filter the ENSPRESO data.
         :param scenario: The scenario for which to compute the import availability.
 
@@ -247,10 +246,11 @@ class EnspresoBiomassAvailability(EnspresoBiomass):
         ]
         return potential
 
+
 class EnspresoBiomassPrice(EnspresoBiomass):
     """Dataset class for the ENSPRESO biomass price data.
-    
-    This class inherits from EnspresoBiomass and 
+
+    This class inherits from EnspresoBiomass and
     provides methods to extract biomass price"""
 
     name = "enspreso_biomass_price"
@@ -268,23 +268,23 @@ class EnspresoBiomassPrice(EnspresoBiomass):
         element: Carrier,
         biomass_types: list[str],
         scenario: str = "ENS_Med",
-        regional_prices: bool = False
+        regional_prices: bool = False,
     ) -> Attribute:
         """
         Compute the import price of a biomass carrier from ENSPRESO potentials.
 
         Filters the ENSPRESO NUTS0 energy-commodity prices to the given
-        scenario and energy-commodity codes, converts from Euro/GJ to Euro/MWh, 
-        and derives the reference-year value per node plus its yearly variation 
+        scenario and energy-commodity codes, converts from Euro/GJ to Euro/MWh,
+        and derives the reference-year value per node plus its yearly variation
         relative to that reference year. When aggregating across multiple
         biomass types and/or regions, the average price is used, weighted by
         the availability of each biomass type in each region.
 
         :param element: The Carrier element for which to compute the import price.
-        :param biomass_types: List of 
+        :param biomass_types: List of
             biomass energy-commodity codes to filter the ENSPRESO data.
         :param scenario: The scenario for which to compute the import price.
-        :param regional_prices: Whether to use national prices. If False, 
+        :param regional_prices: Whether to use national prices. If False,
             the average price across all NUTS0 regions is used.
 
         Returns:
@@ -295,14 +295,14 @@ class EnspresoBiomassPrice(EnspresoBiomass):
             (self.data["Scenario"] == scenario)
             & (self.data["Energy Commodity"].isin(biomass_types))
         ]
-        data = data.set_index(["NUTS0", "Year","Energy Commodity"])
+        data = data.set_index(["NUTS0", "Year", "Energy Commodity"])
         unit = data["Units"].unique()
-        assert len(unit) == 1, (
-            f"Multiple units found in ENSPRESO biomass price data: {unit}"
-        )
-        assert unit[0] == "Euro2010/GJ", (
-            f"Unexpected unit in ENSPRESO biomass price data: {unit[0]}"
-        )
+        assert (
+            len(unit) == 1
+        ), f"Multiple units found in ENSPRESO biomass price data: {unit}"
+        assert (
+            unit[0] == "Euro2010/GJ"
+        ), f"Unexpected unit in ENSPRESO biomass price data: {unit[0]}"
         data = data["NUTS0 Energy Commodity Cost "]
 
         nodes = pd.Index(element.model.config.system.set_nodes)
@@ -312,19 +312,23 @@ class EnspresoBiomassPrice(EnspresoBiomass):
         availability = enspreso_availability._get_availability_import(
             biomass_types=biomass_types, scenario=scenario
         )
-        availability = availability.set_index(
-            ["NUTS0", "Year","Energy Commodity"]
-            )["Value"]
+        availability = availability.set_index(["NUTS0", "Year", "Energy Commodity"])[
+            "Value"
+        ]
         data = data.loc[common_nodes].sort_index()
         availability = availability.loc[common_nodes].sort_index()
-        data_availability = data*availability
+        data_availability = data * availability
 
         if not regional_prices:
-            price = (data_availability.groupby(["Year"]).sum()
-                     /availability.groupby(["Year"]).sum())
+            price = (
+                data_availability.groupby(["Year"]).sum()
+                / availability.groupby(["Year"]).sum()
+            )
         else:
-            price = (data_availability.groupby(["NUTS0", "Year"]).sum()
-                     /availability.groupby(["NUTS0", "Year"]).sum())
+            price = (
+                data_availability.groupby(["NUTS0", "Year"]).sum()
+                / availability.groupby(["NUTS0", "Year"]).sum()
+            )
             price = price.unstack(level=0).T
 
         # convert from 2010 Euro/GJ to Euro/MWh in reference year
@@ -354,18 +358,17 @@ class EnspresoBiomassPrice(EnspresoBiomass):
             df = None
             yearly_variation.name = "price_import_yearly_variation"
             yearly_variation.index.name = "year"
-        
+
         source = SourceInformation(
             description=(
                 "Biomass import price derived from ENSPRESO NUTS0 energy "
                 f"commodity prices {biomass_types}, scenario '{scenario}'. "
-                "Values are converted from Euro/GJ to Euro/MWh and interpolated to fill "
-                "missing years; " 
-                "the yearly variation is expressed relative to the reference year."
-                " If regional_prices is True, national prices are used; "
-                "otherwise, the average price across all NUTS0 regions is used." 
-                " The average price is weighted by the availability of "
-                "each biomass type in each region."
+                "Values are converted from Euro/GJ to Euro/MWh and interpolated to "
+                "fill missing years; the yearly variation is expressed relative to the "
+                "reference year. If regional_prices is True, national prices are used; "
+                "otherwise, the average price across all NUTS0 regions is used. The "
+                "average price is weighted by the availability of each biomass type in "
+                "each region."
             ),
             metadata=self.metadata,
         )

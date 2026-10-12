@@ -5,10 +5,10 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from pathlib import Path
 
+import pandas as pd
 from zen_creator.datasets.datasets.dataset import Dataset
 from zen_creator.datasets.datasets.metadata import MetaData
 
-import pandas as pd
 
 class ImportIncreaseGas(Dataset[pd.DataFrame]):
     """
@@ -32,7 +32,7 @@ class ImportIncreaseGas(Dataset[pd.DataFrame]):
             author=["Mike Fulwood", "Anouk Honoré", "Jack Sharples", "Marshall Hall"],
             publication="The Oxford Institute for Energy Studies",
             publication_year=2022,
-            url=f"https://www.oxfordenergy.org/publications/the-eu-plan-to-reduce-russian-gas-imports-by-two-thirds-by-the-end-of-2022-practical-realities-and-implications/",
+            url="https://www.oxfordenergy.org/publications/the-eu-plan-to-reduce-russian-gas-imports-by-two-thirds-by-the-end-of-2022-practical-realities-and-implications/",
         )
 
     def _set_path(self) -> Path | None:
@@ -40,8 +40,8 @@ class ImportIncreaseGas(Dataset[pd.DataFrame]):
 
     def _set_data(self) -> pd.S:
         return pd.Series({"lng": 55, "norway": 2, "azerbaijan": 2.85, "algeria": 2})
-    
-    def get_import_increase(self,region:str) -> pd.DataFrame:
+
+    def get_import_increase(self, region: str) -> pd.DataFrame:
         """
         Get the import increase data for natural gas.
 
@@ -49,5 +49,6 @@ class ImportIncreaseGas(Dataset[pd.DataFrame]):
         """
         if region not in self.data.index:
             raise ValueError(
-                f"Region '{region}' not found in the import increase data.")
+                f"Region '{region}' not found in the import increase data."
+            )
         return self.data[region]

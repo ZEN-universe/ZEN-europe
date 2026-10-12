@@ -4,7 +4,6 @@ from typing import TYPE_CHECKING, Any, Dict, cast
 
 import pandas as pd
 
-
 if TYPE_CHECKING:
     from pathlib import Path
 
@@ -47,8 +46,9 @@ class PotentialCapacityRenewables(DatasetCollection):
         euro_calliope_dataset = cast(EuroCalliope, self.data["euro_calliope"])
         data = enspreso_dataset.get_capacity_limit(element)
         if not element.name == "wind_offshore":
-            missing_nodes = pd.Index(
-                element.model.config.system.set_nodes).difference(data.index)
+            missing_nodes = pd.Index(element.model.config.system.set_nodes).difference(
+                data.index
+            )
             for node in missing_nodes:
                 data.loc[node] = euro_calliope_dataset.get_capacity_limit(element, node)
         data = data.sort_index()

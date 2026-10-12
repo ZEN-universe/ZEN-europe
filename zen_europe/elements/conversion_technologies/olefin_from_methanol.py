@@ -38,16 +38,16 @@ class OlefinFromMethanol(ConversionTechnology):
         electricity.
         """
         return Attribute(
-            name="input_carrier", default_value=["methanol", "electricity"],
-            element=self)
+            name="input_carrier",
+            default_value=["methanol", "electricity"],
+            element=self,
+        )
 
     def _set_output_carrier(self) -> Attribute:
         """
         Set the output carrier of olefin from methanol to olefin.
         """
-        return Attribute(
-            name="output_carrier", default_value=["olefin"], element=self
-        )
+        return Attribute(name="output_carrier", default_value=["olefin"], element=self)
 
     # ---------- Required methods that are called during object build ----------
 
@@ -67,7 +67,7 @@ class OlefinFromMethanol(ConversionTechnology):
                     "to the lifetime of methanol from natural gas, "
                     "assuming a standard industrial technology lifetime."
                 ),
-                metadata=m_ng.lifetime.sources[-1].metadata
+                metadata=m_ng.lifetime.sources[-1].metadata,
             ),
         )
         return attr
@@ -90,7 +90,7 @@ class OlefinFromMethanol(ConversionTechnology):
                         "from natural gas, assuming a standard "
                         "industrial construction timeline."
                     ),
-                    metadata=m_ng.construction_time.sources[-1].metadata
+                    metadata=m_ng.construction_time.sources[-1].metadata,
                 ),
             )
             return attr
@@ -106,8 +106,10 @@ class OlefinFromMethanol(ConversionTechnology):
         aidres_dataset = Aidres(source_path=self.source_path)
         cf_dict = aidres_dataset.get_conversion_factors_aidres(self.name)
         cf = [
-            {carrier: {"default_value": value, "unit": "GWh/tproduct"}
-            for carrier, value in cf_dict.items()}
+            {
+                carrier: {"default_value": value, "unit": "GWh/tproduct"}
+                for carrier, value in cf_dict.items()
+            }
         ]
         source = SourceInformation(
             description=(

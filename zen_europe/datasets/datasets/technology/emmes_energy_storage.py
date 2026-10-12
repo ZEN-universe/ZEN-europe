@@ -46,17 +46,15 @@ class EMMESEnergyStorage(Dataset[pd.DataFrame]):
     def _set_path(self) -> Path | None:
         if self.source_path is None:
             raise ValueError("source_path must be set to load the dataset.")
-        return (Path(self.source_path)
-                / "03-technology"
-                / "capacity_existing"
-                / "battery")
+        return (
+            Path(self.source_path) / "03-technology" / "capacity_existing" / "battery"
+        )
 
     def _set_data(self) -> pd.DataFrame:
         """
         Cumulative battery power capacity per node and year in GW.
         """
-        data = pd.read_csv(
-            self.path / "emmes_battery_power_capacity_by_country_MW.csv")
+        data = pd.read_csv(self.path / "emmes_battery_power_capacity_by_country_MW.csv")
         data["country"] = convert_country_names(data["country"])
         data = data[data["country"].notna()]
         data = data.set_index("country")
@@ -80,7 +78,7 @@ class EMMESEnergyStorage(Dataset[pd.DataFrame]):
             f" {self.name} dataset."
         )
         reference_year = element.settings.time.reference_year
-        data = self.data.loc[:, self.data.columns <= reference_year-1]
+        data = self.data.loc[:, self.data.columns <= reference_year - 1]
         data = divide_evolution_of_cumulative_capacity(data)
         data = format_capacity_existing(data)
         return element.capacity_existing.set_data(

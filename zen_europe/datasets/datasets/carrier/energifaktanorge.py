@@ -5,11 +5,10 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from pathlib import Path
 
+import pandas as pd
 from zen_creator.datasets.datasets.dataset import Dataset
 from zen_creator.datasets.datasets.metadata import MetaData
 from zen_creator.utils.attribute import Attribute
-
-import pandas as pd
 
 
 class Energifaktanorge(Dataset[pd.DataFrame]):
@@ -27,9 +26,7 @@ class Energifaktanorge(Dataset[pd.DataFrame]):
     def _set_metadata(self) -> MetaData:
         return MetaData(
             name=self.name,
-            title=(
-                "Energy use by sector"
-            ),
+            title=("Energy use by sector"),
             author=["Energifaktanorge"],
             publication="Energifaktanorge",
             publication_year=2025,
@@ -45,7 +42,7 @@ class Energifaktanorge(Dataset[pd.DataFrame]):
     # -------- methods ------------------------
     def get_service_demand(self) -> Attribute:
         """
-        Get the NO heat demand for the Service sector
+        Get the NO heat demand for the Service sector.
 
         Args:
             element (Carrier): The carrier element for which to get the demand.
@@ -53,8 +50,10 @@ class Energifaktanorge(Dataset[pd.DataFrame]):
         total_energy_service = 36 * 1000  # GWh
         share_space_heating = 0.4
         share_water_heating = 0.1
-        data_ser = pd.Series({
-            "space_heating": total_energy_service * share_space_heating,
-            "water_heating": total_energy_service * share_water_heating,
-        })
+        data_ser = pd.Series(
+            {
+                "space_heating": total_energy_service * share_space_heating,
+                "water_heating": total_energy_service * share_water_heating,
+            }
+        )
         return data_ser

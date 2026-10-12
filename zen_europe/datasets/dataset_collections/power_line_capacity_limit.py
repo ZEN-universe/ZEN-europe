@@ -43,10 +43,9 @@ class PowerLineCapacityLimit(DatasetCollection):
     CANDIDATES = "candidates"
     BOTH = "both"
 
-    def __init__(self,
-                 settings: Settings,
-                 source_path: Path | str,
-                 set_nodes: list[str]):
+    def __init__(
+        self, settings: Settings, source_path: Path | str, set_nodes: list[str]
+    ):
         self.settings = settings
         self.set_nodes = set_nodes
         super().__init__(source_path=source_path)
@@ -59,13 +58,14 @@ class PowerLineCapacityLimit(DatasetCollection):
 
         return {
             "tyndp_electricity_modelling_results": TYNDPElectricityModellingResults(
-                source_path=self.source_path),
-            "iosn_candidate_units": IoSNCandidateUnits(
-                source_path=self.source_path),
+                source_path=self.source_path
+            ),
+            "iosn_candidate_units": IoSNCandidateUnits(source_path=self.source_path),
             "entsoe": ENTSOE(
                 settings=self.settings,
                 set_nodes=self.set_nodes,
-                source_path=self.source_path),
+                source_path=self.source_path,
+            ),
         }
 
     # -------- outward-facing accessors ------------------
@@ -84,11 +84,13 @@ class PowerLineCapacityLimit(DatasetCollection):
         if potential in (self.TYNDP, self.BOTH):
             limits[self.TYNDP] = self._get_limit_tyndp(set_edges)
             metadata["tyndp_electricity_modelling_results"] = self.data[
-                "tyndp_electricity_modelling_results"].metadata
+                "tyndp_electricity_modelling_results"
+            ].metadata
         if potential in (self.CANDIDATES, self.BOTH):
             limits[self.CANDIDATES] = self._get_limit_candidates(set_edges)
             metadata["iosn_candidate_units"] = self.data[
-                "iosn_candidate_units"].metadata
+                "iosn_candidate_units"
+            ].metadata
             metadata["entsoe"] = self.data["entsoe"].metadata
         if not limits:
             raise ValueError(
@@ -106,8 +108,9 @@ class PowerLineCapacityLimit(DatasetCollection):
             unit="GW",
             source=SourceInformation(
                 description=self._get_description(potential),
-                metadata=metadata if len(metadata) > 1 else next(
-                    iter(metadata.values())),
+                metadata=(
+                    metadata if len(metadata) > 1 else next(iter(metadata.values()))
+                ),
             ),
         )
 
@@ -116,27 +119,28 @@ class PowerLineCapacityLimit(DatasetCollection):
         """The export capacity that the TYNDP 2022 scenarios model per edge."""
         modelling_results = cast(
             TYNDPElectricityModellingResults,
-            self.data["tyndp_electricity_modelling_results"])
+            self.data["tyndp_electricity_modelling_results"],
+        )
         capacity = modelling_results.get_export_capacity(self.set_nodes)
         return self._to_edges(self._symmetric(capacity), set_edges)
 
     def _get_limit_candidates(self, set_edges: pd.DataFrame) -> pd.Series:
         """The existing capacity plus the increase of all candidates per edge."""
-        candidate_units = cast(
-            IoSNCandidateUnits, self.data["iosn_candidate_units"])
+        candidate_units = cast(IoSNCandidateUnits, self.data["iosn_candidate_units"])
         increase = candidate_units.get_capacity_increase(self.set_nodes)
         increase = self._to_edges(self._symmetric(increase), set_edges)
 
         entsoe = cast(ENTSOE, self.data["entsoe"])
         capacity_existing = entsoe.get_transmission_capacity()
         capacity_existing = capacity_existing["capacity_existing"].droplevel(
-            "year_construction")
-        capacity_existing = capacity_existing.groupby("edge").sum().reindex(
-            set_edges.index).fillna(0.0)
+            "year_construction"
+        )
+        capacity_existing = (
+            capacity_existing.groupby("edge").sum().reindex(set_edges.index).fillna(0.0)
+        )
         return capacity_existing + increase
 
-    def _to_edges(
-            self, capacity: pd.Series, set_edges: pd.DataFrame) -> pd.Series:
+    def _to_edges(self, capacity: pd.Series, set_edges: pd.DataFrame) -> pd.Series:
         """Map a capacity per country pair onto the edges of the model."""
         pairs = pd.MultiIndex.from_frame(set_edges[["node_from", "node_to"]])
         capacity = capacity.reindex(pairs).fillna(0.0)
@@ -149,7 +153,8 @@ class PowerLineCapacityLimit(DatasetCollection):
         reverse = capacity.copy()
         reverse.index = pd.MultiIndex.from_tuples(
             [(node_to, node_from) for node_from, node_to in capacity.index],
-            names=capacity.index.names)
+            names=capacity.index.names,
+        )
         return pd.concat([capacity, reverse], axis=1).max(axis=1)
 
     def _get_description(self, potential: str) -> str:
