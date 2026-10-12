@@ -1,8 +1,13 @@
+# Project-specific-ignores
 data/created_models
-test.py
 tests/end_to_end/outputs
+docs/files/generated/
 CLAUDE.md
 *.ipynb
+*.feather
+test.py
+
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
