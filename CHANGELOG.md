@@ -3,10 +3,16 @@
 This file gets automatically updated in ZEN-europe's continuous integration 
 procedures. Do not edit the file manually.
 
-## [Unversioned Changes] - 2026-06-17 
+## [v1.0.0] - 2026-10-12 
 
 ### Maintenance Tasks 🧹
 - upgrade `black` to patch security vulnerability. [[🔀 PR #20](https://github.com/ZEN-universe/ZEN-europe/pull/20) @csfunke]
+
+### Data Changes 📊
+- Full energy system v1 [[🔀 PR #31](https://github.com/ZEN-universe/ZEN-europe/pull/31) @jacob-mannhardt]
+
+### BREAKING CHANGES ⚠️
+- This is the first full energy system [[🔀 PR #31](https://github.com/ZEN-universe/ZEN-europe/pull/31) @jacob-mannhardt]
 
 ## [v0.3.0] - 2026-06-12 
 
