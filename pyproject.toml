@@ -9,12 +9,12 @@ description="ZEN-europe hosts the european, sector-coupled dataset for ZEN-garde
 readme = "README.md"
 requires-python = ">=3.11"
 authors = [
-  { name="Christoph Funke", email="zen-garden@ethz.ch" },
-  { name="Jacob Mannhardt"},
+  { name="Jacob Mannhardt", email="zen-garden@ethz.ch"},
+  { name="Christoph Funke"},
 ]
 
 dependencies = [
-    "zen-creator>=1.3.0",
+    "zen-creator>=2.0.0",
     "eurostat",
     "requests",
     "scikit-learn",
