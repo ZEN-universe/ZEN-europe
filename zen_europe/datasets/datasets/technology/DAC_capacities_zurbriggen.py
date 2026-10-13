@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from functools import cached_property
 from pathlib import Path
 
 import pandas as pd
@@ -20,6 +21,17 @@ class DACCapacitiesZurbriggen(Dataset[pd.DataFrame]):
     """
 
     name = "DAC_capacities_zurbriggen"
+
+    # Global DAC capacity [tCO2/yr] of the probabilistic diffusion model of the
+    # paper: the mean initial capacity in 2030 (8.8 MtCO2/yr in the base case, ten
+    # times more with a short-term policy push) and the median capacity in 2050
+    # for the growth analogues.
+    GLOBAL_CAPACITY_PATHWAYS: dict[str, dict[int, float]] = {
+        "LNG analogue": {2030: 8.8e6, 2050: 20e6},
+        "ammonia analogue": {2030: 8.8e6, 2050: 70e6},
+        "ammonia + policy": {2030: 88e6, 2050: 600e6},
+        "wind + policy": {2030: 88e6, 2050: 1600e6},
+    }
 
     def __init__(self, settings: Settings, source_path: Path | str | None = None):
         self.settings = settings
@@ -55,6 +67,13 @@ class DACCapacitiesZurbriggen(Dataset[pd.DataFrame]):
             / "Capacity DAC Projects Database 2024.xlsx"
         )
 
+    @cached_property
+    def _projects(self) -> pd.DataFrame:
+        """All projects of the database, worldwide and of every status."""
+        data = pd.read_excel(self.path, sheet_name="All Projects", skiprows=1)
+        data = data.rename(columns={"Unnamed: 7": "Technology Comments"})
+        return data.iloc[2:]
+
     def _set_data(self) -> pd.DataFrame:
         """
         The data is extracted from the GitHub repository of the Zurbriggen et al. paper.
@@ -62,9 +81,7 @@ class DACCapacitiesZurbriggen(Dataset[pd.DataFrame]):
         We allocate all icelandic storage projects to Norway,
         as we don't have a separate country in the model for Iceland.
         """
-        data = pd.read_excel(self.path, sheet_name="All Projects", skiprows=1)
-        data = data.rename(columns={"Unnamed: 7": "Technology Comments"})
-        data = data.iloc[2:]
+        data = self._projects
         data = data[
             data["Status"].isin(
                 [
@@ -74,7 +91,7 @@ class DACCapacitiesZurbriggen(Dataset[pd.DataFrame]):
                     "FID",
                 ]
             )
-        ]
+        ].copy()
         data["node"] = convert_ISO3_to_ISO2(data["Country"])
         data["node"] = data["node"].replace({"IS": "NO"})
         data = data[data["node"].notna()]
@@ -87,6 +104,42 @@ class DACCapacitiesZurbriggen(Dataset[pd.DataFrame]):
         return data
 
     # -------- methods ------------------------
+    def get_global_dac_capacity_operational(self) -> pd.Series:
+        """
+        Cumulative global capacity [tCO2/yr] of the operational DAC projects, by
+        the year they came online.
+
+        Unlike `get_capacity_existing`, all countries are included and only
+        projects with the status "Operational" are counted.
+        """
+        data = self._projects
+        operational = data[data["Status"].astype(str).str.strip() == "Operational"]
+        year = pd.to_numeric(operational["Date online"], errors="coerce")
+        capacity = pd.to_numeric(operational["Capacity"], errors="coerce")
+        cumulative = capacity.groupby(year).sum().cumsum()
+        cumulative.index = cumulative.index.astype(int)
+        cumulative.index.name = "year"
+        cumulative.name = "capacity"
+        return cumulative.astype(float)
+
+    def get_global_dac_capacity(self, pathway: str) -> pd.Series:
+        """
+        Global DAC capacity [tCO2/yr] of `pathway` in the reported years.
+
+        The pathways are one of `GLOBAL_CAPACITY_PATHWAYS`: base case or enhanced
+        policy, with the growth of a historical analogue technology.
+        """
+        if pathway not in self.GLOBAL_CAPACITY_PATHWAYS:
+            raise ValueError(
+                f"Unknown DAC pathway '{pathway}' of Zurbriggen et al., expected one "
+                f"of {list(self.GLOBAL_CAPACITY_PATHWAYS)}."
+            )
+        data = pd.Series(
+            self.GLOBAL_CAPACITY_PATHWAYS[pathway], name="capacity", dtype=float
+        )
+        data.index.name = "year"
+        return data
+
     def get_capacity_existing(self, element: ConversionTechnology) -> Attribute:
         """
         Returns the existing DAC capacity from the Zurbriggen et al. paper.

@@ -24,6 +24,7 @@ class CacheSettings(SettingsCategory):
     overwrite_unece: bool = False
     overwrite_pan_european_climate_database: bool = False
     overwrite_passenger_cars_cox: bool = False
+    overwrite_dac_costs_sievert: bool = False
 
 
 _active = CacheSettings()

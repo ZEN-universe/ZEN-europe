@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from zen_europe.datasets.dataset_collections.dac_costs import DACCosts
 from zen_europe.datasets.dataset_collections.technology_cost_database import (
     TechnologyCostDatabase,
 )
@@ -108,10 +109,7 @@ class DAC(ConversionTechnology):
         Returns:
             Attribute: An Attribute object containing the specific capex data.
         """
-        tech_db = TechnologyCostDatabase(
-            settings=self.settings, source_path=self.source_path
-        )
-        return tech_db.get_capex_specific_conversion(self)
+        return self._cost_dataset().get_capex_specific_conversion(self)
 
     def _set_opex_specific_fixed(self) -> Attribute:
         """
@@ -120,10 +118,7 @@ class DAC(ConversionTechnology):
         Returns:
             Attribute: An Attribute object containing the specific fixed opex data.
         """
-        tech_db = TechnologyCostDatabase(
-            settings=self.settings, source_path=self.source_path
-        )
-        return tech_db.get_opex_specific_fixed(self)
+        return self._cost_dataset().get_opex_specific_fixed(self)
 
     def _set_opex_specific_variable(self) -> Attribute:
         """
@@ -132,10 +127,21 @@ class DAC(ConversionTechnology):
         Returns:
             Attribute: An Attribute object containing the specific variable opex data.
         """
-        tech_db = TechnologyCostDatabase(
+        return self._cost_dataset().get_opex_specific_variable(self)
+
+    def _cost_dataset(self) -> DACCosts | TechnologyCostDatabase:
+        """
+        The source of the costs of DAC, selected by `cost.dac_cost_source`.
+
+        `DACCosts` gives the experience curves of Sievert et al. (2024) along a
+        global deployment pathway, the technology cost database the DEA
+        projections.
+        """
+        if self.settings.cost.dac_cost_source == "sievert":
+            return DACCosts(settings=self.settings, source_path=self.source_path)
+        return TechnologyCostDatabase(
             settings=self.settings, source_path=self.source_path
         )
-        return tech_db.get_opex_specific_variable(self)
 
     def _set_capacity_existing(self) -> Attribute:
         """
