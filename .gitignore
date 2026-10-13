@@ -6,6 +6,8 @@ docs/files/generated/
 CLAUDE.md
 *.ipynb
 *.feather
+data/raw_data/02-carrier/entsoe/*.json
+data/raw_data/02-carrier/eurostat/*.json
 test.py
 
 
