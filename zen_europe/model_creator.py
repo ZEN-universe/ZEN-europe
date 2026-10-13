@@ -34,7 +34,7 @@ def create_model(
     models: Path | str | None = None,
     model_name: str | None = None,
     name: str = "zen-europe",
-    output_folder: Path | str = DEFAULT_OUTPUT_PATH,
+    output_folder: Path | str | None = None,
     write: bool = True,
 ) -> Model:
     """Generate a ZEN-europe dataset.
@@ -50,7 +50,8 @@ def create_model(
             and the dataset is named after it.
         name: The name of the dataset, used when model_name is not given.
         output_folder: The directory the dataset is written to, together with
-            the config.yaml that ZEN-garden is run with.
+            the config.yaml that ZEN-garden is run with. Overrides the
+            ``output.path`` setting when given.
         write: Whether to write the dataset to disk.
     """
     if config is None:
@@ -63,10 +64,11 @@ def create_model(
         name = model_name
 
     model_settings = Settings.load_from_yaml(config, patch=patch)
+    resolved_output_folder = output_folder or model_settings.output.path
 
     model = Model.from_config(config, settings=model_settings)
     set_active_cache_settings(model.settings.cache)
-    model.output_folder = Path(output_folder)
+    model.output_folder = Path(resolved_output_folder)
     model.name = name
 
     # apply changes

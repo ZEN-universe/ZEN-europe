@@ -8,6 +8,7 @@ from .data_source import DataSourceSettings  # noqa: F401
 from .emissions import EmissionsSettings  # noqa: F401
 from .investment import InvestmentSettings  # noqa: F401
 from .max_load import MaxLoadSettings  # noqa: F401
+from .output import OutputSettings  # noqa: F401
 from .region import RegionSettings  # noqa: F401
 from .scenario import ScenarioSettings  # noqa: F401
 from .structure import StructureSettings  # noqa: F401
@@ -21,6 +22,7 @@ __all__ = [
     "DataSourceSettings",
     "AvailabilitySettings",
     "MaxLoadSettings",
+    "OutputSettings",
     "ScenarioSettings",
     "CacheSettings",
     "RegionSettings",

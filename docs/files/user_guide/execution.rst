@@ -58,7 +58,8 @@ Command line options
        ``zen-europe``.
    * - ``--output_path``
      - Folder the datasets are written to, together with the ``config.yaml``
-       that ZEN-garden is run with. Default: ``data/created_models``.
+       that ZEN-garden is run with. Overrides the typed ``output.path`` setting.
+       Default: ``data/created_models``.
 
 
 Generating several variants
