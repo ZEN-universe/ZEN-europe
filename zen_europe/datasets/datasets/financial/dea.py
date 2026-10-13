@@ -527,7 +527,7 @@ class DEA(Dataset[pd.DataFrame]):
         """
         filename, url = _SOURCES[source]
         file_path = self.path / filename
-        if not file_path.exists():
+        if get_active_cache_settings().overwrite_dea or not file_path.exists():
             self._download(url, file_path)
         raw = pd.read_excel(file_path, sheet_name="alldata_flat")
         if rf_category_fixup:

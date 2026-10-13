@@ -6,6 +6,7 @@ import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
+from zen_creator.utils.config import Config
 from zen_creator.utils.settings import ModelSet, Settings
 
 from zen_europe.model_creator import (
@@ -14,6 +15,7 @@ from zen_europe.model_creator import (
     create_model,
     default_models_path,
 )
+from zen_europe.settings.cache import clear_caches
 
 COLOR_SUCCESS = "\033[92m"
 COLOR_WARNING = "\033[38;5;208m"  # orange
@@ -111,6 +113,14 @@ def zen_europe_cli() -> None:
             f"from the settings (default: {DEFAULT_OUTPUT_PATH})."
         ),
     )
+    parser.add_argument(
+        "--no-incremental",
+        action="store_true",
+        help=(
+            "Delete all registered downloaded source snapshots and derived "
+            "dataset caches before generating models."
+        ),
+    )
     args = parser.parse_args()
 
     if args.all and args.model:
@@ -119,6 +129,9 @@ def zen_europe_cli() -> None:
         parser.error("--sequential only applies together with --all.")
     if args.jobs is not None and not args.all:
         parser.error("--jobs only applies together with --all.")
+
+    if args.no_incremental:
+        _clear_caches(args.config_path or DEFAULT_CONFIG_PATH)
 
     if args.all:
         _generate_all(args)
@@ -165,7 +178,13 @@ def _generate_all(args: argparse.Namespace) -> None:
         return
 
     jobs = args.jobs or DEFAULT_JOBS
-    if _reloads_caches(resolved):
+    if args.no_incremental:
+        logger.warning(
+            "--no-incremental clears shared dataset caches, so models are "
+            "generated one at a time while the caches are rebuilt."
+        )
+        jobs = 1
+    elif _reloads_caches(resolved):
         logger.warning(
             "A model reloads a dataset cache from its source, so the models "
             "are generated one at a time to keep them from writing the same "
@@ -174,6 +193,19 @@ def _generate_all(args: argparse.Namespace) -> None:
         jobs = 1
 
     _generate_in_subprocesses(resolved, args, models_path, jobs)
+
+
+def _clear_caches(config_path: Path) -> None:
+    """Delete registered cache files below the configured source path."""
+    config = Config.load_from_yaml(config_path)
+    if config.source_path is None:
+        raise ValueError(
+            "--no-incremental requires source_path to be set in the configuration."
+        )
+    removed = clear_caches(config.source_path)
+    for path in removed:
+        logger.info(f"Removed cache file {path}")
+    logger.info(f"Removed {len(removed)} cache files before model generation.")
 
 
 def _reloads_caches(resolved: dict[str, Settings]) -> bool:

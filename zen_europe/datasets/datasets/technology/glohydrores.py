@@ -9,6 +9,7 @@ import pandas as pd
 from zen_creator.datasets.datasets.dataset import Dataset
 from zen_creator.datasets.datasets.metadata import MetaData
 
+from zen_europe.settings.cache import get_active_cache_settings
 from zen_europe.utils.utils import convert_country_names
 
 
@@ -54,7 +55,7 @@ class GloHydroRes(Dataset[pd.Series]):
         return Path(self.source_path) / "03-technology" / "capacity_existing"
 
     def _set_data(self) -> pd.Series:
-        if not (
+        if get_active_cache_settings().overwrite_glohydrores or not (
             os.path.exists(self.path / "glohydrores_data.feather")
             and os.path.exists(self.path / "glohydrores_data_raw.feather")
         ):

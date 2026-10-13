@@ -11,6 +11,7 @@ from zen_creator import Attribute, Technology
 from zen_creator.datasets.datasets.dataset import Dataset
 from zen_creator.datasets.datasets.metadata import MetaData, SourceInformation
 
+from zen_europe.settings.cache import get_active_cache_settings
 from zen_europe.utils.utils import convert_country_names, format_capacity_existing
 
 
@@ -107,9 +108,9 @@ class PowerPlantMatching(Dataset[pd.DataFrame]):
         return Path(self.source_path) / "03-technology" / "capacity_existing"
 
     def _set_data(self) -> pd.DataFrame:
-        if not os.path.exists(
-            self.path / "processed_powerplantmatching_data_raw.feather"
-        ):
+        overwrite = get_active_cache_settings().overwrite_powerplantmatching
+        cache_path = self.path / "processed_powerplantmatching_data_raw.feather"
+        if overwrite or not os.path.exists(cache_path):
             # imported here because powerplantmatching pulls in matplotlib and
             # is only needed when the processed file has not been cached yet
             import powerplantmatching as ppm

@@ -6,6 +6,8 @@ import pandas as pd
 from zen_creator.datasets.datasets.dataset import Dataset
 from zen_creator.datasets.datasets.metadata import MetaData
 
+from zen_europe.settings.cache import get_active_cache_settings
+
 
 class JRCHydroPowerDatabase(Dataset[pd.DataFrame]):
     """
@@ -44,7 +46,10 @@ class JRCHydroPowerDatabase(Dataset[pd.DataFrame]):
         return Path(self.source_path) / "03-technology" / "capacity_existing"
 
     def _set_data(self) -> pd.DataFrame:
-        if not (self.path / "jrc_hydro_power_database_data.feather").exists():
+        if (
+            get_active_cache_settings().overwrite_jrc_hydro_power_database
+            or not (self.path / "jrc_hydro_power_database_data.feather").exists()
+        ):
             url = "https://github.com/energy-modelling-toolkit/hydro-power-database/blob/master/data/jrc-hydro-power-plant-database.csv?raw=true"
             data = pd.read_csv(url)
             data.to_feather(self.path / "jrc_hydro_power_database_data.feather")

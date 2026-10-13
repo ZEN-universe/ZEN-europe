@@ -234,7 +234,7 @@ class Eurostat(Dataset[pd.DataFrame]):
         path = (
             Path(self.source_path) / "02-carrier" / "eurostat" / f"{dataset}_{par}.json"
         )
-        if path.exists():
+        if path.exists() and not self.settings.cache.overwrite_eurostat:
             return json.loads(path.read_text())
 
         values = es.get_par_values(dataset, par)

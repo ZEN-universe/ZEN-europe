@@ -13,6 +13,8 @@ from zen_creator import Attribute, StorageTechnology
 from zen_creator.datasets.datasets.dataset import Dataset
 from zen_creator.datasets.datasets.metadata import MetaData, SourceInformation
 
+from zen_europe.settings.cache import get_active_cache_settings
+
 
 class PECDHydroCapacities(Dataset[pd.DataFrame]):
     """
@@ -67,7 +69,10 @@ class PECDHydroCapacities(Dataset[pd.DataFrame]):
 
     def _set_data(self) -> pd.DataFrame:
         file_path = self.path / "PECD-hydro-capacities.csv"
-        if not file_path.exists():
+        if (
+            get_active_cache_settings().overwrite_pecd_hydro_capacities
+            or not file_path.exists()
+        ):
             logging.info(f"Downloading {self.name} from {self.URL}...")
             pd.read_csv(self.URL).to_csv(file_path, index=False)
         data = pd.read_csv(file_path)
