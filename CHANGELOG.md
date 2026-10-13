@@ -3,6 +3,11 @@
 This file gets automatically updated in ZEN-europe's continuous integration 
 procedures. Do not edit the file manually.
 
+## [Unversioned Changes] - 2026-10-13 
+
+### Documentation Changes 📝
+- Fix the name of the docs from ZEN-creator to ZEN-europe. [[🔀 PR #34](https://github.com/ZEN-universe/ZEN-europe/pull/34) @jacob-mannhardt]
+
 ## [v1.0.0] - 2026-10-12 
 
 ### Maintenance Tasks 🧹
