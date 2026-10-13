@@ -111,7 +111,7 @@ html_theme_options = {
         "color-brand-primary": "#215CAF",
         "color-brand-content": "#007894",
     },
-    "source_repository": "https://github.com/ZEN-universe/ZEN-creator",
+    "source_repository": "https://github.com/ZEN-universe/ZEN-europe",
     "source_branch": "main",
     "source_directory": "docs/",
     "top_of_page_buttons": ["view"],
@@ -119,8 +119,8 @@ html_theme_options = {
 
 
 # The name for this set of Sphinx documents.
-html_title = "ZEN-creator"
-html_short_title = "ZEN-creator"
+html_title = "ZEN-europe"
+html_short_title = "ZEN-europe"
 
 # The name of an image file (relative to this directory)
 html_logo = "files/figures/general/zen_garden_logo_text.png"
