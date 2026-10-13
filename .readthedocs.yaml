@@ -5,18 +5,11 @@ build:
   os: ubuntu-24.04
   tools:
     python: "3.11"
+  jobs:
+    # editable install, so that the data folder is found in the repository
+    post_install:
+      - python -m pip install --no-cache-dir -e ".[docs]"
 
 # Build documentation in the "docs/" directory with Sphinx
 sphinx:
   configuration: docs/conf.py
-
-# Optional but recommended, declare the Python requirements required
-# to build your documentation
-# See https://docs.readthedocs.io/en/stable/guides/reproducible-builds.html
-python:
-  install:
-  - method: pip
-    path: .
-    extra_requirements:
-      - docs
-      - dev

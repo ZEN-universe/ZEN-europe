@@ -283,7 +283,7 @@ jobs:
     needs: build-package
     environment:
       name: pypi
-      url: https://pypi.org/project/zen-creator/
+      url: https://pypi.org/project/zen-europe/
     permissions:
       id-token: write
     steps:
