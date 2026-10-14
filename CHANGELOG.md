@@ -3,6 +3,14 @@
 This file gets automatically updated in ZEN-europe's continuous integration 
 procedures. Do not edit the file manually.
 
+## [v1.2.0] - 2026-10-14 
+
+### Bug Fixes 🐛
+- remove the `system.use_capacities_existing` setting when setting `use_existing_capacities=False`, because this does not allow for keeping existing hydro capacities. And there is no need to set `system.use_capacities_existing`, because we don't produce any existing capacities for any other technologies anyway. [[🔀 PR #45](https://github.com/ZEN-universe/ZEN-europe/pull/45) @jacob-mannhardt]
+
+### Data Changes 📊
+- Calculate the more expensive DAC from Sievert et al. The cost per cumulative capacity is converted to a yearly trajectory by utilizing various projections of global DAC deployment. [[🔀 PR #45](https://github.com/ZEN-universe/ZEN-europe/pull/45) @jacob-mannhardt]
+
 ## [v1.1.0] - 2026-10-14 
 
 ### New Features ✨
