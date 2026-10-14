@@ -1,11 +1,14 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import logging
 import os
+import time
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from pathlib import Path
-from typing import cast
+from typing import Callable, Sequence, TypeVar, cast
 
 import pandas as pd
 import requests
@@ -152,6 +155,48 @@ _NEIGHBOURS = _country_level_neighbours()
 # transient failure; safe to log and skip.
 _SKIP_ERRORS = (NoMatchingDataError, InvalidPSRTypeError, InvalidBusinessParameterError)
 
+# The per-country queries are independent HTTP requests, so they run in a small
+# thread pool (the platform allows 400 requests per minute per token). A request
+# that fails transiently is retried before the whole query is given up on.
+_MAX_WORKERS = 12
+_REQUEST_ATTEMPTS = 3
+_RETRY_DELAY_SECONDS = 2.0
+
+_Item = TypeVar("_Item")
+_Result = TypeVar("_Result")
+
+
+class _QueryFailedError(RuntimeError):
+    """A request kept failing, so the query result would be incomplete."""
+
+
+def _request_with_retry(request: Callable[[], _Result], description: str) -> _Result:
+    """Run `request`, retrying transient `requests` errors with a growing delay.
+
+    Errors in `_SKIP_ERRORS` (no data) are not transient and propagate at once."""
+    for attempt in range(1, _REQUEST_ATTEMPTS + 1):
+        try:
+            return request()
+        except requests.RequestException as exc:
+            if attempt == _REQUEST_ATTEMPTS:
+                raise _QueryFailedError(
+                    f"{description} failed after {_REQUEST_ATTEMPTS} attempts: {exc}"
+                ) from exc
+            logger.warning(f"{description} failed ({exc}); retrying")
+            time.sleep(_RETRY_DELAY_SECONDS * attempt)
+    raise AssertionError("unreachable")
+
+
+def _map_parallel(
+    function: Callable[[_Item], _Result], items: Sequence[_Item]
+) -> list[_Result]:
+    """Apply `function` to every item in a thread pool, keeping the item order.
+
+    The first `_QueryFailedError` is raised, so a partial result is never
+    returned (and therefore never cached)."""
+    with ThreadPoolExecutor(max_workers=_MAX_WORKERS) as pool:
+        return list(pool.map(function, items))
+
 
 class ENTSOE(Dataset[pd.DataFrame]):
     """ENTSO-E Transparency Platform dataset class.
@@ -216,7 +261,15 @@ class ENTSOE(Dataset[pd.DataFrame]):
                     "restart the Python process.\nYou will not need the token if you "
                     "have already have a cached dataset."
                 )
-            self._client = EntsoeRawClient(api_key=api_key)
+            # the default session keeps only 10 connections per host, so with
+            # more worker threads the surplus connections would be discarded
+            # (and re-opened) after every request
+            session = requests.Session()
+            adapter = requests.adapters.HTTPAdapter(
+                pool_connections=1, pool_maxsize=_MAX_WORKERS
+            )
+            session.mount("https://", adapter)
+            self._client = EntsoeRawClient(api_key=api_key, session=session)
         return self._client
 
     # -------- disk cache ------------------
@@ -255,8 +308,14 @@ class ENTSOE(Dataset[pd.DataFrame]):
         reset.columns = reset.columns.astype(str)
 
         data_path.parent.mkdir(parents=True, exist_ok=True)
-        reset.to_feather(data_path)
-        meta_path.write_text(
+        # write to a temporary file and move it into place, so that models
+        # generated in parallel (zen-europe --all) never read a half-written
+        # cache; the sidecar goes last, as the cache only counts once both exist
+        tmp_data_path = data_path.with_name(f"{data_path.name}.{os.getpid()}.tmp")
+        reset.to_feather(tmp_data_path)
+        os.replace(tmp_data_path, data_path)
+        tmp_meta_path = meta_path.with_name(f"{meta_path.name}.{os.getpid()}.tmp")
+        tmp_meta_path.write_text(
             json.dumps(
                 {
                     "n_index_levels": data.index.nlevels,
@@ -265,6 +324,7 @@ class ENTSOE(Dataset[pd.DataFrame]):
                 }
             )
         )
+        os.replace(tmp_meta_path, meta_path)
         return data
 
     # -------- outward-facing accessors ------------------
@@ -336,8 +396,14 @@ class ENTSOE(Dataset[pd.DataFrame]):
             )
             year = last_entsoe_year
         monthly = self.settings.data_source.use_monthly_entsoe_ntc
+        # only the edges between the model nodes are queried, so the cache is
+        # specific to that set of edges
+        edges_hash = hashlib.sha1(json.dumps(self._ntc_edges()).encode()).hexdigest()[
+            :8
+        ]
         cache_name = (
-            f"transmission_capacity_{'monthly' if monthly else 'yearly'}_{year}"
+            f"transmission_capacity_{'monthly' if monthly else 'yearly'}"
+            f"_{year}_{edges_hash}"
         )
         capacity = self._cached_query(
             cache_name, lambda: self._query_transmission_capacity(year, monthly)
@@ -364,34 +430,39 @@ class ENTSOE(Dataset[pd.DataFrame]):
         demand = pd.DataFrame(
             index=pd.date_range(start, end, freq="1h", inclusive="left")
         )
-        for idx, node in enumerate(self.set_nodes):
-            logger.info(
-                f"Querying ENTSO-E demand for {node} - {idx + 1}/{len(self.set_nodes)}"
-            )
+        client = self._entsoe_client
+        nodes = list(self.set_nodes)
+
+        def query_node(node: str) -> pd.Series | None:
+            logger.info(f"Querying ENTSO-E demand for {node}")
             area = _entsoe_code(node)
             try:
-                xml_text = self._entsoe_client.query_load(area, start=start, end=end)
+                xml_text = _request_with_retry(
+                    lambda: client.query_load(area, start=start, end=end),
+                    f"Load query for {node}",
+                )
                 frame = parse_loads(xml_text, process_type="A16")
             except _SKIP_ERRORS:
                 try:
-                    xml_text = self._entsoe_client.query_load_forecast(
-                        area, start=start, end=end, process_type="A01"
+                    xml_text = _request_with_retry(
+                        lambda: client.query_load_forecast(
+                            area, start=start, end=end, process_type="A01"
+                        ),
+                        f"Load forecast query for {node}",
                     )
                     frame = parse_loads(xml_text, process_type="A01")
                     logger.info(f"Using forecasted load for {node}")
                 except _SKIP_ERRORS:
                     logger.info(f"No demand data found for {node}")
-                    continue
-                except requests.RequestException as exc:
-                    logger.warning(f"Load forecast query failed for {node}: {exc}")
-                    continue
-            except requests.RequestException as exc:
-                logger.warning(f"Load query failed for {node}: {exc}")
-                continue
+                    return None
             series = frame.iloc[:, 0]
             if series.empty:
-                continue
-            demand[node] = series.resample("1h").mean()
+                return None
+            return series.resample("1h").mean()
+
+        for node, series in zip(nodes, _map_parallel(query_node, nodes), strict=True):
+            if series is not None:
+                demand[node] = series
         demand.index.name = "time"
         return demand
 
@@ -407,30 +478,34 @@ class ENTSOE(Dataset[pd.DataFrame]):
         generation = pd.DataFrame(
             index=pd.date_range(start, end, freq="1h", inclusive="left")
         )
-        for idx, node in enumerate(self.set_nodes):
-            logger.info(
-                f"Querying ENTSO-E generation for {node} of type {psr_type}"
-                f"- {idx + 1}/{len(self.set_nodes)}"
-            )
+        client = self._entsoe_client
+        nodes = list(self.set_nodes)
+
+        def query_node(node: str) -> pd.Series | None:
+            logger.info(f"Querying ENTSO-E generation for {node} of type {psr_type}")
             area = _entsoe_code(node)
             try:
-                xml_text = self._entsoe_client.query_generation(
-                    area, start=start, end=end, psr_type=psr_type
+                xml_text = _request_with_retry(
+                    lambda: client.query_generation(
+                        area, start=start, end=end, psr_type=psr_type
+                    ),
+                    f"Generation query for {node} ({psr_type})",
                 )
             except _SKIP_ERRORS:
                 logger.info(f"No generation data found for {node} ({psr_type})")
-                continue
-            except requests.RequestException as exc:
-                logger.warning(f"Generation query failed for {node}: {exc}")
-                continue
+                return None
             series = parse_generation(xml_text, nett=True)
             if isinstance(series, pd.DataFrame):
                 # multiple production sub-series can remain if netting wasn't
                 # applicable; sum whatever generation-like columns are left
                 series = series.sum(axis=1)
             if series.empty:
-                continue
-            generation[node] = series.resample("1h").mean()
+                return None
+            return series.resample("1h").mean()
+
+        for node, series in zip(nodes, _map_parallel(query_node, nodes), strict=True):
+            if series is not None:
+                generation[node] = series
         generation.index.name = "time"
         return generation
 
@@ -443,35 +518,42 @@ class ENTSOE(Dataset[pd.DataFrame]):
             )
             year = year_entsoe
         start, end = self._year_bounds(year)
-        capacity: dict[str, float] = {}
-        for idx, node in enumerate(self.set_nodes):
+        client = self._entsoe_client
+        nodes = list(self.set_nodes)
+
+        def query_node(node: str) -> float | None:
             logger.info(
                 f"Querying ENTSO-E installed capacity for {node} of type {psr_type}"
-                f"- {idx + 1}/{len(self.set_nodes)}"
             )
             area = _entsoe_code(node)
             try:
-                xml_text = self._entsoe_client.query_installed_generation_capacity(
-                    area, start=start, end=end, psr_type=psr_type
+                xml_text = _request_with_retry(
+                    lambda: client.query_installed_generation_capacity(
+                        area, start=start, end=end, psr_type=psr_type
+                    ),
+                    f"Installed capacity query for {node} ({psr_type})",
                 )
             except _SKIP_ERRORS:
                 logger.info(f"No installed capacity data found for {node} ({psr_type})")
-                continue
-            except requests.RequestException as exc:
-                logger.warning(f"Installed capacity query failed for {node}: {exc}")
-                continue
+                return None
             series = parse_generation(xml_text, nett=True)
             if isinstance(series, pd.DataFrame):
                 series = series.sum(axis=1)
             if series.empty:
-                continue
+                return None
             series.index = cast(pd.DatetimeIndex, series.index).year
             series = series.groupby(series.index).sum()
-            capacity[node] = (
+            return (
                 float(series.loc[year])
                 if year in series.index
                 else float(series.iloc[-1])
             )
+
+        capacity: dict[str, float] = {
+            node: value
+            for node, value in zip(nodes, _map_parallel(query_node, nodes), strict=True)
+            if value is not None
+        }
         index = pd.MultiIndex.from_tuples(
             [(node, year) for node in capacity], names=["node", "year_construction"]
         )
@@ -489,22 +571,32 @@ class ENTSOE(Dataset[pd.DataFrame]):
             )
             year = year_entsoe
         start, end = self._year_bounds(year)
-        edges = sorted(
+        edges = self._ntc_edges()
+        _ = self._entsoe_client  # create the client before the threads share it
+
+        def query_edge(edge: tuple[str, str]) -> float:
+            node_from, node_to = edge
+            logger.info(
+                f"Querying ENTSO-E transmission capacity from {node_from} to {node_to}"
+            )
+            return self._query_ntc(node_from, node_to, start, end, monthly)
+
+        values = _map_parallel(query_edge, edges)
+        capacity = {
+            f"{node_from}-{node_to}": value
+            for (node_from, node_to), value in zip(edges, values, strict=True)
+        }
+        return pd.Series(capacity, dtype=float)
+
+    def _ntc_edges(self) -> list[tuple[str, str]]:
+        """The directed neighbouring country pairs between the model nodes."""
+        nodes = set(self.set_nodes).intersection(_NODES)
+        return sorted(
             (node_from, node_to)
             for node_from, adjacent in _NEIGHBOURS.items()
             for node_to in adjacent
-            if node_from in _NODES and node_to in _NODES
+            if node_from in nodes and node_to in nodes
         )
-        capacity: dict[str, float] = {}
-        for idx, (node_from, node_to) in enumerate(edges):
-            logger.info(
-                f"Querying ENTSO-E transmission capacity from "
-                f"{node_from} to {node_to} - {idx + 1}/{len(edges)}"
-            )
-            capacity[f"{node_from}-{node_to}"] = self._query_ntc(
-                node_from, node_to, start, end, monthly
-            )
-        return pd.Series(capacity, dtype=float)
 
     def _query_ntc(
         self,
@@ -516,30 +608,25 @@ class ENTSOE(Dataset[pd.DataFrame]):
     ) -> float:
         area_from = _entsoe_code(node_from)
         area_to = _entsoe_code(node_to)
+        client = self._entsoe_client
+        query = (
+            client.query_net_transfer_capacity_monthahead
+            if monthly
+            else client.query_net_transfer_capacity_yearahead
+        )
         try:
-            if monthly:
-                xml_text = self._entsoe_client.query_net_transfer_capacity_monthahead(
+            xml_text = _request_with_retry(
+                lambda: query(
                     country_code_from=area_from,
                     country_code_to=area_to,
                     start=start,
                     end=end,
-                )
-            else:
-                xml_text = self._entsoe_client.query_net_transfer_capacity_yearahead(
-                    country_code_from=area_from,
-                    country_code_to=area_to,
-                    start=start,
-                    end=end,
-                )
+                ),
+                f"Transmission capacity query from {node_from} to {node_to}",
+            )
         except _SKIP_ERRORS:
             logger.info(
-                f"No transmission capacity data found " f"from {node_from} to {node_to}"
-            )
-            return float("nan")
-        except requests.RequestException as exc:
-            logger.warning(
-                f"Transmission capacity query failed"
-                f"from {node_from} to {node_to}: {exc}"
+                f"No transmission capacity data found from {node_from} to {node_to}"
             )
             return float("nan")
         series = parse_crossborder_flows(xml_text)
