@@ -919,6 +919,10 @@ class Eurostat(Dataset[pd.DataFrame]):
             )
 
         data = pd.concat(non_empty_results)
+        year_columns = pd.Index(
+            [column for column in data.columns if str(column).isdigit()]
+        )
+        data[year_columns] = data[year_columns].apply(pd.to_numeric, errors="coerce")
         self._validate_query_result(data, filter_pars, dataset, required_geo or [])
         return data
 
