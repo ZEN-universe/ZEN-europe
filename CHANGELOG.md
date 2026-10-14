@@ -3,6 +3,19 @@
 This file gets automatically updated in ZEN-europe's continuous integration 
 procedures. Do not edit the file manually.
 
+## [v1.1.0] - 2026-10-14 
+
+### New Features ✨
+- separate `price_year` from `reference_year` so that the two can be specified independently. [[🔀 PR #41](https://github.com/ZEN-universe/ZEN-europe/pull/41) @csfunke]
+- add output folder to command line options. [[🔀 PR #41](https://github.com/ZEN-universe/ZEN-europe/pull/41) @csfunke]
+- add `clear_caches` command line flag which allows a complete rerun of ZEN-europe. [[🔀 PR #41](https://github.com/ZEN-universe/ZEN-europe/pull/41) @csfunke]
+
+### Bug Fixes 🐛
+- remove cached files so that the main branch contains only raw data. [[🔀 PR #41](https://github.com/ZEN-universe/ZEN-europe/pull/41) @csfunke]
+- make the Eurostat API more robust by retrying each query multiple times, setting a limit on the maximum number of workers, and differentiating between failed requests and empty data. This fixes consistency issues with the Eurostat API, which frequently failed. [[🔀 PR #41](https://github.com/ZEN-universe/ZEN-europe/pull/41) @csfunke]
+- fix bug in Eurostat which caused years to be stored as objects rather than integers. This caused the code to produce an empty DataFrame error when loading Eurostat data without a cache. [[🔀 PR #41](https://github.com/ZEN-universe/ZEN-europe/pull/41) @csfunke]
+- update dea api to match new spreadsheet format. [[🔀 PR #41](https://github.com/ZEN-universe/ZEN-europe/pull/41) @csfunke]
+
 ## [v1.0.1] - 2026-10-13 
 
 ### Bug Fixes 🐛
