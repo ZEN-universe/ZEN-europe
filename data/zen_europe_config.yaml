@@ -5,7 +5,7 @@ source_path: "./data/raw_data"
 # set_nodes. settings that are not listed keep ZEN-garden's defaults.
 system:
   conduct_time_series_aggregation: true
-  aggregated_time_steps_per_year: 10
+  aggregated_time_steps_per_year: 50
   use_rolling_horizon: false
 
 # dataset-specific, type-checked settings (see zen_europe/settings/).

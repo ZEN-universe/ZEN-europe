@@ -157,7 +157,7 @@ _OUTPUT_COLUMNS = [
     "conversion_factor_fuel",
 ]
 # The parameters that are monetary and therefore have to be rebased from the
-# money year of Cox et al. to the reference year.
+# money year of Cox et al. to the configured price year.
 _COST_COLUMNS = ["capex", "capex_bat_cur", "capex_bat_fut", "vopex"]
 
 # The parameter that gives the demand of an input carrier per vehicle
@@ -743,15 +743,14 @@ class PassengerCarsCox(Dataset[pd.DataFrame]):
         return cast(float, self.data.loc[technology, parameter])
 
     def get_cost(self, element: ConversionTechnology, parameter: str) -> float:
-        """One cost parameter of one passenger car, rebased to the reference
-        year of the model.
+        """Return one passenger-car cost rebased to the configured price year.
 
         Args:
             element: The passenger car for which to get the cost.
             parameter: Name of the cost parameter, e.g. 'capex'.
 
         Returns:
-            The cost in Euro of the reference year.
+            The cost in Euro of the configured price year.
         """
         if parameter not in _COST_COLUMNS:
             raise ValueError(
@@ -759,7 +758,7 @@ class PassengerCarsCox(Dataset[pd.DataFrame]):
                 f"{_COST_COLUMNS}."
             )
         inflation = self.get_inflation_rate(
-            base_year=self.MONEY_YEAR, target_year=element.settings.time.reference_year
+            base_year=self.MONEY_YEAR, target_year=element.settings.cost.price_year
         )
         return float(self.get_parameter(element.name, parameter)) * inflation
 
@@ -856,7 +855,7 @@ class PassengerCarsCox(Dataset[pd.DataFrame]):
                     "(2020), taken at the manufacturing cost rather than at "
                     "the consumer price, i.e. divided by the markup factor. "
                     f"Monetary values are rebased from {self.MONEY_YEAR} to "
-                    f"{element.settings.time.reference_year} Euro using ECB "
+                    f"{element.settings.cost.price_year} Euro using ECB "
                     "HICP inflation."
                 ),
                 metadata=self.metadata,

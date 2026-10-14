@@ -8,6 +8,37 @@ CLAUDE.md
 *.feather
 test.py
 
+# Downloaded source snapshots and derived dataset caches
+/data/raw_data/01-energy_system/desnz_ghg_inventory/*.csv
+/data/raw_data/01-energy_system/eea_ghg_inventory/*.csv
+/data/raw_data/01-energy_system/global_carbon_budget/*.csv
+/data/raw_data/01-energy_system/worldbank_co2_emissions/*.csv
+/data/raw_data/01-energy_system/worldbank_population/*.csv
+/data/raw_data/02-carrier/entsoe/*.feather
+/data/raw_data/02-carrier/entsoe/*.json
+/data/raw_data/02-carrier/eurostat/*.feather
+/data/raw_data/02-carrier/eurostat/*.json
+/data/raw_data/02-carrier/heat/jrc_idees/useful_thermal_energy_service.feather
+/data/raw_data/03-technology/capacity_existing/transport/unece/*.feather
+/data/raw_data/03-technology/capacity_existing/glohydrores_data.feather
+/data/raw_data/03-technology/capacity_existing/glohydrores_data_raw.feather
+/data/raw_data/03-technology/capacity_existing/jrc_hydro_power_database_data.feather
+/data/raw_data/03-technology/capacity_existing/PECD-hydro-capacities.csv
+/data/raw_data/03-technology/capacity_existing/processed_powerplantmatching_data_raw.feather
+/data/raw_data/03-technology/climate_data/*_raw.zip
+/data/raw_data/03-technology/climate_data/onshore_wind_weights.csv
+/data/raw_data/03-technology/climate_data/offshore_wind_weights.csv
+/data/raw_data/03-technology/climate_data/pecd_data_*.feather
+/data/raw_data/03-technology/cost/dea/technology_data_for_el_and_dh.xlsx
+/data/raw_data/03-technology/cost/dea/technology_data_heating_installations.xlsx
+/data/raw_data/03-technology/cost/dea/data_sheets_for_renewable_fuels.xlsx
+/data/raw_data/03-technology/cost/dea/technology_data_for_carbon_capture_transport_storage.xlsx
+/data/raw_data/03-technology/cost/dea/technology_data_for_energy_transport.xlsx
+/data/raw_data/03-technology/cost/dea/dea_processed.feather
+/data/raw_data/03-technology/passenger_cars/vehicle_tech_parameters.csv
+/data/raw_data/04-monetary/ecb/ecb_inflation.csv
+/data/raw_data/04-monetary/ecb/ecb_dollar_to_euro.csv
+
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

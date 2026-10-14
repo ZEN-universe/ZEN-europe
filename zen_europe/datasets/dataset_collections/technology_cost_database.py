@@ -487,7 +487,6 @@ class TechnologyCostDatabase(DatasetCollection):
         # df, since these are not time-varying attributes.
         if attribute.name == "lifetime" or attribute.name == "construction_time":
             df = None
-        reference_year = element.settings.time.reference_year
         rebasing = (
             ""
             if multiplier == 1.0
@@ -508,7 +507,8 @@ class TechnologyCostDatabase(DatasetCollection):
                 f"{description.capitalize()} for '{element.name}'{add_desc_str} is the "
                 f"{metric} across all available data for the agencies "
                 f"{', '.join(agencies)} reporting data for this technology at plant "
-                f"size '{plant_size}'. Monetary values are rebased to {reference_year} "
+                f"size '{plant_size}'. Monetary values are rebased to "
+                f"{self.settings.cost.price_year} "
                 f"Euro using ECB HICP inflation.{rebasing}"
             ),
             metadata=self.metadata,
@@ -548,7 +548,7 @@ class TechnologyCostDatabase(DatasetCollection):
                 value=[
                     value
                     * self._inflation.get_inflation_rate(
-                        int(money_year_src), reference_year
+                        int(money_year_src), self.settings.cost.price_year
                     )
                     for value, money_year_src in zip(
                         rows["value"], rows["money_year_src"], strict=True
@@ -847,7 +847,8 @@ class TechnologyCostDatabase(DatasetCollection):
                 f"plant size '{plant_size}', divided by the retrofit flow "
                 f"coupling factor ({coupling_factor.default_value:.4g} "
                 f"{coupling_factor.unit}) to express it per unit of captured "
-                f"CO2. Monetary values are rebased to {reference_year} Euro "
+                f"CO2. Monetary values are rebased to "
+                f"{self.settings.cost.price_year} Euro "
                 f"using ECB HICP inflation."
             ),
             metadata=self.metadata,

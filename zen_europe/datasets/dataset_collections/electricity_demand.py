@@ -48,6 +48,30 @@ class ElectricityDemand(DatasetCollection):
             "bfe": BFE(self.source_path),
         }
 
+    @staticmethod
+    def _validate_heating_share_year(
+        requested_year: int,
+        heating_share_hp: pd.DataFrame,
+        heating_share_eb: pd.DataFrame,
+    ) -> None:
+        """Raise a descriptive error if heating-share data lacks a requested year."""
+        missing_from = []
+        if requested_year not in heating_share_hp.columns:
+            missing_from.append("heat-pump data")
+        if requested_year not in heating_share_eb.columns:
+            missing_from.append("electrode-boiler data")
+        if not missing_from:
+            return
+
+        heat_pump_years = sorted(heating_share_hp.columns, key=str)
+        electrode_boiler_years = sorted(heating_share_eb.columns, key=str)
+        raise ValueError(
+            f"Heating-share year {requested_year} is missing from "
+            f"{' and '.join(missing_from)}. Available heat-pump years: "
+            f"{heat_pump_years}. Available electrode-boiler years: "
+            f"{electrode_boiler_years}."
+        )
+
     def get_demand(self, element: Carrier) -> Attribute:
         """
         Get the electricity demand for the specified element.
@@ -60,8 +84,8 @@ class ElectricityDemand(DatasetCollection):
         heat_demand = heat_demand_dataset._calculate_demand(element)
         # load heating share, ignores district heating electricity demand
         heating_share = heat_demand_dataset._calculate_heating_share_household()
-        heating_share_hp = heating_share.loc["heat_pump"]
-        heating_share_eb = heating_share.loc["electrode_boiler"]
+        heating_share_hp = cast(pd.DataFrame, heating_share.loc["heat_pump"])
+        heating_share_eb = cast(pd.DataFrame, heating_share.loc["electrode_boiler"])
         common_nodes = heating_share_hp.index.intersection(
             element.model.config.system.set_nodes
         )
@@ -72,6 +96,9 @@ class ElectricityDemand(DatasetCollection):
             f"Missing nodes in heating share data: " f"{missing_nodes}"
         )
         year_time_series = self.settings.time.year_time_series
+        self._validate_heating_share_year(
+            year_time_series, heating_share_hp, heating_share_eb
+        )
         heating_share_hp = heating_share_hp.loc[common_nodes, year_time_series]
         heating_share_eb = heating_share_eb.loc[common_nodes, year_time_series]
         heat_demand_hp = heat_demand * heating_share_hp

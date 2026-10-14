@@ -202,6 +202,18 @@ _SOURCES: dict[str, tuple[str, str]] = {
     ),
 }
 
+_REQUIRED_SOURCE_COLUMNS = {
+    "ws",
+    "Technology",
+    "cat",
+    "par",
+    "unit",
+    "priceyear",
+    "est",
+    "year",
+    "val",
+}
+
 # `ws`-sheet name (within the energy-transport workbook's `alldata_flat`) for each
 # district
 # heating distribution network variant -> our area-type label. DEA also reports DH
@@ -483,7 +495,9 @@ class DEA(Dataset[pd.DataFrame]):
     def _set_path(self) -> Path | None:
         if self.source_path is None:
             raise ValueError("source_path must be set to load the dataset.")
-        return self.source_path / "03-technology" / "cost" / "dea"
+        path = self.source_path / "03-technology" / "cost" / "dea"
+        path.mkdir(parents=True, exist_ok=True)
+        return path
 
     def _set_data(self) -> pd.DataFrame:
         cache_path = self.path / "dea_processed.feather"
@@ -527,15 +541,59 @@ class DEA(Dataset[pd.DataFrame]):
         """
         filename, url = _SOURCES[source]
         file_path = self.path / filename
-        if not file_path.exists():
+        if get_active_cache_settings().overwrite_dea or not file_path.exists():
             self._download(url, file_path)
-        raw = pd.read_excel(file_path, sheet_name="alldata_flat")
+        raw = self._read_source_workbook(file_path)
         if rf_category_fixup:
             raw = raw.copy()
-            raw.loc[raw["cat"].str.contains("Financial data"), "cat"] = "Financial data"
+            contains_financial_data = raw["cat"].str.contains(
+                "Financial data", na=False
+            )
+            raw.loc[contains_financial_data, "cat"] = "Financial data"
         financial = self._clean(raw[raw["cat"] == "Financial data"])
         technical = self._clean(raw[raw["cat"] == "Energy/technical data"])
         return financial, technical
+
+    @staticmethod
+    def _read_source_workbook(file_path: Path) -> pd.DataFrame:
+        """Read either of the workbook layouts currently published by DEA.
+
+        DEA is gradually replacing the original ``alldata_flat`` worksheets with
+        ``alldata_long`` worksheets. The newer worksheet has an introductory row and
+        uses a lowercase name for the technology column. This method presents both
+        layouts to the existing parser in the same form.
+
+        Args:
+            file_path: Downloaded DEA Excel workbook.
+
+        Returns:
+            Source rows with consistent column names.
+
+        Raises:
+            ValueError: If the workbook has neither supported worksheet or lacks
+                columns required by the parser.
+        """
+        with pd.ExcelFile(file_path) as workbook:
+            if "alldata_long" in workbook.sheet_names:
+                raw = pd.read_excel(workbook, sheet_name="alldata_long", header=1)
+            elif "alldata_flat" in workbook.sheet_names:
+                raw = pd.read_excel(workbook, sheet_name="alldata_flat")
+            else:
+                available = ", ".join(map(str, workbook.sheet_names))
+                raise ValueError(
+                    f"DEA workbook '{file_path.name}' contains neither "
+                    f"'alldata_long' nor 'alldata_flat'. Available worksheets: "
+                    f"{available}"
+                )
+
+        raw = raw.rename(columns={"technology": "Technology"})
+        missing_columns = sorted(_REQUIRED_SOURCE_COLUMNS.difference(raw.columns))
+        if missing_columns:
+            raise ValueError(
+                f"DEA workbook '{file_path.name}' is missing required columns: "
+                f"{', '.join(missing_columns)}"
+            )
+        return raw
 
     @staticmethod
     def _download(url: str, dest: Path) -> None:

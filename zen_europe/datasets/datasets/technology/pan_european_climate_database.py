@@ -185,7 +185,10 @@ class PanEuropeanClimateDatabase(Dataset[dict[str, pd.DataFrame]]):
             return pd.read_feather(cache_path).set_index("Date")
 
         zip_path = self.path / f"{technology}_{year}_raw.zip"
-        if not zip_path.exists():
+        if (
+            self.settings.cache.overwrite_pan_european_climate_database
+            or not zip_path.exists()
+        ):
             self._download(request, year, zip_path)
 
         data = self._parse_zip(zip_path)
@@ -286,7 +289,10 @@ class PanEuropeanClimateDatabase(Dataset[dict[str, pd.DataFrame]]):
     def _get_wind_weights(self, technology: str) -> pd.DataFrame:
         filename, url = self._WIND_WEIGHT_SOURCES[technology]
         weight_path = self.path / filename
-        if not weight_path.exists():
+        if (
+            self.settings.cache.overwrite_pan_european_climate_database
+            or not weight_path.exists()
+        ):
             self._download_file(url, weight_path)
         return pd.read_csv(weight_path)
 

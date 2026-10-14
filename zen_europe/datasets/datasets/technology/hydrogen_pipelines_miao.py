@@ -57,16 +57,17 @@ class HydrogenPipelinesMiao(Dataset[dict[str, pd.DataFrame]]):
 
     # -------- methods ------------------------
     def _correct_for_capacity_dollar_year(
-        self, capex_per_distance: float, reference_year: int
+        self, capex_per_distance: float, price_year: int
     ) -> float:
         """
         Correct the capex_per_distance for the dollar year of the capacity.
 
         Args:
             capex_per_distance (float): The capex_per_distance to be corrected.
+            price_year (int): Year to which the monetary value is rebased.
         """
         capex_per_distance = capex_per_distance * self.get_inflation_rate(
-            base_year=self.MONEY_YEAR, target_year=reference_year
+            base_year=self.MONEY_YEAR, target_year=price_year
         )
         capex_per_distance = capex_per_distance * self.get_dollar2euro(
             year=self.MONEY_YEAR
@@ -91,7 +92,7 @@ class HydrogenPipelinesMiao(Dataset[dict[str, pd.DataFrame]]):
         )
         return self._correct_for_capacity_dollar_year(
             capex_per_distance=0.34,  # million USD/km for a 1000
-            reference_year=technology.settings.time.reference_year,
+            price_year=technology.settings.cost.price_year,
         )
 
     def get_capex_per_distance_transport_offshore(
@@ -111,7 +112,7 @@ class HydrogenPipelinesMiao(Dataset[dict[str, pd.DataFrame]]):
         )
         return self._correct_for_capacity_dollar_year(
             capex_per_distance=0.96,  # million USD/km for a 1000
-            reference_year=technology.settings.time.reference_year,
+            price_year=technology.settings.cost.price_year,
         )
 
     def get_opex_fixed_onshore(self, technology: TransportTechnology) -> float:

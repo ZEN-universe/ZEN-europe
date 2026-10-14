@@ -6,6 +6,7 @@ import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
+from zen_creator.utils.config import Config
 from zen_creator.utils.settings import ModelSet, Settings
 
 from zen_europe.model_creator import (
@@ -14,6 +15,7 @@ from zen_europe.model_creator import (
     create_model,
     default_models_path,
 )
+from zen_europe.settings.cache import clear_caches
 
 COLOR_SUCCESS = "\033[92m"
 COLOR_WARNING = "\033[38;5;208m"  # orange
@@ -104,11 +106,19 @@ def zen_europe_cli() -> None:
         "--output_path",
         type=Path,
         required=False,
-        default=DEFAULT_OUTPUT_PATH,
+        default=None,
         help=(
             "Directory the datasets are written to, together with the "
-            f"config.yaml that ZEN-garden is run with (default: "
-            f"{DEFAULT_OUTPUT_PATH})."
+            "config.yaml that ZEN-garden is run with. Overrides output.path "
+            f"from the settings (default: {DEFAULT_OUTPUT_PATH})."
+        ),
+    )
+    parser.add_argument(
+        "--clear-caches",
+        action="store_true",
+        help=(
+            "Delete all registered downloaded source snapshots and derived "
+            "dataset caches before generating models."
         ),
     )
     args = parser.parse_args()
@@ -119,6 +129,9 @@ def zen_europe_cli() -> None:
         parser.error("--sequential only applies together with --all.")
     if args.jobs is not None and not args.all:
         parser.error("--jobs only applies together with --all.")
+
+    if args.clear_caches:
+        _clear_caches(args.config_path or DEFAULT_CONFIG_PATH)
 
     if args.all:
         _generate_all(args)
@@ -131,14 +144,14 @@ def _generate_one(args: argparse.Namespace) -> None:
     name = args.model or args.name
 
     logger.info(f"Generating model '{name}' ...")
-    create_model(
+    model = create_model(
         config=args.config_path,
         models=args.models_path,
         model_name=args.model,
         name=args.name,
         output_folder=args.output_path,
     )
-    _log_success(name, args.output_path)
+    _log_success(name, model.output_folder)
 
 
 def _generate_all(args: argparse.Namespace) -> None:
@@ -165,7 +178,13 @@ def _generate_all(args: argparse.Namespace) -> None:
         return
 
     jobs = args.jobs or DEFAULT_JOBS
-    if _reloads_caches(resolved):
+    if args.clear_caches:
+        logger.warning(
+            "--clear-caches clears shared dataset caches, so models are "
+            "generated one at a time while the caches are rebuilt."
+        )
+        jobs = 1
+    elif _reloads_caches(resolved):
         logger.warning(
             "A model reloads a dataset cache from its source, so the models "
             "are generated one at a time to keep them from writing the same "
@@ -174,6 +193,19 @@ def _generate_all(args: argparse.Namespace) -> None:
         jobs = 1
 
     _generate_in_subprocesses(resolved, args, models_path, jobs)
+
+
+def _clear_caches(config_path: Path) -> None:
+    """Delete registered cache files below the configured source path."""
+    config = Config.load_from_yaml(config_path)
+    if config.source_path is None:
+        raise ValueError(
+            "--clear-caches requires source_path to be set in the configuration."
+        )
+    removed = clear_caches(config.source_path)
+    for path in removed:
+        logger.info(f"Removed cache file {path}")
+    logger.info(f"Removed {len(removed)} cache files before model generation.")
 
 
 def _reloads_caches(resolved: dict[str, Settings]) -> bool:
@@ -195,13 +227,13 @@ def _generate_in_process(
 
     for name in resolved:
         logger.info(f"Generating model '{name}' ...")
-        create_model(
+        model = create_model(
             config=args.config_path,
             models=models_path,
             model_name=name,
             output_folder=args.output_path,
         )
-        _log_success(name, args.output_path)
+        _log_success(name, model.output_folder)
 
 
 def _generate_in_subprocesses(
@@ -228,7 +260,8 @@ def _generate_in_subprocesses(
             name = futures[future]
             result = future.result()
             if result.returncode == 0:
-                _log_success(name, args.output_path)
+                output_folder = args.output_path or resolved[name].output.path
+                _log_success(name, output_folder)
                 continue
 
             failed.append(name)
@@ -262,9 +295,9 @@ def _command_for(name: str, args: argparse.Namespace, models_path: Path) -> list
         name,
         "--models_path",
         str(models_path),
-        "--output_path",
-        str(args.output_path),
     ]
+    if args.output_path is not None:
+        command += ["--output_path", str(args.output_path)]
     if args.config_path is not None:
         command += ["--config_path", str(args.config_path)]
 

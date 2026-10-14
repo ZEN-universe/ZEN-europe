@@ -47,8 +47,11 @@ Describe how the default dataset changes. If it does not change, state that. If 
 ### Dataset
 - [ ] The default dataset is generated without errors (`zen-europe`).
 - [ ] Every variant of the models file is generated without errors (`zen-europe --all`), if variants are affected.
-- [ ] `sources.md` of the changed elements reads correctly and cites every source.
+- [ ] `SourceInformation` is up to date with complete descriptions of the data processing steps and sources for each attribute. The `sources.md` files have been checked for completeness.
 - [ ] Units, node names, technology and carrier names follow the conventions of the model.
+- [ ] Time series profiles are taken from the year `settings.time.year_time_series`.
+- [ ] Costs are converted to the price year `settings.cost.price_year`.
+ 
 
 ### ZEN-garden compatibility
 - [ ] The generated dataset is read and solved by the current `main` of ZEN-garden:
@@ -67,7 +70,7 @@ Describe how the default dataset changes. If it does not change, state that. If 
 - [ ] Element methods only map attributes to datasets, collections or assumptions, each with a source.
 - [ ] New classes are imported in the `__init__.py` of their folder, and new elements are listed in their sectors.
 - [ ] New options are settings, with a default that reproduces the previous dataset.
-- [ ] Downloaded sources are cached and have an `overwrite_*` flag in `CacheSettings`.
+- [ ] Downloaded sources are cached.  In `cache.py`, the caches are added to the `CACHE_PROVIDERS` and have an `overwrite_*` flag in `CacheSettings` that controls cache behavior.
 - [ ] Raw data files are placed in the matching folder of `data/raw_data`.
 
 ### Documentation
