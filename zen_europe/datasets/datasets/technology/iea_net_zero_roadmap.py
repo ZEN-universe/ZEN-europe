@@ -32,9 +32,7 @@ class IEANetZeroRoadmap(Dataset[pd.Series]):
     def _set_metadata(self) -> MetaData:
         return MetaData(
             name=self.name,
-            title=(
-                "Net Zero Roadmap:Carbon capture, utilisation and storage"
-            ),
+            title=("Net Zero Roadmap:Carbon capture, utilisation and storage"),
             author=["International Energy Agency"],
             publication="International Energy Agency",
             publication_year=2023,

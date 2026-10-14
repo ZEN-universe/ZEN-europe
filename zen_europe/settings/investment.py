@@ -12,8 +12,8 @@ class InvestmentSettings(SettingsCategory):
         "knowledge_depreciation_rate": "system.knowledge_depreciation_rate",
         # We don't set "system.use_capacities_existing" here because it would overwrite
         # the existing hydro capacities even if use_existing_capacities is False.
-        # We already remove all existing capacities in the model if 
-        # use_existing_capacities is False, so we don't need to set this control. 
+        # We already remove all existing capacities in the model if
+        # use_existing_capacities is False, so we don't need to set this control.
     }
 
     allow_investment: bool = True

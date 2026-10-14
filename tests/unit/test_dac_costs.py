@@ -157,7 +157,7 @@ def test_interpolation_at_a_grid_node_returns_the_node(model: Model) -> None:
     ],
 )
 def test_global_capacity_hits_the_anchors(
-    model: Model, pathway: str, expected: list[float]
+    model: Model, pathway: DACDeploymentPathway, expected: list[float]
 ) -> None:
     """The pathway starts from the operational projects of Zurbriggen et al."""
     dac_costs = _dac_costs(model)
