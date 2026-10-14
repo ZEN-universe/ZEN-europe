@@ -114,7 +114,7 @@ def zen_europe_cli() -> None:
         ),
     )
     parser.add_argument(
-        "--no-incremental",
+        "--clear-caches",
         action="store_true",
         help=(
             "Delete all registered downloaded source snapshots and derived "
@@ -130,7 +130,7 @@ def zen_europe_cli() -> None:
     if args.jobs is not None and not args.all:
         parser.error("--jobs only applies together with --all.")
 
-    if args.no_incremental:
+    if args.clear_caches:
         _clear_caches(args.config_path or DEFAULT_CONFIG_PATH)
 
     if args.all:
@@ -178,9 +178,9 @@ def _generate_all(args: argparse.Namespace) -> None:
         return
 
     jobs = args.jobs or DEFAULT_JOBS
-    if args.no_incremental:
+    if args.clear_caches:
         logger.warning(
-            "--no-incremental clears shared dataset caches, so models are "
+            "--clear-caches clears shared dataset caches, so models are "
             "generated one at a time while the caches are rebuilt."
         )
         jobs = 1
@@ -200,7 +200,7 @@ def _clear_caches(config_path: Path) -> None:
     config = Config.load_from_yaml(config_path)
     if config.source_path is None:
         raise ValueError(
-            "--no-incremental requires source_path to be set in the configuration."
+            "--clear-caches requires source_path to be set in the configuration."
         )
     removed = clear_caches(config.source_path)
     for path in removed:

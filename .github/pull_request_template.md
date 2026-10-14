@@ -70,7 +70,7 @@ Describe how the default dataset changes. If it does not change, state that. If 
 - [ ] Element methods only map attributes to datasets, collections or assumptions, each with a source.
 - [ ] New classes are imported in the `__init__.py` of their folder, and new elements are listed in their sectors.
 - [ ] New options are settings, with a default that reproduces the previous dataset.
-- [ ] Downloaded sources are cached and have an `overwrite_*` flag in `CacheSettings`.
+- [ ] Downloaded sources are cached.  In `cache.py`, the caches are added to the `CACHE_PROVIDERS` and have an `overwrite_*` flag in `CacheSettings` that controls cache behavior.
 - [ ] Raw data files are placed in the matching folder of `data/raw_data`.
 
 ### Documentation
