@@ -3,6 +3,11 @@
 This file gets automatically updated in ZEN-europe's continuous integration 
 procedures. Do not edit the file manually.
 
+## [v1.3.0] - 2026-10-15 
+
+### New Features ✨
+- speeding up the querying of ENTSOE by parallelizing it [[🔀 PR #47](https://github.com/ZEN-universe/ZEN-europe/pull/47) @jacob-mannhardt]
+
 ## [v1.2.0] - 2026-10-14 
 
 ### Bug Fixes 🐛
