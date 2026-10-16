@@ -4,14 +4,14 @@ from typing import TYPE_CHECKING, cast
 
 import pandas as pd
 
-from zen_europe.datasets.dataset_collections.hydro_existing_capacity import (
-    HydroExistingCapacity,
+from zen_europe.datasets.dataset_collections.hydro_existing_capacity_plant_level import (  # noqa: E501
+    HydroExistingCapacityPlantLevel,
+)
+from zen_europe.datasets.dataset_collections.hydropower_existing_capacities import (
+    HydropowerExistingCapacities,
 )
 from zen_europe.datasets.dataset_collections.lifetime_expectation import (
     LifetimeExpectation,
-)
-from zen_europe.datasets.dataset_collections.run_of_river_hydro_max_load import (
-    RunOfRiverHydroMaxLoad,
 )
 from zen_europe.datasets.dataset_collections.technology_cost_database import (
     TechnologyCostDatabase,
@@ -204,15 +204,17 @@ class RunOfRiverHydro(ConversionTechnology):
             self.settings.investment.use_existing_capacities
             or self.settings.investment.keep_existing_hydro_capacities
         ):
-            hydro_capacity = HydroExistingCapacity(
-                settings=self.settings,
-                source_path=self.source_path,
-                set_nodes=self.model.config.system.set_nodes,
-            )
             if self.settings.data_source.use_plant_level_hydro_capacity:
-                attr = hydro_capacity.get_capacity_existing_plant_level_data(self)
+                hydro_capacity = HydroExistingCapacityPlantLevel(
+                    source_path=self.source_path,
+                )
+                attr = hydro_capacity.get_capacity_existing(self)
             else:
-                attr = hydro_capacity.get_capacity_existing_pecd_data(self)
+                hydro_capacities = HydropowerExistingCapacities(
+                    settings=self.settings,
+                    source_path=self.source_path,
+                )
+                attr = hydro_capacities.get_capacity_existing(self)
             return attr
         else:
             attr = self.capacity_existing
@@ -232,12 +234,11 @@ class RunOfRiverHydro(ConversionTechnology):
         Returns:
             Attribute: An Attribute object containing the maximum load data.
         """
-        ror_max_load = RunOfRiverHydroMaxLoad(
+        hydropower_data = HydropowerExistingCapacities(
             settings=self.settings,
             source_path=self.source_path,
-            set_nodes=self.model.config.system.set_nodes,
         )
-        return ror_max_load.get_max_load(self)
+        return hydropower_data.get_max_load_ror_hydro(self)
 
     def _set_max_diffusion_rate(self) -> Attribute:
         """

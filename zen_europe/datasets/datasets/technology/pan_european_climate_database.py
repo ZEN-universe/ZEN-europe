@@ -11,6 +11,7 @@ import cdsapi
 import pandas as pd
 
 if TYPE_CHECKING:
+    from zen_creator import Element
     from zen_creator.utils.settings import Settings
 
 from zen_creator import Attribute
@@ -25,15 +26,15 @@ class PanEuropeanClimateDatabase(Dataset[dict[str, pd.DataFrame]]):
     Pan-European Climate Database (PECD 4.2) dataset class.
 
     Downloads hourly capacity factors for utility-scale solar PV, onshore wind, and
-    offshore wind, plus hydropower reservoir inflow energy, aggregated to NUTS0
+    offshore wind, plus hydropower generation and inflow energy, aggregated to NUTS0
     (country) resolution, from the Copernicus Climate Data Store's `sis-energy-pecd`
     dataset, for the historical ERA5-reanalysis `settings.time.year_time_series`.
     Wind technologies use PECD's "Existing technologies" turbine class (technology
     codes 20 offshore / 30 onshore) at the "Resource Grade B" installation-site
     assumption (current-plant-equivalent siting, as opposed to Grade A's idealized
     top-10%-of-locations siting); solar PV uses the utility-scale fixed-tilt panel
-    technology (62); hydropower reservoir inflow has no technology/energy_scenario
-    dimension at all in PECD.
+    technology (62); hydropower indicators have no technology/energy_scenario
+    dimension in PECD.
 
     Solar PV is downloaded directly at NUTS0 resolution. Wind and hydropower are
     *not* available at NUTS0 -- PECD only reports them at its own regional zones
@@ -106,7 +107,18 @@ class PanEuropeanClimateDatabase(Dataset[dict[str, pd.DataFrame]]):
         },
         "run-of-river_hydro": {
             "variable": "hydropower_run_of_river_generation",
-            # "variable": "hydropower_run_of_river_with_pondage_generation",
+            "technology": None,
+            "energy_scenario": None,
+            "spatial_resolution": "szon",
+        },
+        "run-of-river_with_pondage_hydro": {
+            "variable": "hydropower_run_of_river_with_pondage_generation",
+            "technology": None,
+            "energy_scenario": None,
+            "spatial_resolution": "szon",
+        },
+        "pumped_hydro": {
+            "variable": "hydropower_open_loop_pumped_storage_inflow",
             "technology": None,
             "energy_scenario": None,
             "spatial_resolution": "szon",
@@ -249,12 +261,17 @@ class PanEuropeanClimateDatabase(Dataset[dict[str, pd.DataFrame]]):
         """Aggregate `data`'s PECD-region columns into NUTS0-country columns.
 
         `photovoltaics` is already downloaded at nuts_0 resolution and passes
-        through unchanged; the other three technologies are downloaded at PECD's
+        through unchanged; wind and hydro indicators are downloaded at PECD's
         own regional resolution (see `TECHNOLOGY_REQUESTS`) and need aggregating.
         """
         if technology == "photovoltaics":
             return data
-        if technology == "reservoir_hydro" or technology == "run-of-river_hydro":
+        if technology in {
+            "reservoir_hydro",
+            "run-of-river_hydro",
+            "run-of-river_with_pondage_hydro",
+            "pumped_hydro",
+        }:
             return self._aggregate_hydro_to_nuts0(data)
         return self._aggregate_wind_to_nuts0(technology, data)
 
@@ -319,7 +336,30 @@ class PanEuropeanClimateDatabase(Dataset[dict[str, pd.DataFrame]]):
             dest.write_bytes(response.read())
 
     # -------- methods ------------------------
-    def get_max_load(self, element) -> Attribute:
+
+    def get_max_load(self, element: Element) -> Attribute:
+        """
+        Get the maximum load (capacity factor) for a technology.
+
+        Maximum load for solar and wind is taken from PECD capacity-factor data.
+        Run-of-river maximum load is handled by HydropowerExistingCapacities,
+        which can reconcile generation with the separate capacity dataset.
+
+        Args:
+            element: The element for which to get the maximum load.
+
+        Returns:
+            pd.Series: A pandas Series containing the maximum load data.
+        """
+
+        if element.name in ["photovoltaics", "wind_onshore", "wind_offshore"]:
+            return self._get_max_load_solar_and_wind(element)
+        raise ValueError(
+            "Max load data is not available directly from the PECD dataset for "
+            f"element {element.name}"
+        )
+
+    def _get_max_load_solar_and_wind(self, element: Element) -> Attribute:
         """
         Get the maximum load for a technology.
 
@@ -368,24 +408,26 @@ class PanEuropeanClimateDatabase(Dataset[dict[str, pd.DataFrame]]):
         return element.max_load.set_data(
             source=source,
             df=data,
-            default_value=0,
             unit="1",
+            default_value = 0
         )
 
-    def get_outflow_run_of_river_hydro(self, element) -> pd.DataFrame:
+    def get_generation_run_of_river_hydro(self, element: Element) -> pd.DataFrame:
         """
-        Get the outflow for run-of-river hydro.
+        Get combined run-of-river and pondage generation in GW.
 
         Args:
-            element: The element for which to get the outflow.
+            element: An element providing the model nodes to retain.
+
         Returns:
-            pd.DataFrame: A pandas DataFrame containing the outflow data.
+            pd.DataFrame: Hourly run-of-river generation by model node.
         """
-        assert element.name == "run-of-river_hydro", (
-            f"Outflow data for {element.name} is not available in the "
-            "PanEuropeanClimateDatabase dataset."
+        # PECD's installed-capacity category is "Run-of-River and pondage".
+        # Combine both generation indicators so the numerator uses exactly the
+        # same technology boundary as the capacity denominator.
+        data = self.data["run-of-river_hydro"].add(
+            self.data["run-of-river_with_pondage_hydro"], fill_value=0
         )
-        data = self.data["run-of-river_hydro"]
         common_nodes = data.columns.intersection(element.model.config.system.set_nodes)
         missing_nodes = set(element.model.config.system.set_nodes).difference(
             common_nodes
@@ -396,54 +438,15 @@ class PanEuropeanClimateDatabase(Dataset[dict[str, pd.DataFrame]]):
                 f"{missing_nodes}"
             )
         data = data[common_nodes]
-        return self._convert_weekly_energy_to_hourly_flow(data)
-
-    def get_flow_storage_inflow(self, element) -> Attribute:
-        """
-        Get the storage inflow for reservoir hydro.
-
-        Args:
-            element: The element for which to get the storage inflow.
-
-        Returns:
-            Attribute: The storage inflow attribute of the element.
-        """
-        assert element.name == "reservoir_hydro", (
-            f"Storage inflow data for {element.name} is not available in the "
-            "PanEuropeanClimateDatabase dataset."
-        )
-        data = self.data[element.name]
-        capacity_existing = element.capacity_existing.df
-        set_nodes_capacity = capacity_existing.index.get_level_values("node").unique()
-        common_nodes = data.columns.intersection(set_nodes_capacity)
-        missing_nodes = set(set_nodes_capacity).difference(common_nodes)
-        if len(missing_nodes) > 0:
-            logging.warning(
-                "No reservoir inflow reported in the PanEuropeanClimateDatabase data "
-                f"for {sorted(missing_nodes)}, for which capacity data is available."
-            )
-        data = self._convert_weekly_energy_to_hourly_flow(data[common_nodes])
-        source = SourceInformation(
-            description=(
-                "The storage inflow is the hydropower reservoir inflow of the "
-                "Pan-European Climate Database (PECD 4.2) dataset, converted from "
-                "a weekly energy to an hourly flow."
-            ),
-            metadata=self.metadata,
-        )
-        return element.flow_storage_inflow.set_data(
-            source=source,
-            df=data,
-            default_value=0,
-            unit="GW",
-        )
+        return self.convert_weekly_energy_to_hourly_flow(data)
 
     @staticmethod
-    def _convert_weekly_energy_to_hourly_flow(data: pd.DataFrame) -> pd.DataFrame:
-        """
-        Convert a weekly energy time series in MWh to an hourly flow in GW.
+    def convert_weekly_energy_to_hourly_flow(data: pd.DataFrame) -> pd.DataFrame:
+        """Convert weekly energy in MWh to hourly flow in GW.
 
-        The weekly energy is spread evenly across the hours of the week.
+        Weekly energy is spread evenly across each week. PECD supplies 52 values,
+        while the model uses 8,760 hours, so the final weekly rate is extended to
+        cover the remaining 24 hours.
         """
         hours_per_week = int(Constants.HOURS_PER_WEEK)
         data = data.reset_index(drop=True)
