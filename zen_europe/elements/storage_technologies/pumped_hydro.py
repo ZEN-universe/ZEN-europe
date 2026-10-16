@@ -4,8 +4,11 @@ from typing import TYPE_CHECKING, cast
 
 import pandas as pd
 
-from zen_europe.datasets.dataset_collections.hydro_existing_capacity import (
-    HydroExistingCapacity,
+from zen_europe.datasets.dataset_collections.hydro_existing_capacity_plant_level import (  # noqa: E501
+    HydroExistingCapacityPlantLevel,
+)
+from zen_europe.datasets.dataset_collections.hydropower_existing_capacities import (
+    HydropowerExistingCapacities,
 )
 from zen_europe.datasets.dataset_collections.technology_cost_database import (
     TechnologyCostDatabase,
@@ -114,19 +117,19 @@ class PumpedHydro(StorageTechnology):
         Returns:
             Attribute: An Attribute object containing the existing capacity data.
         """
-        if (
-            self.settings.investment.use_existing_capacities
-            or self.settings.investment.keep_existing_hydro_capacities
-        ):
-            hydro_dataset = HydroExistingCapacity(
-                settings=self.settings,
-                source_path=self.source_path,
-                set_nodes=self.model.config.system.set_nodes,
-            )
+        if (self.settings.investment.use_existing_capacities
+                or self.settings.investment.keep_existing_hydro_capacities):
             if self.settings.data_source.use_plant_level_hydro_capacity:
-                attr = hydro_dataset.get_capacity_existing_plant_level_data(self)
+                hydro_dataset = HydroExistingCapacityPlantLevel(
+                    source_path=self.source_path,
+                )
+                attr = hydro_dataset.get_capacity_existing(self)
             else:
-                attr = hydro_dataset.get_capacity_existing_pecd_data(self)
+                hydro_capacities = HydropowerExistingCapacities(
+                    settings=self.settings,
+                    source_path=self.source_path,
+                )
+                attr = hydro_capacities.get_capacity_existing(self)
             return attr
         else:
             attr = self.capacity_existing
@@ -150,21 +153,20 @@ class PumpedHydro(StorageTechnology):
         Returns:
             Attribute: An Attribute object containing the existing capacity data.
         """
-        if (
-            self.settings.investment.use_existing_capacities
-            or self.settings.investment.keep_existing_hydro_capacities
-        ):
-            hydro_dataset = HydroExistingCapacity(
-                settings=self.settings,
-                source_path=self.source_path,
-                set_nodes=self.model.config.system.set_nodes,
-            )
+        if (self.settings.investment.use_existing_capacities
+                or self.settings.investment.keep_existing_hydro_capacities):
             if self.settings.data_source.use_plant_level_hydro_capacity:
-                attr = hydro_dataset.get_capacity_existing_plant_level_data(
-                    self, power=False
+                hydro_dataset = HydroExistingCapacityPlantLevel(
+                    source_path=self.source_path,
                 )
+                attr = hydro_dataset.get_capacity_existing(
+                    self, power=False)
             else:
-                attr = hydro_dataset.get_capacity_existing_pecd_data(self, power=False)
+                hydro_capacities = HydropowerExistingCapacities(
+                    settings=self.settings,
+                    source_path=self.source_path,
+                )
+                attr = hydro_capacities.get_capacity_existing_energy(self)
             return attr
         else:
             attr = self.capacity_existing
@@ -231,6 +233,13 @@ class PumpedHydro(StorageTechnology):
         )
         return attr
 
+    def _set_flow_storage_inflow(self) -> Attribute:
+        """Set natural inflow allocated to open-loop pumped storage."""
+        hydropower_data = HydropowerExistingCapacities(
+            settings=self.settings, source_path=self.source_path
+        )
+        return hydropower_data.get_flow_storage_inflow(self)
+
     def _set_efficiency_discharge(self) -> Attribute:
         """
         Sets the discharging efficiency of pumped hydro.
@@ -244,3 +253,4 @@ class PumpedHydro(StorageTechnology):
         """
         storage_technologies = StorageTechnologiesSchmidt(source_path=self.source_path)
         return storage_technologies.get_efficiency_charge(self)
+

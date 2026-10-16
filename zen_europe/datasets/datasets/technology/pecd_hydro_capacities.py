@@ -88,7 +88,7 @@ class PECDHydroCapacities(Dataset[pd.DataFrame]):
         capacities["power"] = capacities["power"] / 1000
         capacities["power_pumping"] = capacities["power_pumping"].abs() / 1000
 
-        pumped_open, reservoir_open = self._split_open_loop(
+        pumped_open, reservoir_open, _ = self._split_open_loop(
             cast(pd.DataFrame, capacities.loc["Pump Storage - Open Loop"])
         )
         run_of_river = cast(pd.DataFrame, capacities.loc["Run-of-River and pondage"])
@@ -110,23 +110,59 @@ class PECDHydroCapacities(Dataset[pd.DataFrame]):
             }
         )
 
-    @staticmethod
-    def _split_open_loop(open_loop: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
-        """
-        Split open loop pumped storage into a pumped and a reservoir hydro share.
+    def _split_open_loop(
+        self, open_loop: pd.DataFrame
+    ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+        """Split open-loop storage into pumped and reservoir hydro shares.
 
-        The pumped share is min(pumping, turbining)/max(pumping, turbining), so
-        plants that pump back about as much as they turbine count as pumped hydro,
-        while reservoirs with little pumping capacity count as reservoir hydro.
-        The latter applies to Norway, whose entire fleet is reported as open loop
-        pumped storage although it barely pumps.
+        The model has one symmetric power capacity for charging and discharging.
+        Therefore, the pumped share is limited by the smaller of pumping and
+        turbining power. Any excess turbining capability is represented as
+        reservoir hydro. The same shares are applied to power, energy capacity,
+        and, by callers, natural inflow so that all source totals are conserved.
 
         Returns:
-            tuple: The pumped hydro and the reservoir hydro share.
+            The pumped capacity, reservoir capacity, and allocation fractions.
         """
-        capacities = open_loop[["power", "power_pumping"]]
-        share = (capacities.min(axis=1) / capacities.max(axis=1)).fillna(0)
-        return open_loop.mul(share, axis=0), open_loop.mul(1 - share, axis=0)
+        turbining_power = open_loop["power"]
+        symmetric_power = open_loop[["power", "power_pumping"]].min(axis=1)
+        pumped_share = symmetric_power.div(turbining_power.where(turbining_power > 0))
+        pumped_share = pumped_share.fillna(0).clip(lower=0, upper=1)
+        shares = pd.concat(
+            [pumped_share, 1 - pumped_share],
+            axis=1,
+            keys=["pumped_hydro", "reservoir_hydro"],
+        )
+        return (
+            open_loop.mul(shares["pumped_hydro"], axis=0),
+            open_loop.mul(shares["reservoir_hydro"], axis=0),
+            shares,
+        )
+
+    def get_open_loop_shares(self) -> pd.DataFrame:
+        """Return country-level shares used to split open-loop hydropower.
+
+        Returns:
+            A dataframe indexed by node with ``pumped_hydro`` and
+            ``reservoir_hydro`` shares. Each row sums to one.
+        """
+        file_path = self.path / "PECD-hydro-capacities.csv"
+        data = pd.read_csv(file_path)
+        data["node"] = data["zone"].str[:2].replace(self.NODE_MAPPING)
+        data["variable"] = data["variable"].map(self.VARIABLE_MAPPING)
+        capacities = data.pivot_table(
+            index=["type", "node"],
+            columns="variable",
+            values="value",
+            aggfunc="sum",
+        ).fillna(0)
+        capacities["power"] /= 1000
+        capacities["power_pumping"] = capacities["power_pumping"].abs() / 1000
+        open_loop = cast(
+            pd.DataFrame, capacities.loc["Pump Storage - Open Loop"]
+        )
+        _, _, shares = self._split_open_loop(open_loop)
+        return shares
 
     # -------- methods ------------------------
     def get_capacity_existing(self, element: Technology, power: bool) -> Attribute:
@@ -163,11 +199,36 @@ class PECDHydroCapacities(Dataset[pd.DataFrame]):
         data = pd.concat({year_construction: data}, names=["year_construction"])
         data = data.swaplevel(0, 1).sort_index()
 
+        capacity_type = "turbining power" if power else "storage-energy capacity"
+        if element.name == "run-of-river_hydro":
+            technology_method = (
+                "It uses the PECD Run-of-River and pondage power-capacity category "
+                "unchanged."
+            )
+        elif element.name == "reservoir_hydro":
+            technology_method = (
+                "It combines the PECD conventional-reservoir category with the "
+                "reservoir share of open-loop pumped storage. For each node, the "
+                "open-loop reservoir share is one minus the smaller of pumping and "
+                "turbining power divided by turbining power. This share is applied "
+                "identically to open-loop turbining power and upper/head-reservoir "
+                "energy capacity."
+            )
+        else:
+            technology_method = (
+                "It combines the complete PECD closed-loop pumped-storage category "
+                "with the pumped share of open-loop pumped storage. For each node, "
+                "the open-loop pumped share is the smaller of pumping and turbining "
+                "power divided by turbining power. This share is applied identically "
+                "to open-loop turbining power and upper/head-reservoir energy "
+                "capacity."
+            )
         source = SourceInformation(
             description=(
-                f"The existing capacity of {element.name} is derived from the "
+                f"The existing {capacity_type} of {element.name} is derived from the "
                 "hydropower modelling data of the Pan-European Climate Database, "
-                "aggregated from the ENTSO-E market zones to the nodes."
+                "aggregated from ENTSO-E market zones to model nodes. "
+                f"{technology_method}"
             ),
             metadata=self.metadata,
         )
