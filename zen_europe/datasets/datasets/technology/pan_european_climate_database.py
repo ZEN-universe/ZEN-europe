@@ -409,6 +409,7 @@ class PanEuropeanClimateDatabase(Dataset[dict[str, pd.DataFrame]]):
             source=source,
             df=data,
             unit="1",
+            default_value = 0
         )
 
     def get_generation_run_of_river_hydro(self, element: Element) -> pd.DataFrame:
