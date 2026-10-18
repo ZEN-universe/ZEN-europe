@@ -191,6 +191,7 @@ class PumpedHydro(StorageTechnology):
         unit = self.capacity_existing.unit
         capacity_limit = data.groupby(level=0).sum()
         capacity_limit.name = "capacity_limit"
+        capacity_limit.reindex(self.model.config.system.set_nodes, fill_value = 0)
         attr.set_data(
             df=capacity_limit,
             source=SourceInformation(
