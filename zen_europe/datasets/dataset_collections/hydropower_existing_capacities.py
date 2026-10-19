@@ -101,6 +101,10 @@ class HydropowerExistingCapacities(DatasetCollection):
 
     def get_max_load_ror_hydro(self, element: Technology) -> Attribute:
         """Get ROR maximum load from PECD generation and finalized capacity."""
+        assert element.name == "run-of-river_hydro", (
+            f"Maximum load data for {element.name} is not available in the "
+            "PanEuropeanClimateDatabase dataset."
+        )
         pecd = cast(
             PanEuropeanClimateDatabase,
             self.data["pan_european_climate_database"],

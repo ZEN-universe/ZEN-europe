@@ -204,6 +204,7 @@ class ReservoirHydro(StorageTechnology):
         )
         attr.set_data(
             df=capacity_limit,
+            default_value=0,
             source=SourceInformation(
                 description=(
                     "The capacity limit is set to the sum of the"
