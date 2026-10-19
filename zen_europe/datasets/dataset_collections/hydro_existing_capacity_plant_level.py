@@ -1,35 +1,34 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Dict, cast
+
 import pandas as pd
+
 from zen_europe.datasets.datasets.technology.glohydrores import GloHydroRes
-from zen_europe.datasets.datasets.technology.pecd_hydro_capacities import PECDHydroCapacities
 
 if TYPE_CHECKING:
     from pathlib import Path
 
-    from zen_creator import Dataset, Element
+    from zen_creator import Dataset, Technology
 
 
 from zen_creator import Attribute, DatasetCollection
 from zen_creator.utils.attribute import SourceInformation
-from zen_europe.datasets.datasets.technology.powerplantmatching import (
-    PowerPlantMatching)
-from zen_europe.datasets.datasets.technology.jrc_hydro_db import (
-    JRCHydroPowerDatabase)
-from zen_europe.datasets.datasets.carrier.entsoe import ENTSOE
-from zen_creator.utils.settings import Settings
 
-import matplotlib.pyplot as plt
+from zen_europe.datasets.datasets.technology.powerplantmatching import (
+    PowerPlantMatching,
+)
+
 
 class HydroExistingCapacityPlantLevel(DatasetCollection):
     """Extracting existing capacity data for hydro technologies."""
 
     name = "hydro_existing_capacity"
 
-    def __init__(self, 
-                 source_path: Path | None = None,
-                 ):
+    def __init__(
+        self,
+        source_path: Path | None = None,
+    ):
 
         super().__init__(source_path=source_path)
 
@@ -45,17 +44,16 @@ class HydroExistingCapacityPlantLevel(DatasetCollection):
         }
 
     def get_capacity_existing(
-            self, 
-            element: Element,
-            power: bool = True) -> Attribute:
+        self, element: Technology, power: bool = True
+    ) -> Attribute:
         """
-        Get the existing capacity for hydro technologies based on plant-level 
+        Get the existing capacity for hydro technologies based on plant-level
         data from the PowerPlantMatching and GloHydroRes datasets.
 
         This function retrieves the existing capacity data for the specified element.
         Args:
             element (Element): The element for which to retrieve the existing capacity.
-            power (bool): If True, returns the power capacity; if False, returns the 
+            power (bool): If True, returns the power capacity; if False, returns the
             energy capacity.
         """
         if not power:
@@ -67,9 +65,10 @@ class HydroExistingCapacityPlantLevel(DatasetCollection):
         glohydrores_dataset = cast(GloHydroRes, self.data["glohydrores"])
         data_ppm = ppm_dataset.get_capacity_existing(element).df
         data_glohydrores = glohydrores_dataset.get_capacity_existing(element)
-        data_combined = pd.concat([data_ppm,data_glohydrores],axis=1).max(axis=1)
+        data_combined = pd.concat([data_ppm, data_glohydrores], axis=1).max(axis=1)
         data_combined.index = data_combined.index.set_names(
-            ["node", "year_construction"])
+            ["node", "year_construction"]
+        )
         data_combined = data_combined.sort_index()
         data_combined.name = "capacity_existing"
 

@@ -174,7 +174,9 @@ class RunOfRiverHydro(ConversionTechnology):
         data = cast(pd.Series, self.capacity_existing.df)
         capacity_limit = data.groupby(level=0).sum()
         capacity_limit.name = "capacity_limit"
-        capacity_limit = capacity_limit.reindex(self.model.config.system.set_nodes, fill_value = 0)
+        capacity_limit = capacity_limit.reindex(
+            self.model.config.system.set_nodes, fill_value=0
+        )
         attr.set_data(
             df=capacity_limit,
             source=SourceInformation(

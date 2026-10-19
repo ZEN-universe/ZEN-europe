@@ -11,7 +11,7 @@ import cdsapi
 import pandas as pd
 
 if TYPE_CHECKING:
-    from zen_creator import Element
+    from zen_creator import Element, Technology
     from zen_creator.utils.settings import Settings
 
 from zen_creator import Attribute
@@ -337,7 +337,7 @@ class PanEuropeanClimateDatabase(Dataset[dict[str, pd.DataFrame]]):
 
     # -------- methods ------------------------
 
-    def get_max_load(self, element: Element) -> Attribute:
+    def get_max_load(self, element: Technology) -> Attribute:
         """
         Get the maximum load (capacity factor) for a technology.
 
@@ -359,7 +359,7 @@ class PanEuropeanClimateDatabase(Dataset[dict[str, pd.DataFrame]]):
             f"element {element.name}"
         )
 
-    def _get_max_load_solar_and_wind(self, element: Element) -> Attribute:
+    def _get_max_load_solar_and_wind(self, element: Technology) -> Attribute:
         """
         Get the maximum load for a technology.
 
@@ -374,7 +374,10 @@ class PanEuropeanClimateDatabase(Dataset[dict[str, pd.DataFrame]]):
             "PanEuropeanClimateDatabase dataset."
         )
         data = self.data[element.name]
-        capacity_nodes = element.capacity_limit.df.index
+        capacity_limit = element.capacity_limit.df
+        if capacity_limit is None:
+            raise ValueError(f"Capacity limits are not available for {element.name}.")
+        capacity_nodes = capacity_limit.index
         capacity_nodes = capacity_nodes.intersection(
             element.model.config.system.set_nodes
         )
@@ -406,10 +409,7 @@ class PanEuropeanClimateDatabase(Dataset[dict[str, pd.DataFrame]]):
             metadata=self.metadata,
         )
         return element.max_load.set_data(
-            source=source,
-            df=data,
-            unit="1",
-            default_value = 0
+            source=source, df=data, unit="1", default_value=0
         )
 
     def get_generation_run_of_river_hydro(self, element: Element) -> pd.DataFrame:

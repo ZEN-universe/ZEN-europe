@@ -19,7 +19,7 @@ from zen_europe.datasets.datasets.technology.pecd_hydro_capacities import (
 )
 
 if TYPE_CHECKING:
-    from zen_creator import Dataset, Technology
+    from zen_creator import Dataset, StorageTechnology, Technology
 
 
 class HydropowerExistingCapacities(DatasetCollection):
@@ -194,7 +194,7 @@ class HydropowerExistingCapacities(DatasetCollection):
         capacities = cast(PECDHydroCapacities, self.data["pecd_hydro_capacities"])
         return capacities.get_capacity_existing(element, power=False)
 
-    def get_flow_storage_inflow(self, element: Technology) -> Attribute:
+    def get_flow_storage_inflow(self, element: StorageTechnology) -> Attribute:
         """Get PECD 4.2 inflow using the legacy open-loop allocation.
 
         Pure reservoir inflow is assigned to reservoir hydro. Open-loop pumped
@@ -230,7 +230,7 @@ class HydropowerExistingCapacities(DatasetCollection):
             )
         fraction = shares[element.name].reindex(open_loop.columns, fill_value=0)
         data = open_loop.mul(fraction, axis=1)
-        reclassified_nodes = pd.Index([])
+        reclassified_nodes: pd.Index[str] = pd.Index([], dtype=str)
         if element.name == "reservoir_hydro":
             data = pecd.data["reservoir_hydro"].add(data, fill_value=0)
             reclassified_nodes = self.ROR_AS_RESERVOIR_NODES.intersection(

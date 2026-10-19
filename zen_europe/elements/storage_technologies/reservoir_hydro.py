@@ -122,8 +122,10 @@ class ReservoirHydro(StorageTechnology):
         Returns:
             Attribute: An Attribute object containing the existing capacity data.
         """
-        if (self.settings.investment.use_existing_capacities
-                or self.settings.investment.keep_existing_hydro_capacities):
+        if (
+            self.settings.investment.use_existing_capacities
+            or self.settings.investment.keep_existing_hydro_capacities
+        ):
             if self.settings.data_source.use_plant_level_hydro_capacity:
                 hydro_dataset = HydroExistingCapacityPlantLevel(
                     source_path=self.source_path,
@@ -158,14 +160,15 @@ class ReservoirHydro(StorageTechnology):
         Returns:
             Attribute: An Attribute object containing the existing capacity data.
         """
-        if (self.settings.investment.use_existing_capacities
-                or self.settings.investment.keep_existing_hydro_capacities):
+        if (
+            self.settings.investment.use_existing_capacities
+            or self.settings.investment.keep_existing_hydro_capacities
+        ):
             if self.settings.data_source.use_plant_level_hydro_capacity:
                 hydro_dataset = HydroExistingCapacityPlantLevel(
                     source_path=self.source_path,
                 )
-                attr = hydro_dataset.get_capacity_existing(
-                    self, power=False)
+                attr = hydro_dataset.get_capacity_existing(self, power=False)
             else:
                 hydro_capacities = HydropowerExistingCapacities(
                     settings=self.settings,
@@ -196,7 +199,9 @@ class ReservoirHydro(StorageTechnology):
         unit = self.capacity_existing.unit
         capacity_limit = data.groupby(level=0).sum()
         capacity_limit.name = "capacity_limit"
-        capacity_limit = capacity_limit.reindex(self.model.config.system.set_nodes, fill_value = 0)
+        capacity_limit = capacity_limit.reindex(
+            self.model.config.system.set_nodes, fill_value=0
+        )
         attr.set_data(
             df=capacity_limit,
             source=SourceInformation(
@@ -278,4 +283,3 @@ class ReservoirHydro(StorageTechnology):
         """
         storage_technologies = StorageTechnologiesSchmidt(source_path=self.source_path)
         return storage_technologies.get_efficiency_discharge(self)
-

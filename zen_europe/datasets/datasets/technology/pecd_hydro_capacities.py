@@ -158,9 +158,7 @@ class PECDHydroCapacities(Dataset[pd.DataFrame]):
         ).fillna(0)
         capacities["power"] /= 1000
         capacities["power_pumping"] = capacities["power_pumping"].abs() / 1000
-        open_loop = cast(
-            pd.DataFrame, capacities.loc["Pump Storage - Open Loop"]
-        )
+        open_loop = cast(pd.DataFrame, capacities.loc["Pump Storage - Open Loop"])
         _, _, shares = self._split_open_loop(open_loop)
         return shares
 
