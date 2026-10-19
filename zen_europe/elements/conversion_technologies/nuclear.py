@@ -200,7 +200,7 @@ class Nuclear(ConversionTechnology):
             cap_ex = cast(pd.Series, self.capacity_existing.df)
             cap_lim = cap_ex.groupby("node").sum()
             cap_lim.name = "capacity_limit"
-            cap_lim.reindex(self.model.config.system.set_nodes, fill_value = 0)
+            cap_lim = cap_lim.reindex(self.model.config.system.set_nodes, fill_value = 0)
             attr.set_data(
                 df=cap_lim,
                 source=SourceInformation(
