@@ -3,6 +3,11 @@
 This file gets automatically updated in ZEN-europe's continuous integration 
 procedures. Do not edit the file manually.
 
+## [v1.4.0] - 2026-10-20 
+
+### Data Changes 📊
+- update the hydropower data. The data is now taken from only two sources: the Pan-European Climate database (accessed via the Copernicus api) and the harmonized Pan-European Climate database capacities published on Zenodo under `https://zenodo.org/records/3985078/files/`. The new data now include inflows from run-of-river hydropower plants with pondage and open-loop pumped hydropower, thereby ensuring the inflows are complete. Energy and power capacities, as well as inflows from open-loop pumped hydropower, are divided into reservoir hydropower and closed-loop pumped hydropower. This means that pumped hydropower is no longer purely a storage technology but also has some inflows. Finally, run-of-river inflows for Finland and Norway are moved to reservoir hydropower inflows to ensure consistency between the capacity and inflow datasets. [[🔀 PR #49](https://github.com/ZEN-universe/ZEN-europe/pull/49) @csfunke]
+
 ## [v1.3.0] - 2026-10-15 
 
 ### New Features ✨
