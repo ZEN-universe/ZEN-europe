@@ -3,6 +3,11 @@
 This file gets automatically updated in ZEN-europe's continuous integration 
 procedures. Do not edit the file manually.
 
+## [Unversioned Changes] - 2026-10-23 
+
+### Documentation Changes 📝
+- add link to the Read the Docs in the README. [[🔀 PR #51](https://github.com/ZEN-universe/ZEN-europe/pull/51) @csfunke]
+
 ## [v1.4.0] - 2026-10-20 
 
 ### Data Changes 📊
