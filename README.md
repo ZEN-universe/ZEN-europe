@@ -27,6 +27,5 @@ configuration `./data/config.yaml`.
 
 ## Documentation
 
-The documentation in `docs/` describes the design, the model structure, the
-execution procedure, tutorials on settings and models files, and the rules
-for adding elements and datasets.
+More complete documentation is available on the 
+[Read the Docs page](https://zen-europe.readthedocs.io/en/latest/).
