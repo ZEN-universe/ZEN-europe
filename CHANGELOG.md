@@ -6,6 +6,7 @@ procedures. Do not edit the file manually.
 ## [Unversioned Changes] - 2026-10-23 
 
 ### Documentation Changes 📝
+- add the link to the read the docs to the readme to find the RtD [[🔀 PR #53](https://github.com/ZEN-universe/ZEN-europe/pull/53) @jacob-mannhardt]
 - add link to the Read the Docs in the README. [[🔀 PR #51](https://github.com/ZEN-universe/ZEN-europe/pull/51) @csfunke]
 
 ## [v1.4.0] - 2026-10-20 
