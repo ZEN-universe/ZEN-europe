@@ -8,6 +8,9 @@ ZEN-europe generates the input data of a European, sector-coupled energy
 system model for `ZEN-garden <https://github.com/ZEN-universe/ZEN-garden>`_.
 It is built on `ZEN-creator <https://zen-creator.readthedocs.io/en/latest/>`_.
 
+The source code is available on
+`GitHub <https://github.com/ZEN-universe/ZEN-europe>`_.
+
 
 .. _doc_overview:
 
