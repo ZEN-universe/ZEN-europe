@@ -147,7 +147,7 @@ class ShippingTechnologiesKorberg(Dataset[dict[str, pd.DataFrame]]):
             )
         inflation = self.get_inflation_rate(
             base_year=self.MONEY_YEAR,
-            target_year=technology.settings.cost.price_year,
+            target_year=technology.settings.time.price_year,
         )
         return fuel_distribution_costs[technology.name] * inflation
 
@@ -181,7 +181,7 @@ class ShippingTechnologiesKorberg(Dataset[dict[str, pd.DataFrame]]):
 
         inflation = self.get_inflation_rate(
             base_year=self.MONEY_YEAR,
-            target_year=technology.settings.cost.price_year,
+            target_year=technology.settings.time.price_year,
         )
         return (
             specific_capex_values[technology.name] * inflation,

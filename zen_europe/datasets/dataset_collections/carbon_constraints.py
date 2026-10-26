@@ -75,8 +75,11 @@ class CarbonConstraints(DatasetCollection):
         share = self.calculate_budget_share_egal(energy_system)
         budget_europe = global_budget * share
         sector_share = self.calculate_sector_share(energy_system)
+        year_sector_share = int(self.settings.time.reference_year 
+                             if self.settings.time.reference_year in sector_share.index
+                             else sector_share.index[-1])
         sector_budget = (
-            budget_europe * sector_share.loc[self.settings.time.reference_year]
+            budget_europe * sector_share.loc[year_sector_share]
         )
         attr = energy_system.carbon_emissions_budget
         attr.set_data(
@@ -169,6 +172,7 @@ class CarbonConstraints(DatasetCollection):
         historic_emissions = global_carbon_budget.get_historic_emissions(
             start_year=IPCCAR6.AR6_BUDGET_START_YEAR,
             end_year=self.settings.time.reference_year - 1,
+            extrapolate_missing_years=self.settings.emissions.extrapolate_missing_years,
         )
         return historic_emissions.sum()
 

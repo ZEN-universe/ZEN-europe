@@ -151,7 +151,7 @@ class MethanolProductionCollodi(Dataset[pd.Series]):
         capex_total = 693.7 * 1e6  # Euro
         methanol_production = self._calculate_hourly_methanol_production()
         inflation = ECBInflation(source_path=self.source_path).get_inflation_rate(
-            base_year=self.MONEY_YEAR, target_year=element.settings.cost.price_year
+            base_year=self.MONEY_YEAR, target_year=element.settings.time.price_year
         )
         capex_specific = capex_total / methanol_production * inflation
         attr.set_data(
@@ -182,7 +182,7 @@ class MethanolProductionCollodi(Dataset[pd.Series]):
             self._calculate_hourly_methanol_production() * Constants.HOURS_PER_YEAR
         ) / 1000  # MWh/year
         inflation = ECBInflation(source_path=self.source_path).get_inflation_rate(
-            base_year=self.MONEY_YEAR, target_year=element.settings.cost.price_year
+            base_year=self.MONEY_YEAR, target_year=element.settings.time.price_year
         )
         opex_specific = opex_variable / annual_production * inflation
         attr.set_data(
@@ -211,7 +211,7 @@ class MethanolProductionCollodi(Dataset[pd.Series]):
         opex_fixed = 26677400  # Euro
         methanol_production = self._calculate_hourly_methanol_production()
         inflation = ECBInflation(source_path=self.source_path).get_inflation_rate(
-            base_year=self.MONEY_YEAR, target_year=element.settings.cost.price_year
+            base_year=self.MONEY_YEAR, target_year=element.settings.time.price_year
         )
         opex_specific = opex_fixed / methanol_production * inflation
         attr.set_data(

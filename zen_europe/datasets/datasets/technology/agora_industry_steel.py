@@ -114,7 +114,7 @@ class AgoraIndustrySteel(Dataset[pd.Series]):
         opex = opex_specific_variable[element.name] + fixed_opex[element.name]
         inflation_dataset = ECBInflation(self.source_path)
         inflation = inflation_dataset.get_inflation_rate(
-            base_year=self.MONEY_YEAR, target_year=element.settings.cost.price_year
+            base_year=self.MONEY_YEAR, target_year=element.settings.time.price_year
         )
         dollar2euro = ECBDollar2Euro(self.source_path).get_dollar2euro(
             year=self.MONEY_YEAR

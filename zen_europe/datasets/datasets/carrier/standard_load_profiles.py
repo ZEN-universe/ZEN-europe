@@ -93,8 +93,8 @@ class StandardLoadProfiles(Dataset[dict[str, pd.DataFrame]]):
             data_d = self.data[day_type]
             data[day_type] = data_d.dot(share_regions)
         # get starting day of the year
-        year_time_series = element.settings.time.year_time_series
-        start_day = datetime.date(year_time_series, 1, 1).weekday()
+        time_series_year = element.settings.time.time_series_year
+        start_day = datetime.date(time_series_year, 1, 1).weekday()
         seq_days = ["w"] * 5 + ["we"] * 2
         seq_days = seq_days[start_day:] + seq_days[:start_day]
         data_ts = pd.concat([data[day] for day in seq_days], axis=0)

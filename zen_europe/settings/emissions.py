@@ -14,3 +14,4 @@ class EmissionsSettings(SettingsCategory):
     use_EU_ETS_cap: bool = False
     temperature_increase: float = 1.5
     probability_carbon_budget: float = 0.5
+    extrapolate_missing_years: bool = True

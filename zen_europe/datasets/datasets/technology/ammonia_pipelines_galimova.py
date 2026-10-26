@@ -109,7 +109,7 @@ class AmmoniaPipelinesGalimova(Dataset[dict[str, pd.DataFrame]]):
             0.617
             * self.get_inflation_rate(
                 base_year=self.MONEY_YEAR,
-                target_year=technology.settings.cost.price_year,
+                target_year=technology.settings.time.price_year,
             )
             * 1000
         )  # Euro/km/MW

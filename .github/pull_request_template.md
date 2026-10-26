@@ -49,8 +49,8 @@ Describe how the default dataset changes. If it does not change, state that. If 
 - [ ] Every variant of the models file is generated without errors (`zen-europe --all`), if variants are affected.
 - [ ] `SourceInformation` is up to date with complete descriptions of the data processing steps and sources for each attribute. The `sources.md` files have been checked for completeness.
 - [ ] Units, node names, technology and carrier names follow the conventions of the model.
-- [ ] Time series profiles are taken from the year `settings.time.year_time_series`.
-- [ ] Costs are converted to the price year `settings.cost.price_year`.
+- [ ] Time series profiles are taken from the year `settings.time.time_series_year`.
+- [ ] Costs are converted to the price year `settings.time.price_year`.
  
 
 ### ZEN-garden compatibility

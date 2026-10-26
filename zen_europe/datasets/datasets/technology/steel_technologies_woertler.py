@@ -76,7 +76,7 @@ class SteelTechnologiesWoertler(Dataset[pd.Series]):
         specific_capex: float = capex[element.name]
         specific_capex *= Constants.HOURS_PER_YEAR  # Euro/(tproduct/h)
         inflation = ECBInflation(source_path=self.source_path).get_inflation_rate(
-            base_year=self.MONEY_YEAR, target_year=element.settings.cost.price_year
+            base_year=self.MONEY_YEAR, target_year=element.settings.time.price_year
         )
         specific_capex *= inflation
         attr = element.capex_specific_conversion

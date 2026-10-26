@@ -48,7 +48,7 @@ Temporal resolution
    * - ``time.interval_between_years``
      - 4
      - Years between two optimized years
-   * - ``time.year_time_series``
+   * - ``time.time_series_year``
      - 2019
      - Weather and demand year of the hourly time series
 

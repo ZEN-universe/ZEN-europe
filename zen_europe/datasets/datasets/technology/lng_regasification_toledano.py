@@ -69,7 +69,7 @@ class LNGRegasificationToledano(Dataset[dict[str, pd.DataFrame]]):
         vopex = vopex * ecb_dollar2euro.get_dollar2euro(self.MONEY_YEAR)
         inflation = ECBInflation(source_path=self.source_path)
         vopex = vopex * inflation.get_inflation_rate(
-            self.MONEY_YEAR, technology.settings.cost.price_year
+            self.MONEY_YEAR, technology.settings.time.price_year
         )
         attr = technology.opex_specific_variable
         return attr.set_data(
