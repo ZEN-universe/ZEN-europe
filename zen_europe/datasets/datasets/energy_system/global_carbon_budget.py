@@ -137,16 +137,20 @@ class GlobalCarbonBudget(Dataset[pd.Series]):
             return self.data.loc[start_year:end_year]
 
         extrapolated_years = range(last_year + 1, end_year + 1)
-        year_str = (f"{extrapolated_years[0]}-{end_year}" 
-                    if len(extrapolated_years) > 1 
-                    else str(extrapolated_years[0]))
+        year_str = (
+            f"{extrapolated_years[0]}-{end_year}"
+            if len(extrapolated_years) > 1
+            else str(extrapolated_years[0])
+        )
         logger.warning(
             f"The Global Carbon Budget {self.VERSION} reports emissions until "
             f"{last_year}. Extrapolating values for {year_str} "
             f"linearly from the last {self.EXTRAPOLATION_YEARS} years."
         )
         reference = self.data.loc[last_year - self.EXTRAPOLATION_YEARS + 1 :]
-        slope, intercept = np.polyfit(reference.index, reference.values, deg=1)
+        slope, intercept = np.polyfit(
+            reference.index.to_numpy(), reference.to_numpy(dtype=float), deg=1
+        )
         extrapolated = pd.Series(
             [slope * year + intercept for year in extrapolated_years],
             index=pd.Index(extrapolated_years, name=self.data.index.name),

@@ -12,6 +12,6 @@ class EmissionsSettings(SettingsCategory):
     use_carbon_annual_limit: bool = False
     use_annual_limit_overshoot: bool = True
     use_EU_ETS_cap: bool = False
-    temperature_increase: float = 1.5
+    temperature_increase: float = 1.7
     probability_carbon_budget: float = 0.5
     extrapolate_missing_years: bool = True
