@@ -244,4 +244,5 @@ class CarbonConstraints(DatasetCollection):
         trajectory = trajectory.reindex(
             optimization_years.union(target_years)
         ).interpolate(method="index")
+        trajectory.name = "carbon_emissions_annual_limit"
         return trajectory.loc[optimization_years]
