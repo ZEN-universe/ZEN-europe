@@ -3,6 +3,9 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Dict, cast
 
 import pandas as pd
+import numpy as np
+import logging
+logger = logging.getLogger(__name__)
 
 from zen_europe.datasets.datasets.energy_system.desnz_ghg_inventory import (
     DESNZGreenhouseGasInventory,
@@ -39,7 +42,8 @@ EU_2030_TARGET_REDUCTION = 0.55
 EU_2040_TARGET_YEAR = 2040
 EU_2040_TARGET_REDUCTION = 0.90
 
-
+# number of most recent years the linear extrapolation is fitted to
+EXTRAPOLATION_YEARS = 10
 class CarbonConstraints(DatasetCollection):
     """Calculate carbon constraints."""
 
@@ -74,6 +78,10 @@ class CarbonConstraints(DatasetCollection):
         global_budget = self.get_remaining_global_carbon_budget()
         share = self.calculate_budget_share_egal(energy_system)
         budget_europe = global_budget * share
+        if not self.settings.emissions.correct_budget_with_global_emissions:
+            budget_europe = self.correct_budget_with_european_emissions(
+                energy_system, 
+                budget_europe)
         sector_share = self.calculate_sector_share(energy_system)
         year_sector_share = int(
             self.settings.time.reference_year
@@ -158,8 +166,11 @@ class CarbonConstraints(DatasetCollection):
         budget_since_ar6_start_year = ipcc_ar6.get_remaining_carbon_budget(
             temperature_target=temperature_target, probability=probability
         )
-        emitted_since_ar6_start_year = self.get_historic_global_emissions()
-        return budget_since_ar6_start_year - emitted_since_ar6_start_year
+        if self.settings.emissions.correct_budget_with_global_emissions:
+            emitted_since_ar6_start_year = self.get_historic_global_emissions()
+            return budget_since_ar6_start_year - emitted_since_ar6_start_year
+        else:
+            return budget_since_ar6_start_year
 
     def get_historic_global_emissions(self) -> float:
         """
@@ -169,7 +180,9 @@ class CarbonConstraints(DatasetCollection):
         global_carbon_budget = cast(
             GlobalCarbonBudget, self.data["global_carbon_budget"]
         )
-        historic_emissions = global_carbon_budget.get_historic_emissions(
+        historic_emissions = global_carbon_budget.data
+        historic_emissions = self.extrapolate_historic_emissions(
+            data=historic_emissions,
             start_year=IPCCAR6.AR6_BUDGET_START_YEAR,
             end_year=self.settings.time.reference_year - 1,
             extrapolate_missing_years=self.settings.emissions.extrapolate_missing_years,
@@ -246,3 +259,76 @@ class CarbonConstraints(DatasetCollection):
         ).interpolate(method="index")
         trajectory.name = "carbon_emissions_annual_limit"
         return trajectory.loc[optimization_years]
+
+    def correct_budget_with_european_emissions(
+        self, energy_system: EnergySystem, budget_europe: float
+    ) -> float:
+        """
+        Correct the remaining carbon budget of the energy system with the
+        actual European emissions between the start of the IPCC AR6 carbon
+        budget and the reference year of the model.
+        """
+        european_emissions = self.calculate_total_emissions(energy_system)
+        european_emissions = self.extrapolate_historic_emissions(
+            data=european_emissions,
+            start_year=IPCCAR6.AR6_BUDGET_START_YEAR,
+            end_year=self.settings.time.reference_year - 1,
+            extrapolate_missing_years=self.settings.emissions.extrapolate_missing_years
+        )
+        remaining_budget = budget_europe - european_emissions.sum()
+        return remaining_budget
+
+    def extrapolate_historic_emissions(
+        self,
+        data: pd.Series, 
+        start_year: int, 
+        end_year: int, 
+        extrapolate_missing_years: bool
+    ) -> pd.Series:
+        """
+        Check if the historic emissions data contains the requested years, 
+        and extrapolate missing years if requested.
+
+        Args:
+            data (pd.Series): Historic emissions data.
+            start_year (int): First year of the period.
+            end_year (int): Last year of the period.
+            extrapolate_missing_years (bool): If True, years after the last
+                reported year are filled with a linear fit of the last
+                `EXTRAPOLATION_YEARS` reported years. If False, missing years
+                raise an error.
+        """
+        missing = [
+            year for year in (start_year, end_year) if year not in data.index
+        ]
+        last_year = int(data.index.max())
+        only_after_last_year = all(year > last_year for year in missing)
+        if missing and not (extrapolate_missing_years and only_after_last_year):
+            raise ValueError(
+                f"The Global Carbon Budget does not report the years {missing}. "
+                f"Available years: {data.index.min()}-{last_year}."
+            )
+        if not missing:
+            return data.loc[start_year:end_year]
+
+        extrapolated_years = range(last_year + 1, end_year + 1)
+        year_str = (
+            f"{extrapolated_years[0]}-{end_year}"
+            if len(extrapolated_years) > 1
+            else str(extrapolated_years[0])
+        )
+        logger.warning(
+            f"Historic emissions are only available until "
+            f"{last_year}. Extrapolating values for {year_str} "
+            f"linearly from the last {EXTRAPOLATION_YEARS} years."
+        )
+        reference = data.loc[last_year - EXTRAPOLATION_YEARS + 1 :]
+        slope, intercept = np.polyfit(
+            reference.index.to_numpy(), reference.to_numpy(dtype=float), deg=1
+        )
+        extrapolated = pd.Series(
+            [slope * year + intercept for year in extrapolated_years],
+            index=pd.Index(extrapolated_years, name=data.index.name),
+            name=data.name,
+        )
+        return pd.concat([data, extrapolated]).loc[start_year:end_year]
