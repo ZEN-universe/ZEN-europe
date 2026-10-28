@@ -17,10 +17,12 @@ import zen_europe.settings  # noqa: F401  (registers the categories)
 
 CONFIG_PATH = Path(__file__).parents[2] / "data" / "zen_europe_config.yaml"
 
+
 def test_settings_override_from_dict() -> None:
     settings = Settings.model_validate({"time": {"interval_between_years": 5}})
 
     assert settings.time.interval_between_years == 5
+
 
 def test_settings_rejects_wrong_type() -> None:
     with pytest.raises(ValidationError):
