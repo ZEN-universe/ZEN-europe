@@ -1,6 +1,7 @@
 # Project-specific-ignores
 data/created_models
 data/models.yaml
+models*.yaml
 tests/end_to_end/outputs
 docs/files/generated/
 CLAUDE.md

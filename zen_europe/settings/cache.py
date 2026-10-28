@@ -18,7 +18,7 @@ class CacheSettings(SettingsCategory):
     overwrite_entsoe: bool = False
     overwrite_eurostat: bool = False
     overwrite_eea_ghg_inventory: bool = False
-    overwrite_global_carbon_budget: bool = True
+    overwrite_global_carbon_budget: bool = False
     overwrite_desnz_ghg_inventory: bool = False
     overwrite_worldbank_co2_emissions: bool = False
     overwrite_worldbank_population: bool = False
