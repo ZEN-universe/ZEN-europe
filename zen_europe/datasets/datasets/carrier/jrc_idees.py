@@ -202,5 +202,5 @@ class JRCIDEES(Dataset[pd.DataFrame]):
         common_countries = data.index.get_level_values("node").isin(
             element.model.config.system.set_nodes
         )
-        data = data.loc[common_countries, element.settings.time.year_time_series]
+        data = data.loc[common_countries, element.settings.time.time_series_year]
         return data

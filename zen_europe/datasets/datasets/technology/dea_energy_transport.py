@@ -246,5 +246,5 @@ class DEAEnergyTransport(Dataset[dict[str, pd.DataFrame]]):
             )
         return costs[technology_name] * self.get_inflation_rate(
             base_year=self.MONEY_YEARS[technology_name],
-            target_year=technology.settings.cost.price_year,
+            target_year=technology.settings.time.price_year,
         )

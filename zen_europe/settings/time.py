@@ -20,10 +20,11 @@ class TimeSettings(SettingsCategory):
         "interval_between_years": "system.interval_between_years",
     }
 
-    reference_year: int = 2022
+    reference_year: int = 2026
     last_year: int = 2050
-    year_time_series: int = 2019
-    interval_between_years: int = 4
+    price_year: int = 2025
+    time_series_year: int = 2019
+    interval_between_years: int = 2
 
     def apply(self, config: "Config") -> None:
         """Write the horizon into the system config.

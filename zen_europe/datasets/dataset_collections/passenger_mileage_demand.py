@@ -82,8 +82,8 @@ class PassengerMileageDemand(DatasetCollection):
         # get urbanization data from Eurostat dataset
         eurostat_dataset = cast(Eurostat, self.data["eurostat"])
         share_regions = eurostat_dataset.get_population_by_urbanization()
-        year_time_series = element.settings.time.year_time_series
-        share_regions = share_regions[year_time_series].unstack()
+        time_series_year = element.settings.time.time_series_year
+        share_regions = share_regions[time_series_year].unstack()
         common_nodes = pd.Index(share_regions.columns).intersection(
             set(element.model.config.system.set_nodes)
         )

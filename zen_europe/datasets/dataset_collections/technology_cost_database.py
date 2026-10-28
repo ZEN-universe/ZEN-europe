@@ -508,7 +508,7 @@ class TechnologyCostDatabase(DatasetCollection):
                 f"{metric} across all available data for the agencies "
                 f"{', '.join(agencies)} reporting data for this technology at plant "
                 f"size '{plant_size}'. Monetary values are rebased to "
-                f"{self.settings.cost.price_year} "
+                f"{self.settings.time.price_year} "
                 f"Euro using ECB HICP inflation.{rebasing}"
             ),
             metadata=self.metadata,
@@ -548,7 +548,7 @@ class TechnologyCostDatabase(DatasetCollection):
                 value=[
                     value
                     * self._inflation.get_inflation_rate(
-                        int(money_year_src), self.settings.cost.price_year
+                        int(money_year_src), self.settings.time.price_year
                     )
                     for value, money_year_src in zip(
                         rows["value"], rows["money_year_src"], strict=True
@@ -848,7 +848,7 @@ class TechnologyCostDatabase(DatasetCollection):
                 f"coupling factor ({coupling_factor.default_value:.4g} "
                 f"{coupling_factor.unit}) to express it per unit of captured "
                 f"CO2. Monetary values are rebased to "
-                f"{self.settings.cost.price_year} Euro "
+                f"{self.settings.time.price_year} Euro "
                 f"using ECB HICP inflation."
             ),
             metadata=self.metadata,

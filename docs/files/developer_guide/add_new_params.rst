@@ -112,8 +112,6 @@ Recommended quick check:
 Worked Example: ``min_full_load_hours_fraction``
 ================================================
 
-Your recent change in ``conversion_technology.py`` is the reference example.
-
 1. Registered the new name in ``_subclass_attribute_names``.
 2. Created the attribute in ``set_default_values_conversion_technology``.
 3. Added getter/setter with validation.

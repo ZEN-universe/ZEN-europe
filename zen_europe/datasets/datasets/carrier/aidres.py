@@ -178,7 +178,7 @@ class Aidres(Dataset[dict[str, pd.DataFrame]]):
         capex_specific_value = capex_total_value / capacity_value * 1000  # Euro/(t/h)
         inflation = ECBInflation(source_path=self.source_path).get_inflation_rate(
             base_year=money_year[element.name],
-            target_year=element.settings.cost.price_year,
+            target_year=element.settings.time.price_year,
         )
         capex_specific_value *= inflation
         attr = element.capex_specific_conversion

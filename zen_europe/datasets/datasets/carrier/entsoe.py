@@ -418,7 +418,7 @@ class ENTSOE(Dataset[pd.DataFrame]):
     # -------- per-country query loops ------------------
 
     def _query_demand(self) -> pd.DataFrame:
-        year = self.settings.time.year_time_series
+        year = self.settings.time.time_series_year
         year_entsoe = self.last_entsoe_year
         if year > year_entsoe:
             logging.info(

@@ -95,12 +95,12 @@ class ElectricityDemand(DatasetCollection):
         assert len(missing_nodes) == 0, (
             f"Missing nodes in heating share data: " f"{missing_nodes}"
         )
-        year_time_series = self.settings.time.year_time_series
+        time_series_year = self.settings.time.time_series_year
         self._validate_heating_share_year(
-            year_time_series, heating_share_hp, heating_share_eb
+            time_series_year, heating_share_hp, heating_share_eb
         )
-        heating_share_hp = heating_share_hp.loc[common_nodes, year_time_series]
-        heating_share_eb = heating_share_eb.loc[common_nodes, year_time_series]
+        heating_share_hp = heating_share_hp.loc[common_nodes, time_series_year]
+        heating_share_eb = heating_share_eb.loc[common_nodes, time_series_year]
         heat_demand_hp = heat_demand * heating_share_hp
         heat_demand_eb = heat_demand * heating_share_eb
         electricity_demand_eb = (

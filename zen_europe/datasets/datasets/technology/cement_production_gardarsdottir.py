@@ -87,7 +87,7 @@ class CementProductionGardarsdottir(Dataset[pd.Series]):
         specific_capex = capex_total / hourly_production
 
         inflation = ECBInflation(source_path=self.source_path).get_inflation_rate(
-            base_year=self.MONEY_YEAR, target_year=element.settings.cost.price_year
+            base_year=self.MONEY_YEAR, target_year=element.settings.time.price_year
         )
         specific_capex *= inflation
         attr.set_data(
@@ -118,7 +118,7 @@ class CementProductionGardarsdottir(Dataset[pd.Series]):
         opex_specific_fixed = opex_total / hourly_production
 
         inflation = ECBInflation(source_path=self.source_path).get_inflation_rate(
-            base_year=self.MONEY_YEAR, target_year=element.settings.cost.price_year
+            base_year=self.MONEY_YEAR, target_year=element.settings.time.price_year
         )
         opex_specific_fixed *= inflation
         attr.set_data(
@@ -144,7 +144,7 @@ class CementProductionGardarsdottir(Dataset[pd.Series]):
         attr = element.opex_specific_variable
         opex_specific_variable = 6.875  # Euro/tproduct, screengrab from Fig. 4
         inflation = ECBInflation(source_path=self.source_path).get_inflation_rate(
-            base_year=self.MONEY_YEAR, target_year=element.settings.cost.price_year
+            base_year=self.MONEY_YEAR, target_year=element.settings.time.price_year
         )
         opex_specific_variable *= inflation
         attr.set_data(

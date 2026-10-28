@@ -66,7 +66,7 @@ class NorthernLightsCosts(Dataset[pd.Series]):
         ecb_inflation = ECBInflation(source_path=self.source_path)
         inflation = ecb_inflation.get_inflation_rate(
             base_year=self.MONEY_YEAR,
-            target_year=element.settings.cost.price_year,
+            target_year=element.settings.time.price_year,
         )
         specific_capex = specific_capex * inflation
         attr = element.capex_specific_conversion

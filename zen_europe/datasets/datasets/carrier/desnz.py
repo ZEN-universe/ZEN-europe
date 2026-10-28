@@ -59,10 +59,10 @@ class DESNZ(Dataset[pd.DataFrame]):
         Args:
             element (Element): The element for which to get the demand.
         """
-        year_time_series = element.model.settings.time.year_time_series
+        time_series_year = element.model.settings.time.time_series_year
         data_ser = cast(pd.Series, self.data.loc["Services", "Total"])
         data_ser = data_ser.loc[["Space heating ", "Water heating "]]
-        data_ser = data_ser.xs(year_time_series, level="Year")
+        data_ser = data_ser.xs(time_series_year, level="Year")
         data_ser = data_ser.rename(
             index={"Space heating ": "space_heating", "Water heating ": "water_heating"}
         )
