@@ -38,9 +38,6 @@ Documentation
 
    files/developer_guide/installation
    files/developer_guide/extending
-   files/developer_guide/workflow
-   files/developer_guide/class_diagram
-   files/developer_guide/add_new_params
 
 .. toctree::
    :maxdepth: 1

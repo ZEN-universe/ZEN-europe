@@ -12,8 +12,8 @@ dependencies:
 # To install as a developer --------------------------------------------
 # conda env create -f zen_europe_env.yml
 # conda activate zen-europe-env
-# cd <path to zen_creator>
-# pip install -e .
+# optional, to develop ZEN-creator alongside:
+# pip install -e <path to zen_creator>
 
 
 #  To remove as a developer --------------------------------------------

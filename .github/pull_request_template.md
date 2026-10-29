@@ -7,17 +7,17 @@ Closes # (if applicable).
 
 ## Detailed list of changes
 
-List all changes proposed in the pull request in the format `<type>: <description>` (**mandatory**). This list will be used to update the changelog. Valid types include `fix`, `feat`, `docs`, `chore`, and `breaking`.
+List all changes proposed in the pull request in the format `<type>: <description>` (**mandatory**). This list will be used to update the changelog. Valid types include `data`, `fix`, `feat`, `docs`, `chore`, and `breaking`.
 
 The first sentence of the description should be written in the imperative tense (e.g., "Add new feature" or "Clean existing code file"). Subsequent sentences may have any format; however, the description must consist of only one paragraph (no newline characters).
 
-An example list is shown below. Update these sections to match the changes proposed in the pull request.:
+An example list is shown below. Update these sections to match the changes proposed in the pull request:
 
 - data: describe any changes to the input data made in this pull-request. Include 1-2 additional sentences on the context. Data changes automatically lead to minor version bumps.
 - fix: describe bug fixed through the pull-request, including 1-2 additional sentences on the context. Bug fixes automatically lead to patch version bumps.
-- feat: describe new features added to the model. Features include any new functionality that is available to ZEN-garden users. New features automatically lead to minor version bumps.
-- docs: describe changes to the documentation. This category is for all changes to the documentation or docstrings. Documentation changes do not bump the ZEN-garden version.
-- chore: describe maintenance tasks such as updating tests, improving continuous integration workflows, and refactoring code. These tasks do not change the functionality of ZEN-garden from a user perspective and therefore do not lead to a version bump. They are primarily relevant for developers.
+- feat: describe new features added to the model. Features include any new functionality that is available to ZEN-europe users. New features automatically lead to minor version bumps.
+- docs: describe changes to the documentation. This category is for all changes to the documentation or docstrings. Documentation changes do not bump the ZEN-europe version.
+- chore: describe maintenance tasks such as updating tests, improving continuous integration workflows, and refactoring code. These tasks do not change the functionality of ZEN-europe from a user perspective and therefore do not lead to a version bump. They are primarily relevant for developers.
 - breaking: describe breaking changes. Add a 1–2 sentence description of the breaking change. Breaking changes automatically lead to a major version bump.
 
 
@@ -33,7 +33,7 @@ Describe how the default dataset changes. If it does not change, state that. If 
 - [ ] A detailed list of changes is provided.
 
 ### Code quality
-- [ ] Newly introduced dependencies are added to `pyproject.toml` and to `zen_europe_env.yml`.
+- [ ] Newly introduced dependencies are added to `pyproject.toml`.
 - [ ] Code has been formatted via `black .` in a terminal window.
 - [ ] Linter `ruff check .` passes all checks.
 - [ ] Type checker `mypy .` passes all checks.
@@ -59,7 +59,7 @@ Describe how the default dataset changes. If it does not change, state that. If 
   ```bash
   pip install git+https://github.com/ZEN-universe/ZEN-garden.git@main
   zen-europe
-  zen_garden --config ./data/created_models/config.yaml --dataset ./data/created_models/zen-europe
+  zen-garden --config ./data/created_models/config.yaml --dataset ./data/created_models/zen-europe
   ```
 
 - [ ] The ZEN-garden run is feasible, and the objective value is plausible compared to `main`.

@@ -207,8 +207,11 @@ class ENTSOE(Dataset[pd.DataFrame]):
     under ``source_path / "02-carrier" / "entsoe"``.
 
     Requires an API security token in the ``ENTSOE_API_KEY`` environment
-    variable (generate one at https://transparency.entsoe.eu/ under "My
-    Account" -> "Web API Access").
+    variable. To obtain one, register on https://transparency.entsoe.eu/ and
+    send an email to transparency@entsoe.eu with "Restful API access" in the
+    subject line and the registered e-mail address in the body. Then log in,
+    go to "My Account Settings" and generate an API token. See
+    https://transparencyplatform.zendesk.com/hc/en-us/articles/12845911031188-How-to-get-security-token
     """
 
     name = "entsoe"
@@ -255,15 +258,17 @@ class ENTSOE(Dataset[pd.DataFrame]):
             if not api_key:
                 raise RuntimeError(
                     f"ENTSO-E API key not found. Set the {_API_KEY_ENV_VAR} "
-                    "environment variable to a security token generated at "
-                    "https://transparency.entsoe.eu/ (My Account -> Web API "
-                    "Access).\nThen, add the token to your environment variables and "
+                    "environment variable to an API token.\nTo obtain one, register "
+                    "on https://transparency.entsoe.eu/ and send an email to "
+                    "transparency@entsoe.eu with 'Restful API access' in the subject "
+                    "line and the registered e-mail address in the body. Then log in, "
+                    "go to 'My Account Settings' and generate an API token. See "
+                    "https://transparencyplatform.zendesk.com/hc/en-us/articles/"
+                    "12845911031188-How-to-get-security-token\n"
+                    "Then, add the token to your environment variables and "
                     "restart the Python process.\nYou will not need the token if you "
                     "have already have a cached dataset."
                 )
-            # the default session keeps only 10 connections per host, so with
-            # more worker threads the surplus connections would be discarded
-            # (and re-opened) after every request
             session = requests.Session()
             adapter = requests.adapters.HTTPAdapter(
                 pool_connections=1, pool_maxsize=_MAX_WORKERS
