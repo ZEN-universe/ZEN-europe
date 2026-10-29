@@ -3,6 +3,11 @@
 This file gets automatically updated in ZEN-europe's continuous integration 
 procedures. Do not edit the file manually.
 
+## [v1.5.1] - 2026-10-29 
+
+### Bug Fixes 🐛
+- fix default value for `capacity_existing_energy` of `reservoir_hydropower` and `pumped_hydropower`. The default value was still set tin `Inf` in countries that did not have existing capacity for these hydropower types.. [[🔀 PR #58](https://github.com/ZEN-universe/ZEN-europe/pull/58) @csfunke]
+
 ## [v1.5.0] - 2026-10-28 
 
 ### New Features ✨
