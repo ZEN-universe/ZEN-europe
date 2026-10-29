@@ -3,6 +3,12 @@
 This file gets automatically updated in ZEN-europe's continuous integration 
 procedures. Do not edit the file manually.
 
+## [v1.5.2] - 2026-10-29 
+
+### Bug Fixes 🐛
+- Fix ENTSOE error message when API key is missing. Now it highlights that the user needs to send an email [[🔀 PR #60](https://github.com/ZEN-universe/ZEN-europe/pull/60) @jacob-mannhardt]
+- Rewrite the documentation where it mistakenly said ZEN-creator and remove redundant files [[🔀 PR #60](https://github.com/ZEN-universe/ZEN-europe/pull/60) @jacob-mannhardt]
+
 ## [v1.5.1] - 2026-10-29 
 
 ### Bug Fixes 🐛
