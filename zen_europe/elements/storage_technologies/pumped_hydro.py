@@ -230,7 +230,7 @@ class PumpedHydro(StorageTechnology):
         )
         attr.set_data(
             df=capacity_limit,
-            default_value = 0,
+            default_value=0,
             source=SourceInformation(
                 description=(
                     "The energy capacity limit is set to the sum of the"
