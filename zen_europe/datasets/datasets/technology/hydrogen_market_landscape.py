@@ -1,23 +1,20 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any
 
 import pandas as pd
 from zen_creator.datasets.datasets.dataset import Dataset
 from zen_creator.datasets.datasets.metadata import MetaData
 
-from zen_europe.utils.constants import Constants
-from zen_europe.utils.utils import convert_country_names
 
-class HydrogenMarketLandscapeObservatory(Dataset[pd.Series]):
+class HydrogenMarketLandscape(Dataset[pd.Series]):
     """
     Dataset class for the utilization factor of SMR technologies
     based on the European hydrogen market landscape 2025 report.
 
     """
 
-    name = "hydrogen_market_landscape_observatory"
+    name = "hydrogen_market_landscape"
 
     def __init__(self, source_path: Path | str | None = None):
         super().__init__(source_path=source_path)
@@ -25,9 +22,7 @@ class HydrogenMarketLandscapeObservatory(Dataset[pd.Series]):
     def _set_metadata(self) -> MetaData:
         return MetaData(
             name=self.name,
-            title=(
-                "The European hydrogen market landscape - November 2025"
-            ),
+            title=("The European hydrogen market landscape - November 2025"),
             author=["European Hydrogen Observatory"],
             publication="European Hydrogen Observatory",
             publication_year=2025,
@@ -47,7 +42,7 @@ class HydrogenMarketLandscapeObservatory(Dataset[pd.Series]):
         return pd.Series(data)
 
     # -------- methods ------------------------
-    def get_utilization_rate_SMR(self) -> list[dict[str, dict[str, Any]]]:
+    def get_utilization_rate_SMR(self) -> float:
         """Get the utilization rate for SMR technologies in 2024.
 
         The data is obtained from the p.5 of the report.

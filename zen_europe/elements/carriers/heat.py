@@ -38,8 +38,10 @@ class Heat(Carrier):
         Return the price of shed demand of the carrier.
 
         """
-        if (self.settings.availability.allow_heat_demand_shedding
-            or self.settings.availability.allow_all_demand_shedding):
+        if (
+            self.settings.availability.allow_heat_demand_shedding
+            or self.settings.availability.allow_all_demand_shedding
+        ):
             return Attribute(
                 "price_shed_demand",
                 default_value=1e4,

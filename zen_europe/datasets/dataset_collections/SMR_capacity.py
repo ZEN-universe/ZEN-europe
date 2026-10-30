@@ -2,28 +2,26 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Dict, cast
 
-import pandas as pd
-
 from zen_europe.utils.utils import (
     account_for_decommissioned_capacity,
-    calculate_capacity_addition_from_cumulative,
     format_capacity_existing,
 )
 
 if TYPE_CHECKING:
     from pathlib import Path
 
-    from zen_creator import Carrier, Dataset
+    from zen_creator import Dataset
 
 
 from zen_creator import Attribute, ConversionTechnology, DatasetCollection
 from zen_creator.utils.attribute import SourceInformation
 
-from zen_europe.datasets.datasets.technology.hydrogen_market_landscape_observatory import (
-    HydrogenMarketLandscapeObservatory
+from zen_europe.datasets.datasets.technology.hydrogen_market_landscape import (
+    HydrogenMarketLandscape,
 )
 from zen_europe.datasets.datasets.technology.rollout_hydrogen_ganter import (
-    HydrogenRolloutGanter)
+    HydrogenRolloutGanter,
+)
 
 
 class SMRCapacity(DatasetCollection):
@@ -41,31 +39,33 @@ class SMRCapacity(DatasetCollection):
             raise ValueError("source_path must be set to load the dataset collection.")
 
         return {
-            "hydrogen_market_landscape_observatory": (
-                HydrogenMarketLandscapeObservatory(self.source_path)),
-            "hydrogen_rollout_ganter": HydrogenRolloutGanter(self.source_path)
+            "hydrogen_market_landscape": (HydrogenMarketLandscape(self.source_path)),
+            "hydrogen_rollout_ganter": HydrogenRolloutGanter(self.source_path),
         }
 
-    def get_capacity_existing(self, technology: ConversionTechnology) -> pd.Series:
+    def get_capacity_existing(self, technology: ConversionTechnology) -> Attribute:
         """
         Get the existing capacity of SMR technologies.
 
-        The data is obtained from the near-term infrastructure rollout and 
+        The data is obtained from the near-term infrastructure rollout and
         investment strategies for
         net-zero hydrogen supply chains, based on the work of Alissa Ganter et al.
-        (2024). The existing capacity is adjusted for a utilization rate of 0.7, 
+        (2024). The existing capacity is adjusted for a utilization rate of 0.7,
         which is obtained from the European hydrogen market landscape 2025 report.
 
         Args:
             technology: The technology for which to get the existing capacity.
         """
-        assert technology.name == "SMR", (
-            "This method is only applicable to SMR technologies.")
-        ganter_dataset = cast(HydrogenRolloutGanter, 
-                              self.data["hydrogen_rollout_ganter"])
+        assert (
+            technology.name == "SMR"
+        ), "This method is only applicable to SMR technologies."
+        ganter_dataset = cast(
+            HydrogenRolloutGanter, self.data["hydrogen_rollout_ganter"]
+        )
         raw_capacity = ganter_dataset.get_capacity_existing_SMR()
-        hmlo_dataset = cast(HydrogenMarketLandscapeObservatory, 
-                            self.data["hydrogen_market_landscape_observatory"])
+        hmlo_dataset = cast(
+            HydrogenMarketLandscape, self.data["hydrogen_market_landscape"]
+        )
         utilization_rate = hmlo_dataset.get_utilization_rate_SMR()
         raw_capacity /= utilization_rate
         capacity_frame = raw_capacity.to_frame(
