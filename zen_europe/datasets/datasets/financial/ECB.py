@@ -189,8 +189,5 @@ class ECBDollar2Euro(Dataset[pd.DataFrame]):
 
     def get_dollar2euro(self, year: int) -> float:
         """Method to calculate the dollar-to-euro conversion rate for a given year."""
-        euro2dollar = pd.to_numeric(
-            self.data.loc[year, "euro2dollar"],
-            errors="raise",
-        )
+        euro2dollar = float(self.data["euro2dollar"].loc[year])
         return 1 / euro2dollar
