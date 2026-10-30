@@ -3,6 +3,14 @@
 This file gets automatically updated in ZEN-europe's continuous integration 
 procedures. Do not edit the file manually.
 
+## [v1.6.0] - 2026-10-30 
+
+### Bug Fixes 🐛
+- avoid numerical issues/demand shedding in olefin [[🔀 PR #62](https://github.com/ZEN-universe/ZEN-europe/pull/62) @jacob-mannhardt]
+
+### Data Changes 📊
+- add 40% more existing capacity for SMR because of the 70% utilization from the European Hydrogen Observatory. [[🔀 PR #62](https://github.com/ZEN-universe/ZEN-europe/pull/62) @jacob-mannhardt]
+
 ## [v1.5.2] - 2026-10-29 
 
 ### Bug Fixes 🐛
