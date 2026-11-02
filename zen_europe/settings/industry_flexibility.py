@@ -8,7 +8,7 @@ class IndustryFlexibilitySettings(SettingsCategory):
     """Flexibility and heat pump options of the industry sectors.
 
     Technologies that are switched off are removed from the model, see
-    ``zen_europe.utils.industry.remove_inactive_industry_elements``.
+    ``zen_europe.model_creator.remove_inactive_industry_elements``.
     """
 
     name: ClassVar[str] = "industry_flexibility"

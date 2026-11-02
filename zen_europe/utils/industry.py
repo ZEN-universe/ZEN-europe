@@ -12,7 +12,7 @@ from zen_europe.utils.utils import (
 
 if TYPE_CHECKING:
     import pandas as pd
-    from zen_creator import Element, Model
+    from zen_creator import Element
 
 # year of the production, energy and heat statistics
 DATA_YEAR = 2023
@@ -48,28 +48,3 @@ def spread_capacity_existing(capacity: pd.Series, element: Element) -> pd.Series
     frame = capacity.to_frame(element.settings.time.reference_year - 1)
     frame = calculate_capacity_addition_from_cumulative(frame, element)
     return format_capacity_existing(frame)
-
-
-def remove_inactive_industry_elements(model: Model) -> None:
-    """Remove the TES, DSM and industry heat pumps that are switched off in the
-    `industry_flexibility` settings."""
-    # imported here, the element modules import this module
-    from zen_europe.elements.conversion_technologies.heat_pump_industry import (
-        HeatPumpIndustry,
-    )
-    from zen_europe.elements.storage_technologies.industry_DSM import IndustryDSM
-    from zen_europe.elements.storage_technologies.industry_TES import IndustryTES
-
-    settings = model.settings.industry_flexibility
-    inactive = [
-        name
-        for name, element in model.elements.items()
-        if (isinstance(element, IndustryTES) and not settings.use_tes)
-        or (isinstance(element, IndustryDSM) and settings.dsm_shiftability == "none")
-        or (
-            isinstance(element, HeatPumpIndustry)
-            and element.temp_level not in settings.heat_pump_temp_levels
-        )
-    ]
-    for name in inactive:
-        model.remove_element_by_name(name)

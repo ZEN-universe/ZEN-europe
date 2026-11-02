@@ -31,7 +31,7 @@ Input data are computed in `IndustryProductionData` (`industry_production_data.p
 ### Settings (`industry_flexibility.*`, `zen_europe/settings/industry_flexibility.py`)
 
 Technologies that are switched off are removed from the model before it is built
-(`remove_inactive_industry_elements` in `zen_europe/utils/industry.py`).
+(`remove_inactive_industry_elements` in `zen_europe/model_creator.py`).
 
 | setting | default | use |
 |---|---|---|

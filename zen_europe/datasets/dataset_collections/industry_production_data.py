@@ -354,7 +354,7 @@ class IndustryProductionData(DatasetCollection):
         return element.retrofit_flow_coupling_factor.set_data(
             default_value=round(intensity * capture_rate, 12),
             unit="tCO2/tproduct",
-            base_technology=f"{element.sector}_production",
+            base_technology=element.base_technology_name,
             source=SourceInformation(
                 description=(
                     f"The process emissions of {intensity} t CO2 per t of product "

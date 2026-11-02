@@ -93,9 +93,11 @@ class IndustryPostComb(IndustryHeatTechnology):
 
 class GlassPostComb(IndustryPostComb, RetrofittingTechnology):
     name: str = "glass_post_comb"
+    base_technology_name: str = "glass_production"
     sector: ClassVar[str] = "glass"
 
 
 class CeramicPostComb(IndustryPostComb, RetrofittingTechnology):
     name: str = "ceramic_post_comb"
+    base_technology_name: str = "ceramic_production"
     sector: ClassVar[str] = "ceramic"
