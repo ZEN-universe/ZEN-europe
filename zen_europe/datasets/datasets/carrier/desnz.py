@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, ClassVar, cast
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -11,6 +11,7 @@ from zen_creator.datasets.datasets.dataset import Dataset
 from zen_creator.datasets.datasets.metadata import MetaData
 
 from zen_europe.utils.constants import Constants
+from zen_europe.utils.time_series import require_acceptable_year
 
 _KTOE2GWH = 1 / Constants.TOE_PER_MWH  # ktoe (useful energy) -> GWh
 
@@ -23,6 +24,7 @@ class DESNZ(Dataset[pd.DataFrame]):
     """
 
     name = "desnz"
+    ACCEPTABLE_YEARS: ClassVar[tuple[int, ...]] = tuple(range(2017, 2025))
 
     def __init__(self, source_path: Path | str | None = None):
         super().__init__(source_path=source_path)
@@ -60,6 +62,12 @@ class DESNZ(Dataset[pd.DataFrame]):
             element (Element): The element for which to get the demand.
         """
         time_series_year = element.model.settings.time.time_series_year
+        require_acceptable_year(
+            time_series_year,
+            dataset_name=self.name,
+            setting_name="time_series_year",
+            acceptable_years=self.ACCEPTABLE_YEARS,
+        )
         data_ser = cast(pd.Series, self.data.loc["Services", "Total"])
         data_ser = data_ser.loc[["Space heating ", "Water heating "]]
         data_ser = data_ser.xs(time_series_year, level="Year")

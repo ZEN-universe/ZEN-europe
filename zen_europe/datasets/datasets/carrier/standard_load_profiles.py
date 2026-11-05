@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-import datetime
 from pathlib import Path
-from typing import cast
+from typing import ClassVar, cast
 
 import numpy as np
 import pandas as pd
@@ -10,8 +9,10 @@ import pytz
 from zen_creator import Element
 from zen_creator.datasets.datasets.dataset import Dataset
 from zen_creator.datasets.datasets.metadata import MetaData
+from zen_creator.utils.settings import Settings
 
 from zen_europe.utils.constants import Constants
+from zen_europe.utils.time_series import require_acceptable_year
 
 _REGION_TYPES = {"urban": "HT1", "suburban": "HT3", "rural": "HT6"}
 _DAY_TYPES = {"w": "Werktag", "we": "Wochenende"}
@@ -26,8 +27,18 @@ class StandardLoadProfiles(Dataset[dict[str, pd.DataFrame]]):
     """
 
     name = "standard_load_profiles"
+    ACCEPTABLE_YEARS: ClassVar[tuple[int, ...]] = (2019, 2020)
 
-    def __init__(self, source_path: Path | str | None = None):
+    def __init__(
+        self, settings: Settings, source_path: Path | str | None = None
+    ) -> None:
+        self.settings = settings
+        require_acceptable_year(
+            settings.time.time_series_year,
+            dataset_name=self.name,
+            setting_name="time_series_year",
+            acceptable_years=self.ACCEPTABLE_YEARS,
+        )
         super().__init__(source_path=source_path)
 
     def _set_metadata(self) -> MetaData:
@@ -92,20 +103,20 @@ class StandardLoadProfiles(Dataset[dict[str, pd.DataFrame]]):
         for day_type in _DAY_TYPES:
             data_d = self.data[day_type]
             data[day_type] = data_d.dot(share_regions)
-        # get starting day of the year
         time_series_year = element.settings.time.time_series_year
-        start_day = datetime.date(time_series_year, 1, 1).weekday()
-        seq_days = ["w"] * 5 + ["we"] * 2
-        seq_days = seq_days[start_day:] + seq_days[:start_day]
-        data_ts = pd.concat([data[day] for day in seq_days], axis=0)
-        countries = data_ts.columns
-        data_ts = pd.DataFrame(np.tile(data_ts.values, (52, 1)))
-        data_ts.columns = countries
-        if seq_days[-1] == "we" and seq_days[-2] == "w":
-            add_day = data["we"]
-        else:
-            add_day = data["w"]
-        data_ts = pd.concat([data_ts, add_day], axis=0)
+        require_acceptable_year(
+            time_series_year,
+            dataset_name=self.name,
+            setting_name="time_series_year",
+            acceptable_years=self.ACCEPTABLE_YEARS,
+        )
+        days = pd.date_range(
+            f"{time_series_year}-01-01", f"{time_series_year}-12-31", freq="1D"
+        )
+        days = days[~((days.month == 2) & (days.day == 29))]
+        data_ts = pd.concat(
+            [data["w" if day.weekday() < 5 else "we"] for day in days], axis=0
+        )
         data_ts = data_ts.reset_index(drop=True)
         data_ts.index.name = "time"
         return data_ts

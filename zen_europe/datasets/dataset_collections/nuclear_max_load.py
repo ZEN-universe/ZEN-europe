@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any, Dict
+from datetime import datetime
+from typing import TYPE_CHECKING, Any, ClassVar, Dict
 
 import pandas as pd
 
@@ -13,12 +14,11 @@ if TYPE_CHECKING:
     from zen_europe.elements.conversion_technologies.nuclear import Nuclear
 
 
-import calendar
-
 from zen_creator import DatasetCollection
 from zen_creator.utils.settings import Settings
 
 from zen_europe.datasets.datasets.carrier.entsoe import ENTSOE
+from zen_europe.utils.time_series import require_acceptable_year
 
 
 class NuclearMaxLoad(DatasetCollection):
@@ -32,8 +32,12 @@ class NuclearMaxLoad(DatasetCollection):
     """
 
     name = "nuclear_max_load"
-
     NUM_PAST_YEARS = 4
+
+    # Five complete ENTSO-E years are required for every reference year.
+    ACCEPTABLE_YEARS: ClassVar[tuple[int, ...]] = tuple(
+        range(2015 + NUM_PAST_YEARS, datetime.now().year)
+    )
 
     def __init__(
         self, settings: Settings, set_nodes: list[str], source_path: Path | str
@@ -82,6 +86,12 @@ class NuclearMaxLoad(DatasetCollection):
                 f"Using {last_entsoe_year} instead."
             )
             ref_year = last_entsoe_year
+        require_acceptable_year(
+            ref_year,
+            dataset_name=self.name,
+            setting_name="reference_year",
+            acceptable_years=self.ACCEPTABLE_YEARS,
+        )
         years = range(ref_year - self.NUM_PAST_YEARS, ref_year + 1)
         nodal_ml_by_year = {}
         total_ml_by_year = {}
@@ -93,10 +103,6 @@ class NuclearMaxLoad(DatasetCollection):
             common_nodes = gen.columns.intersection(capa.index)
             gen = gen.loc[:, common_nodes]
             capa = capa.loc[common_nodes]
-            if calendar.isleap(year):
-                # drop 29 Feb so every year aligns to the same 8760 hours
-                leap_day_hours = range((31 + 28) * 24, (31 + 29) * 24)
-                gen = gen.loc[~gen.index.isin(leap_day_hours)].reset_index(drop=True)
             nodal_ml_by_year[year] = gen.divide(capa, axis=1).clip(upper=1)
             total_ml_by_year[year] = (gen.sum(axis=1) / capa.sum()).clip(upper=1)
         nodal_ml_df = pd.concat(nodal_ml_by_year, axis=1).T.groupby(level=1).mean().T
