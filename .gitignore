@@ -19,6 +19,8 @@ test.py
 /data/raw_data/02-carrier/entsoe/*.json
 /data/raw_data/02-carrier/eurostat/*.feather
 /data/raw_data/02-carrier/eurostat/*.json
+/data/raw_data/02-carrier/heat/when2heat/when2heat_2023-07-27.csv
+/data/raw_data/02-carrier/heat/when2heat/when2heat_2023-07-27_*.feather
 /data/raw_data/02-carrier/heat/jrc_idees/useful_thermal_energy_service.feather
 /data/raw_data/03-technology/capacity_existing/transport/unece/*.feather
 /data/raw_data/03-technology/capacity_existing/glohydrores_data.feather
@@ -39,7 +41,6 @@ test.py
 /data/raw_data/03-technology/passenger_cars/vehicle_tech_parameters.csv
 /data/raw_data/04-monetary/ecb/ecb_inflation.csv
 /data/raw_data/04-monetary/ecb/ecb_dollar_to_euro.csv
-
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -255,4 +256,3 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
-

@@ -48,7 +48,9 @@ class TruckMileageDemand(DatasetCollection):
             "statistical_pocketbook_transport": StatisticalPocketbookTransport(
                 self.settings, self.source_path
             ),
-            "truck_standard_load_profiles": TruckStandardLoadProfiles(self.source_path),
+            "truck_standard_load_profiles": TruckStandardLoadProfiles(
+                self.settings, self.source_path
+            ),
             "truck_technologies": TruckTechnologiesICCT(self.source_path),
         }
 

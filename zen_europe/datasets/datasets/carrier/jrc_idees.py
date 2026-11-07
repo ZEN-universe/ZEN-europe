@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 import zipfile
 from io import BytesIO
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, ClassVar
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -16,6 +16,7 @@ from zen_creator.datasets.datasets.metadata import MetaData
 
 from zen_europe.settings.cache import get_active_cache_settings
 from zen_europe.utils.constants import Constants
+from zen_europe.utils.time_series import require_acceptable_year
 
 logger = logging.getLogger(__name__)
 
@@ -73,6 +74,7 @@ class JRCIDEES(Dataset[pd.DataFrame]):
     """
 
     name = "jrc_idees"
+    ACCEPTABLE_YEARS: ClassVar[tuple[int, ...]] = tuple(range(2000, 2024))
 
     def __init__(self, source_path: Path | str | None = None):
         super().__init__(source_path=source_path)
@@ -198,9 +200,16 @@ class JRCIDEES(Dataset[pd.DataFrame]):
         Returns:
             A pandas Series containing the demand data for the specified carrier.
         """
+        year = element.settings.time.time_series_year
+        require_acceptable_year(
+            year,
+            dataset_name=self.name,
+            setting_name="time_series_year",
+            acceptable_years=self.ACCEPTABLE_YEARS,
+        )
         data = self.data.copy()
         common_countries = data.index.get_level_values("node").isin(
             element.model.config.system.set_nodes
         )
-        data = data.loc[common_countries, element.settings.time.time_series_year]
+        data = data.loc[common_countries, year]
         return data

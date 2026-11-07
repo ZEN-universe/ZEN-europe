@@ -1,12 +1,15 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import ClassVar
 
 import pandas as pd
 from zen_creator import Element
 from zen_creator.datasets.datasets.dataset import Dataset
 from zen_creator.datasets.datasets.metadata import MetaData
 from zen_creator.utils.settings import Settings
+
+from zen_europe.utils.time_series import require_acceptable_year
 
 
 class StatisticalPocketbookTransport(Dataset[dict[str, pd.Series]]):
@@ -18,6 +21,15 @@ class StatisticalPocketbookTransport(Dataset[dict[str, pd.Series]]):
     """
 
     name = "statistical_pocketbook_transport"
+    ACCEPTABLE_YEARS: ClassVar[tuple[int, ...]] = (
+        1995,
+        2000,
+        2005,
+        2010,
+        2015,
+        2019,
+        2020,
+    )
 
     def __init__(self, settings: Settings, source_path: Path | str | None = None):
         self.settings = settings
@@ -44,6 +56,12 @@ class StatisticalPocketbookTransport(Dataset[dict[str, pd.Series]]):
     def _set_data(self) -> dict[str, pd.Series]:
         types = ["passenger_mileage", "truck_mileage"]
         time_series_year = self.settings.time.time_series_year
+        require_acceptable_year(
+            time_series_year,
+            dataset_name=self.name,
+            setting_name="time_series_year",
+            acceptable_years=self.ACCEPTABLE_YEARS,
+        )
         data: dict[str, pd.Series] = {}
         for t in types:
             sheet = pd.read_excel(self.path, sheet_name=t).set_index("Column1")

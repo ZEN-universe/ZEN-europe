@@ -43,7 +43,9 @@ class PassengerMileageDemand(DatasetCollection):
             "statistical_pocketbook_transport": StatisticalPocketbookTransport(
                 self.settings, self.source_path
             ),
-            "standard_load_profiles": StandardLoadProfiles(self.source_path),
+            "standard_load_profiles": StandardLoadProfiles(
+                self.settings, self.source_path
+            ),
         }
 
     def get_demand(self, element: Carrier) -> Attribute:

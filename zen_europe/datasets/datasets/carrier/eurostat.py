@@ -8,7 +8,7 @@ import time
 import uuid
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Callable, Union, cast
+from typing import Any, Callable, ClassVar, Union, cast
 
 import eurostat as es
 import pandas as pd
@@ -18,6 +18,7 @@ from zen_creator.datasets.datasets.metadata import MetaData
 from zen_creator.utils.settings import Settings
 
 from zen_europe.utils.constants import Constants
+from zen_europe.utils.time_series import require_acceptable_year
 from zen_europe.utils.utils import instance_cache
 
 logger = logging.getLogger(__name__)
@@ -183,10 +184,20 @@ class Eurostat(Dataset[pd.DataFrame]):
     """
 
     name = "eurostat"
+    ACCEPTABLE_YEARS: ClassVar[tuple[int, ...]] = tuple(
+        range(_EUROSTAT_START_YEAR, datetime.now().year)
+    )
 
     def __init__(self, settings: Settings, source_path: Path | str | None = None):
         self.settings = settings
         self.source_path = Path(source_path) if source_path is not None else None
+
+        require_acceptable_year(
+            self.settings.time.time_series_year,
+            dataset_name=self.name,
+            setting_name="time_series_year",
+            acceptable_years=self.ACCEPTABLE_YEARS,
+        )
 
         last_eurostat_year = self._get_latest_year("nrg_bal_c")
         eurostat_year = min(last_eurostat_year, self.settings.time.reference_year - 1)
@@ -197,9 +208,7 @@ class Eurostat(Dataset[pd.DataFrame]):
                 f"Using {eurostat_year} instead."
             )
         self.eurostat_year = eurostat_year
-        self.eurostat_time_series_year = min(
-            eurostat_year, self.settings.time.time_series_year
-        )
+        self.eurostat_time_series_year = self.settings.time.time_series_year
 
         super().__init__(source_path=source_path)
 

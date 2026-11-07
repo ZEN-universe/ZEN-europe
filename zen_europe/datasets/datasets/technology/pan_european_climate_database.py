@@ -3,8 +3,9 @@ from __future__ import annotations
 import logging
 import urllib.request
 import zipfile
+from datetime import datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, ClassVar, TypedDict
 from urllib.error import HTTPError
 
 import cdsapi
@@ -19,6 +20,20 @@ from zen_creator.datasets.datasets.dataset import Dataset
 from zen_creator.datasets.datasets.metadata import MetaData, SourceInformation
 
 from zen_europe.utils.constants import Constants
+from zen_europe.utils.time_series import (
+    canonicalize_hourly_year,
+    require_acceptable_year,
+)
+
+
+class _TechnologyRequest(TypedDict):
+    """CDS selectors pinned for one PECD energy indicator."""
+
+    variable: str
+    technology: str | None
+    energy_scenario: str | None
+    spatial_resolution: str
+    file_version: str
 
 
 class PanEuropeanClimateDatabase(Dataset[dict[str, pd.DataFrame]]):
@@ -28,7 +43,8 @@ class PanEuropeanClimateDatabase(Dataset[dict[str, pd.DataFrame]]):
     Downloads hourly capacity factors for utility-scale solar PV, onshore wind, and
     offshore wind, plus hydropower generation and inflow energy, aggregated to NUTS0
     (country) resolution, from the Copernicus Climate Data Store's `sis-energy-pecd`
-    dataset, for the historical ERA5-reanalysis `settings.time.time_series_year`.
+    dataset, for the historical ERA5-reanalysis
+    `settings.time.resolved_weather_year`.
     Wind technologies use PECD's "Existing technologies" turbine class (technology
     codes 20 offshore / 30 onshore) at the "Resource Grade B" installation-site
     assumption (current-plant-equivalent siting, as opposed to Grade A's idealized
@@ -70,6 +86,10 @@ class PanEuropeanClimateDatabase(Dataset[dict[str, pd.DataFrame]]):
     """
 
     name = "pan_european_climate_database"
+    ACCEPTABLE_YEARS: ClassVar[tuple[int, ...]] = tuple(
+        range(1950, datetime.now().year)
+    )
+    PECD_VERSION = "pecd4_2"
 
     CDS_DATASET = "sis-energy-pecd"
     # Pan-European bounding box [North, West, South, East], matching the CDS
@@ -80,48 +100,55 @@ class PanEuropeanClimateDatabase(Dataset[dict[str, pd.DataFrame]]):
     # `spatial_resolution`. Wind and hydropower are downloaded at PECD's own native
     # regional resolution (not NUTS0) and aggregated to NUTS0 afterwards -- see
     # `_aggregate_to_nuts0`.
-    TECHNOLOGY_REQUESTS: dict[str, dict[str, str | None]] = {
+    TECHNOLOGY_REQUESTS: dict[str, _TechnologyRequest] = {
         "photovoltaics": {
             "variable": "solar_photovoltaic_generation_capacity_factor",
             "technology": "62",  # SPV utility-scale fixed
             "energy_scenario": None,
             "spatial_resolution": "nuts_0",
+            "file_version": "fv1",
         },
         "wind_onshore": {
             "variable": "wind_power_onshore_capacity_factor",
             "technology": "30",  # onshore wind, existing technologies
             "energy_scenario": "resource_grade_b",
             "spatial_resolution": "peon",
+            "file_version": "fv1",
         },
         "wind_offshore": {
             "variable": "wind_power_offshore_capacity_factor",
             "technology": "21",  # offshore wind, existing technologies
             "energy_scenario": "resource_grade_b",
             "spatial_resolution": "peof",
+            "file_version": "fv1",
         },
         "reservoir_hydro": {
             "variable": "hydropower_reservoir_inflow",
             "technology": None,
             "energy_scenario": None,
             "spatial_resolution": "szon",
+            "file_version": "fv1",
         },
         "run-of-river_hydro": {
             "variable": "hydropower_run_of_river_generation",
             "technology": None,
             "energy_scenario": None,
             "spatial_resolution": "szon",
+            "file_version": "fv1",
         },
         "run-of-river_with_pondage_hydro": {
             "variable": "hydropower_run_of_river_with_pondage_generation",
             "technology": None,
             "energy_scenario": None,
             "spatial_resolution": "szon",
+            "file_version": "fv1",
         },
         "pumped_hydro": {
             "variable": "hydropower_open_loop_pumped_storage_inflow",
             "technology": None,
             "energy_scenario": None,
             "spatial_resolution": "szon",
+            "file_version": "fv1",
         },
     }
 
@@ -172,31 +199,39 @@ class PanEuropeanClimateDatabase(Dataset[dict[str, pd.DataFrame]]):
         return Path(self.source_path) / "03-technology" / "climate_data"
 
     def _set_data(self) -> dict[str, pd.DataFrame]:
-        year = self.settings.time.time_series_year
+        year = self.settings.time.resolved_weather_year
+        require_acceptable_year(
+            dataset_name=self.name,
+            setting_name="weather_year",
+            year=year,
+            acceptable_years=self.ACCEPTABLE_YEARS,
+        )
         return {
             technology: self._get_technology_data(technology, request, year)
             for technology, request in self.TECHNOLOGY_REQUESTS.items()
         }
 
     def _get_technology_data(
-        self, technology: str, request: dict[str, str | None], year: int
+        self, technology: str, request: _TechnologyRequest, year: int
     ) -> pd.DataFrame:
         """Return `technology`'s hourly NUTS0 series for `year`.
 
         Downloads and parses it from the CDS API on first use (aggregating from
         PECD's native regional resolution to NUTS0 where needed, see
-        `_aggregate_to_nuts0`), caching the result as `pecd_data_<technology>.feather`
-        directly under `self.path` (i.e. "separated by technology", one output
-        file per technology); subsequent calls just read that cache back.
+        `_aggregate_to_nuts0`), caching the result as
+        `pecd_data_<PECD-version>_<file-version>_<technology>_<weather-year>.feather`
+        directly under `self.path`; subsequent calls read that version-specific cache.
         """
-        cache_path = self.path / f"pecd_data_{technology}.feather"
+        identity = f"{self.PECD_VERSION}_{request['file_version']}_{technology}_{year}"
+        cache_path = self.path / f"pecd_data_{identity}.feather"
         if (
             cache_path.exists()
             and not self.settings.cache.overwrite_pan_european_climate_database
         ):
-            return pd.read_feather(cache_path).set_index("Date")
+            cached = pd.read_feather(cache_path)
+            return cached.set_index(cached.columns[0])
 
-        zip_path = self.path / f"{technology}_{year}_raw.zip"
+        zip_path = self.path / f"{identity}_raw.zip"
         if (
             self.settings.cache.overwrite_pan_european_climate_database
             or not zip_path.exists()
@@ -205,19 +240,23 @@ class PanEuropeanClimateDatabase(Dataset[dict[str, pd.DataFrame]]):
 
         data = self._parse_zip(zip_path)
         data = self._aggregate_to_nuts0(technology, data)
+        if technology in {"photovoltaics", "wind_onshore", "wind_offshore"}:
+            data = canonicalize_hourly_year(
+                data, year=year, dataset_name=f"{self.name}.{technology}"
+            )
         data.reset_index().to_feather(cache_path)
         return data
 
-    def _download(self, request: dict[str, str | None], year: int, dest: Path) -> None:
+    def _download(self, request: _TechnologyRequest, year: int, dest: Path) -> None:
         """Retrieve one technology's PECD series from the CDS API as a raw zip file."""
         cds_request: dict[str, Any] = {
-            "pecd_version": "pecd4_2",
+            "pecd_version": self.PECD_VERSION,
             "temporal_period": ["historical"],
             "origin": ["era5_reanalysis"],
             "variable": [request["variable"]],
             "spatial_resolution": [request["spatial_resolution"]],
             "year": [str(year)],
-            "file_version": ["fv1"],
+            "file_version": [request["file_version"]],
             "area": self.AREA,
         }
         if request["technology"] is not None:

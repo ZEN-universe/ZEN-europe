@@ -32,6 +32,7 @@ class CacheSettings(SettingsCategory):
     overwrite_pecd_hydro_capacities: bool = False
     overwrite_powerplantmatching: bool = False
     overwrite_dac_costs_sievert: bool = False
+    overwrite_when2heat: bool = False
 
 
 class CacheArtifactKind(str, Enum):
@@ -56,6 +57,16 @@ class CacheProvider:
 # classified above, but never cache-deletion targets. Every entry below is produced
 # by ZEN-europe from a remote source or another local input.
 CACHE_PROVIDERS = (
+    CacheProvider(
+        "when2heat",
+        CacheArtifactKind.DOWNLOADED_SOURCE,
+        ("02-carrier/heat/when2heat/when2heat_2023-07-27.csv",),
+    ),
+    CacheProvider(
+        "when2heat",
+        CacheArtifactKind.DERIVED_CACHE,
+        ("02-carrier/heat/when2heat/when2heat_2023-07-27_*.feather",),
+    ),
     CacheProvider(
         "entsoe",
         CacheArtifactKind.DOWNLOADED_SOURCE,
@@ -112,7 +123,7 @@ CACHE_PROVIDERS = (
         "pan_european_climate_database",
         CacheArtifactKind.DOWNLOADED_SOURCE,
         (
-            "03-technology/climate_data/*_raw.zip",
+            "03-technology/climate_data/pecd4_2_fv1_*_raw.zip",
             "03-technology/climate_data/onshore_wind_weights.csv",
             "03-technology/climate_data/offshore_wind_weights.csv",
         ),

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, ClassVar
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -11,6 +11,7 @@ from zen_creator.datasets.datasets.dataset import Dataset
 from zen_creator.datasets.datasets.metadata import MetaData
 
 from zen_europe.utils.constants import Constants
+from zen_europe.utils.time_series import require_acceptable_year
 
 _MAP_TECHNOLOGY = {
     "Heizöl": "oil_boiler",
@@ -30,6 +31,7 @@ class BFE(Dataset[dict[str, pd.DataFrame]]):
     """
 
     name = "bfe"
+    ACCEPTABLE_YEARS: ClassVar[tuple[int, ...]] = tuple(range(2000, 2025))
 
     def __init__(self, source_path: Path | str | None = None):
         super().__init__(source_path=source_path)
@@ -96,6 +98,12 @@ class BFE(Dataset[dict[str, pd.DataFrame]]):
             element (Element): The element for which to get the demand.
         """
         time_series_year = element.model.settings.time.time_series_year
+        require_acceptable_year(
+            time_series_year,
+            dataset_name=self.name,
+            setting_name="time_series_year",
+            acceptable_years=self.ACCEPTABLE_YEARS,
+        )
         data_res = self.data["residential"].loc[
             ["Raumwärme", "Warmwasser"], time_series_year
         ]
