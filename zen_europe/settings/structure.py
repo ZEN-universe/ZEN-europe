@@ -40,6 +40,10 @@ class StructureSettings(SettingsCategory):
             "steel",
             "passenger_transport",
             "truck_transport",
+            "glass",
+            "ceramic",
+            "paper",
+            "food",
         ]
     )
     set_conversion_technologies: list[str] = Field(default_factory=list)

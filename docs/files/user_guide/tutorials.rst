@@ -155,6 +155,10 @@ all fields with their type and default value:
        candidates or plant-level hydro capacities.
    * - ``max_load``
      - Seasonal and nodal availability of nuclear plants.
+   * - ``industry_flexibility``
+     - Flexibility of the glass, ceramic, paper and food sectors: thermal
+       energy storage, DSM shiftability and the temperature bands with heat
+       pumps (see :doc:`industry`).
    * - ``scenario``
      - Scenarios that are added to the dataset (see Tutorial 6).
    * - ``cache``

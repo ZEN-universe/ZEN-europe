@@ -57,6 +57,7 @@ def convert_country_names(series: pd.Series) -> pd.Series:
         "Latvia": "LV",
         "The Netherlands": "NL",
         "Netherlands": "NL",
+        "Netherlands (Kingdom of the)": "NL",
         "Norway": "NO",
         "Poland": "PL",
         "Portugal": "PT",
@@ -66,6 +67,7 @@ def convert_country_names(series: pd.Series) -> pd.Series:
         "Slovakia": "SK",
         "Slovak Republic": "SK",
         "United Kingdom": "UK",
+        "United Kingdom of Great Britain and Northern Ireland": "UK",
         "Great Britain": "UK",
         "UK": "UK",
     }

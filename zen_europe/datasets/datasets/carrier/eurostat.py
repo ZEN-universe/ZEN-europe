@@ -110,6 +110,19 @@ _HEAT_DH_NRG_BAL = {
     "GHP": "Gross heat production",
 }
 
+# final consumption of the paper industry, which sets the waste share of the
+# JRC-IDEES "Biomass and waste" carrier in paper boilers
+_PAPER_NRG_BAL = {
+    "FC_IND_PPP_E": "Final consumption - industry sector - paper, pulp and printing",
+}
+_PAPER_BIOMASS_WASTE_SIEC = {
+    "R5110-5150_W6000RI": "biomass",  # Primary solid biofuels
+    "R5300": "biomass",  # Biogases
+    "W6100": "waste",  # Industrial waste (non-renewable)
+    "W6210": "waste",  # Renewable municipal waste
+    "W6220": "waste",  # Non-renewable municipal waste
+}
+
 _COAL_SIEC = {"C0220": "lignite", "C0129": "hard_coal"}
 _COAL_NRG_BAL = {
     # "TI_EHG_E": "Transformation Input",
@@ -416,6 +429,12 @@ class Eurostat(Dataset[pd.DataFrame]):
         return self._query_heat_dh_technology()
 
     @instance_cache
+    def get_paper_waste_share(self, year: int) -> pd.Series:
+        """Waste share of the paper industry's biomass and waste consumption per
+        node, at the latest available year up to `year`."""
+        return self._query_paper_waste_share(year)
+
+    @instance_cache
     def get_coal_availability(self) -> pd.DataFrame:
         """Coal availability per node."""
         return self._query_coal_availability()
@@ -563,6 +582,22 @@ class Eurostat(Dataset[pd.DataFrame]):
         heat_data = heat_data.groupby(level=[1, 2]).sum(numeric_only=True)
         heat_data = heat_data.swaplevel(0, 1).sort_index()
         return heat_data / Constants.GJ_PER_MWH  # convert from TJ to GWh
+
+    def _query_paper_waste_share(self, year: int) -> pd.Series:
+        """Load the final consumption of biomass and waste in the paper industry
+        and return waste / (biomass + waste); NaN where neither is consumed."""
+        data = self._query_siec_data(
+            nrg_bal=_PAPER_NRG_BAL,
+            siec=_PAPER_BIOMASS_WASTE_SIEC,
+            start_period=_EUROSTAT_START_YEAR,
+        )
+        data = self._convert_availability(data, {}, cutoff_year=year)
+        data = data.droplevel("nrg_bal").astype(float).fillna(0.0)
+        data = data.T.groupby(_PAPER_BIOMASS_WASTE_SIEC).sum().T
+        total = data.sum(axis=1)
+        share = data.get("waste", 0.0) / total.where(total > 0)
+        share.index.name = "node"
+        return share.rename("waste_share")
 
     def _query_coal_availability(self) -> pd.DataFrame:
         """Calculate coal availability, scaled from imports and production

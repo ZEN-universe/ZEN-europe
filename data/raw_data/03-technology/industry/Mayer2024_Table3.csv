@@ -1,0 +1,6 @@
+technology,temperature_degC,efficiency,invest_cost_EUR_kWh,fixed_OaM_cost_EUR_kWh,lifetime_years
+water tank,< 200,0.9,10,0.15,30
+steam accumulator,< 200,0.95,114,4.1,25
+packed bed,200-400,0.97,111.7,4.7,15
+molten salt,300-400,0.89,13.57,6.2,30
+phase change material,200-400,0.89,76.83,4.7,25

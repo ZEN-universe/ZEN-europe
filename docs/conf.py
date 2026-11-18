@@ -47,6 +47,10 @@ extensions = [
     "sphinx.ext.imgconverter",  # for SVG conversion
     "sphinxcontrib.mermaid",  # for class diagrams
 ]
+# generate anchors for Markdown headings (h1-h3), for links like
+# `[Diffusion](#diffusion)`
+myst_heading_anchors = 3
+
 # allow errors in the notebooks
 nbsphinx_allow_errors = True
 

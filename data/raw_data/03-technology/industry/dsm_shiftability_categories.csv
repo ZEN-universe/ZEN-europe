@@ -1,0 +1,11 @@
+carrier,pessimistic,optimistic,reference
+glass,1,1,"continuous furnace campaigns of 5-15 years; Hubert (2015), Basics of industrial glass melting furnaces, https://www.lehigh.edu/imi/teched/GlassProcess/Lectures/Lecture03_Hubert_industglassmeltfurnaces.pdf; Hongtai (2024), https://www.refractory-firebricks.com/case/343.html"
+ceramic,1,2,"tunnel kilns run continuously, batch kilns can stop between cycles; Tangram Technology, Energy management in ceramics processing, https://tangram.co.uk/wp-content/uploads/Energy-and-Sustainability-Topics-Energy-management-in-ceramics-processing.pdf"
+paper,2,3,"mechanical pulping with pulp storage; Helin et al. (2017), doi:10.1016/j.energy.2017.11.075"
+food,1,2,"industry interview; Perez Recatala, A. (ongoing), Master thesis, EPSE, ETH Zurich"
+methanol,2,3,"power-to-methanol can ramp; Schneider and Lagoni (2023), https://projekter.aau.dk/projekter/files/535029626/Flexibility_of_Power_to_Methanol_in_2030.pdf; Chen and Yang (2021), doi:10.1016/j.enconman.2020.113673"
+primary_steel,1,1,"blast furnaces barely vary; Boldrini et al. (2024), doi:10.1016/j.rser.2023.113988; Golmohamadi (2021), doi:10.1016/j.rser.2021.111963"
+secondary_steel,2,3,"electric arc furnace load flexibility; Boldrini et al. (2024), doi:10.1016/j.rser.2023.113988; Golmohamadi (2021), doi:10.1016/j.rser.2021.111963"
+olefin,1,2,"electrified crackers allow part load; Tiggeloven et al. (2023), doi:10.1021/acs.iecr.3c02226"
+ammonia,1,2,"flexible Haber-Bosch designs reach 10 % turndown; Salmon and Banares-Alcantara (2023), doi:10.1039/D3SU00067B; Fahr et al. (2025), doi:10.1016/j.ijhydene.2025.01.039"
+clinker,1,1,"uninterruptible; Golmohamadi (2021), doi:10.1016/j.rser.2021.111963, Table 5"

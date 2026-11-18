@@ -15,9 +15,14 @@ from zen_europe.elements.retrofitting_technologies.coal_to_cement_fuel import (
 from zen_europe.elements.retrofitting_technologies.hydrogen_to_cement_fuel import (
     HydrogenToCementFuel,
 )
+from zen_europe.elements.retrofitting_technologies.industry_post_comb import (
+    CeramicPostComb,
+    GlassPostComb,
+)
 from zen_europe.elements.retrofitting_technologies.waste_to_cement_fuel import (
     WasteToCementFuel,
 )
+from zen_europe.elements.storage_technologies.industry_DSM import ClinkerDSM
 
 
 class CementSector(Sector):
@@ -35,6 +40,9 @@ class CementSector(Sector):
             BiomassToCementFuel,
             HydrogenToCementFuel,
             CementPostComb,
+            GlassPostComb,
+            CeramicPostComb,
             Clinker,
             FuelForCement,
+            ClinkerDSM,
         ]

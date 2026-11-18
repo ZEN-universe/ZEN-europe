@@ -48,6 +48,12 @@ SECTOR_CATEGORIES = {
         ("Industry", "Industrial processes", "Iron and steel production processes"),
         ("Industry", "Industrial fuel combustion", "Iron and steel production"),
     ],
+    # glass and ceramics processes
+    "glass": [("Industry", "Industrial processes", "Glass production")],
+    "ceramic": [
+        ("Industry", "Industrial processes", "Bricks production"),
+        ("Industry", "Industrial processes", "Other ceramics"),
+    ],
 }
 # The chemical industry categories cover methanol and ammonia together. Other
 # industrial combustion is wider than the two, it also holds pulp and paper.

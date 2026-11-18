@@ -1,0 +1,57 @@
+# Model variants: settings patches on top of zen_europe_config.yaml.
+models:
+  # ZEN-europe: glass, ceramic, paper and food with full flexibility (thermal
+  # energy storage and demand-side management)
+  zen_europe: {}
+
+  # the original ZEN-europe: no industrial heat (paper, ceramic, glass, food), no
+  # TES and no DSM
+  zen_europe_legacy:
+    settings:
+      structure:
+        remove_sectors: [glass, ceramic, paper, food]
+      industry_flexibility:
+        use_tes: false
+        dsm_shiftability: none
+
+  zen_europe_no_flex:
+    settings:
+      industry_flexibility:
+        use_tes: false
+        dsm_shiftability: none
+
+  zen_europe_no_flex_no_diffusion:
+    extends: zen_europe_no_flex
+    settings:
+      investment:
+        use_diffusion_rates: false
+
+  zen_europe_no_dsm:
+    settings:
+      industry_flexibility:
+        dsm_shiftability: none
+
+  zen_europe_no_tes:
+    settings:
+      industry_flexibility:
+        use_tes: false
+
+  # DSM only, with the pessimistic DSM shiftability categories
+  zen_europe_no_tes_dsm_pess:
+    extends: zen_europe_no_tes
+    settings:
+      industry_flexibility:
+        dsm_shiftability: pessimistic
+
+  # only the highest temperature band has heat pumps, the lower bands are supplied
+  # via the temperature cascade
+  zen_europe_single_temp:
+    settings:
+      industry_flexibility:
+        heat_pump_temp_levels: ["150_200"]
+
+  zen_europe_no_flex_single_temp:
+    extends: zen_europe_no_flex
+    settings:
+      industry_flexibility:
+        heat_pump_temp_levels: ["150_200"]

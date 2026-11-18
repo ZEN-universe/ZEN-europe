@@ -1,0 +1,13 @@
+industriezweig,RW_bis_65C,RW_bis_lt100C,PW_bis_80C,PW_bis_100C,PW_bis_150C,PW_bis_200C,PW_bis_gt200C
+Nahrung,18%,3%,2%,5%,13%,14%,45%
+Textil,30%,2%,4%,10%,24%,27%,3%
+Holz,51%,1%,2%,28%,16%,28%,0%
+Papier,9%,3%,3%,25%,30%,19%,11%
+Chemie,4%,3%,3%,3%,6%,5%,76%
+Gummi u. Kunststoff,26%,3%,17%,7%,1%,25%,21%
+Nichtmetall,2%,0%,1%,0%,1%,2%,94%
+Metalle,2%,0%,3%,0%,0%,0%,95%
+Metallbau,41%,5%,6%,13%,11%,5%,19%
+Maschinenbau,48%,4%,5%,5%,6%,5%,27%
+Transport,40%,2%,3%,16%,8%,7%,24%
+Sonstige,18%,3%,3%,10%,7%,6%,53%

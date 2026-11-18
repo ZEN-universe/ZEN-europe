@@ -88,6 +88,13 @@ that belong to it and the sectors it cannot exist without. The default
 dataset includes all sectors. They are listed, with their technologies,
 carriers and carrier flows, in :ref:`model_structure.index`.
 
+The sectors ``glass``, ``ceramic``, ``paper`` and ``food`` contain the
+production of these products together with their process heat supply, thermal
+energy storage and demand-side management. Thermal energy storage, demand-side
+management of all industrial products and the temperature bands with heat
+pumps are switched by the ``industry_flexibility`` settings (see
+:doc:`../user_guide/industry`).
+
 Some technologies connect two sectors. They are declared by every sector they
 belong to and are only part of the model when all of these sectors are
 included. For example, ``natural_gas_turbine_CCS`` is declared by the

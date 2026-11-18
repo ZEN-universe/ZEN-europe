@@ -1,0 +1,4 @@
+category,description,capex,opex,energy_to_power_ratio_max
+1,not flexible (priced out),1000.0,1000.0,2.0
+2,partially flexible,20.0,20.0,48.0
+3,fully flexible,1.0,1.0,336.0

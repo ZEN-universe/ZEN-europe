@@ -13,6 +13,10 @@ from zen_europe.elements.retrofitting_technologies.biomass_plant_CCS import (
 from zen_europe.elements.retrofitting_technologies.cement_post_comb import (
     CementPostComb,
 )
+from zen_europe.elements.retrofitting_technologies.industry_post_comb import (
+    CeramicPostComb,
+    GlassPostComb,
+)
 from zen_europe.elements.retrofitting_technologies.natural_gas_turbine_CCS import (
     NaturalGasTurbineCCS,
 )
@@ -37,6 +41,8 @@ class CarbonSector(Sector):
             BiomassPlantCCS,
             SMR_CCS,
             CementPostComb,
+            GlassPostComb,
+            CeramicPostComb,
             BF_BOF_CCS,
             NG_DRI_CCS,
             MethanolFromHydrogen,

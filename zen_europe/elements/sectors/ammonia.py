@@ -5,6 +5,7 @@ from zen_europe.elements.conversion_technologies.ammonia_ICE_ship import (
     AmmoniaICEShip,
 )
 from zen_europe.elements.conversion_technologies.haber_bosch import HaberBosch
+from zen_europe.elements.storage_technologies.industry_DSM import AmmoniaDSM
 from zen_europe.elements.transport_technologies.ammonia_pipeline import (
     AmmoniaPipeline,
 )
@@ -23,4 +24,5 @@ class AmmoniaSector(Sector):
             AmmoniaPipeline,
             AmmoniaICEShip,
             Ammonia,
+            AmmoniaDSM,
         ]

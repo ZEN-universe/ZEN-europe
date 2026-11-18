@@ -11,8 +11,32 @@ from .fuel_for_cement import FuelForCement
 from .gasoline import Gasoline
 from .hard_coal import HardCoal
 from .heat import Heat
+from .heat_industry import (
+    HeatIndustry0100Ceramic,
+    HeatIndustry0100Food,
+    HeatIndustry0100Glass,
+    HeatIndustry0100Paper,
+    HeatIndustry100150Ceramic,
+    HeatIndustry100150Food,
+    HeatIndustry100150Glass,
+    HeatIndustry100150Paper,
+    HeatIndustry150200Ceramic,
+    HeatIndustry150200Food,
+    HeatIndustry150200Glass,
+    HeatIndustry150200Paper,
+)
 from .hydrogen import Hydrogen
+from .industry_products import (
+    Ceramic,
+    Food,
+    Glass,
+    Paper,
+)
 from .kerosene import Kerosene
+from .kiln_fuel import (
+    KilnFuelCeramic,
+    KilnFuelGlass,
+)
 from .lignite import Lignite
 from .lng import LNG
 from .methanol import Methanol
@@ -60,4 +84,22 @@ __all__ = [
     "CrudeOil",
     "FuelForCement",
     "Uranium",
+    "KilnFuelGlass",
+    "KilnFuelCeramic",
+    "HeatIndustry0100Glass",
+    "HeatIndustry0100Ceramic",
+    "HeatIndustry0100Paper",
+    "HeatIndustry0100Food",
+    "HeatIndustry100150Glass",
+    "HeatIndustry100150Ceramic",
+    "HeatIndustry100150Paper",
+    "HeatIndustry100150Food",
+    "HeatIndustry150200Glass",
+    "HeatIndustry150200Ceramic",
+    "HeatIndustry150200Paper",
+    "HeatIndustry150200Food",
+    "Glass",
+    "Ceramic",
+    "Paper",
+    "Food",
 ]
