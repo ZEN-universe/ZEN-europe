@@ -66,7 +66,7 @@ class DistrictHeatingData(DatasetCollection):
         capex = capex_GWh * flh  # in M€/(GWh / year) -> M€ / GW -> € / kW
         ECB_dataset = cast(ECBInflation, self.data["ecb"])
         inflation = ECB_dataset.get_inflation_rate(
-            base_year=int(money_year_src), target_year=self.settings.cost.price_year
+            base_year=int(money_year_src), target_year=self.settings.time.price_year
         )
         capex = capex * inflation
         capex = interpolate_missing_years(capex)
@@ -110,7 +110,7 @@ class DistrictHeatingData(DatasetCollection):
         cost = cost.loc[element.settings.time.years]
         ecb_dataset = cast(ECBInflation, self.data["ecb"])
         inflation = ecb_dataset.get_inflation_rate(
-            base_year=int(money_year_src), target_year=self.settings.cost.price_year
+            base_year=int(money_year_src), target_year=self.settings.time.price_year
         )
         cost = cost * inflation
         source = SourceInformation(
@@ -145,7 +145,7 @@ class DistrictHeatingData(DatasetCollection):
         cost = cost.loc[element.settings.time.years]
         ecb_dataset = cast(ECBInflation, self.data["ecb"])
         inflation = ecb_dataset.get_inflation_rate(
-            base_year=int(money_year_src), target_year=self.settings.cost.price_year
+            base_year=int(money_year_src), target_year=self.settings.time.price_year
         )
         cost = cost * inflation
         default_value = cost.iloc[0]

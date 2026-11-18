@@ -28,7 +28,7 @@ class PanEuropeanClimateDatabase(Dataset[dict[str, pd.DataFrame]]):
     Downloads hourly capacity factors for utility-scale solar PV, onshore wind, and
     offshore wind, plus hydropower generation and inflow energy, aggregated to NUTS0
     (country) resolution, from the Copernicus Climate Data Store's `sis-energy-pecd`
-    dataset, for the historical ERA5-reanalysis `settings.time.year_time_series`.
+    dataset, for the historical ERA5-reanalysis `settings.time.time_series_year`.
     Wind technologies use PECD's "Existing technologies" turbine class (technology
     codes 20 offshore / 30 onshore) at the "Resource Grade B" installation-site
     assumption (current-plant-equivalent siting, as opposed to Grade A's idealized
@@ -172,7 +172,7 @@ class PanEuropeanClimateDatabase(Dataset[dict[str, pd.DataFrame]]):
         return Path(self.source_path) / "03-technology" / "climate_data"
 
     def _set_data(self) -> dict[str, pd.DataFrame]:
-        year = self.settings.time.year_time_series
+        year = self.settings.time.time_series_year
         return {
             technology: self._get_technology_data(technology, request, year)
             for technology, request in self.TECHNOLOGY_REQUESTS.items()

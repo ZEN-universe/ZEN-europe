@@ -177,7 +177,7 @@ class TruckTechnologiesICCT(Dataset[dict[str, pd.DataFrame]]):
             )
         data = opex_specific_variable[element.name]
         inflation = self.get_inflation_rate(
-            base_year=self.MONEY_YEAR, target_year=element.settings.cost.price_year
+            base_year=self.MONEY_YEAR, target_year=element.settings.time.price_year
         )
         data = data * inflation
         attr = element.opex_specific_variable
@@ -227,7 +227,7 @@ class TruckTechnologiesICCT(Dataset[dict[str, pd.DataFrame]]):
         data = interpolate_missing_years(data)
         data = data / self.HOURLY_TONNE_MILEAGE
         inflation = self.get_inflation_rate(
-            base_year=self.MONEY_YEAR, target_year=element.settings.cost.price_year
+            base_year=self.MONEY_YEAR, target_year=element.settings.time.price_year
         )
         data = data * inflation
         data.index.name = "year"

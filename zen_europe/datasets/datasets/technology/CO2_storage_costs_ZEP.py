@@ -72,7 +72,7 @@ class CO2StorageCostsZEP(Dataset[pd.Series]):
         ecb_inflation = ECBInflation(source_path=self.source_path)
         inflation = ecb_inflation.get_inflation_rate(
             base_year=self.MONEY_YEAR,
-            target_year=element.settings.cost.price_year,
+            target_year=element.settings.time.price_year,
         )
         opex_data = opex * inflation
         return attr.set_data(

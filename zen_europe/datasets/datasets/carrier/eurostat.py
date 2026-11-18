@@ -210,8 +210,8 @@ class Eurostat(Dataset[pd.DataFrame]):
                 f"Using {eurostat_year} instead."
             )
         self.eurostat_year = eurostat_year
-        self.eurostat_year_time_series = min(
-            eurostat_year, self.settings.time.year_time_series
+        self.eurostat_time_series_year = min(
+            eurostat_year, self.settings.time.time_series_year
         )
 
         super().__init__(source_path=source_path)
@@ -516,7 +516,7 @@ class Eurostat(Dataset[pd.DataFrame]):
         generation = self._query_siec_data(
             nrg_bal=nrg_bal,
             siec=siec,
-            start_period=self.eurostat_year_time_series,
+            start_period=self.eurostat_time_series_year,
         )
         generation = cast(
             pd.DataFrame,
@@ -526,7 +526,7 @@ class Eurostat(Dataset[pd.DataFrame]):
         )
         generation = generation.astype(float)
         generation.columns = generation.columns.astype(int)
-        generation = generation[self.eurostat_year_time_series]
+        generation = generation[self.eurostat_time_series_year]
         return generation.sort_index()
 
     def _query_total_heat_household(self) -> pd.DataFrame:
@@ -542,7 +542,7 @@ class Eurostat(Dataset[pd.DataFrame]):
         heat_data = self._convert_availability(
             heat_data,
             _HEAT_HOUSEHOLD_SIEC_TOTAL,
-            cutoff_year=self.eurostat_year_time_series,
+            cutoff_year=self.eurostat_time_series_year,
         )
         heat_data = heat_data.rename(index=_HEAT_HOUSEHOLD_NRG_BAL, level=0)
         heat_data = heat_data.swaplevel(0, 1).sort_index(level=0)

@@ -230,8 +230,12 @@ class ReservoirHydro(StorageTechnology):
         unit = self.capacity_existing_energy.unit
         capacity_limit = data.groupby(level=0).sum()
         capacity_limit.name = "capacity_limit_energy"
+        capacity_limit = capacity_limit.reindex(
+            self.model.config.system.set_nodes, fill_value=0
+        )
         attr.set_data(
             df=capacity_limit,
+            default_value=0,
             source=SourceInformation(
                 description=(
                     "The energy capacity limit is set to the sum of the"

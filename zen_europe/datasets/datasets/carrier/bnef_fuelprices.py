@@ -117,7 +117,7 @@ class BNEFFuelPrices(Dataset[pd.DataFrame]):
             year=2021
         )
         inflation = ECBInflation(source_path=self.source_path).get_inflation_rate(
-            base_year=2021, target_year=element.settings.cost.price_year
+            base_year=2021, target_year=element.settings.time.price_year
         )
         data = data * dollar_to_euro * inflation
         return data

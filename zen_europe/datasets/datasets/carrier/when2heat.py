@@ -49,9 +49,9 @@ class When2Heat(Dataset[dict[str, pd.DataFrame]]):
 
     def _set_data(self) -> dict[str, pd.DataFrame]:
         data = pd.read_csv(self.path)
-        year_time_series = self.settings.time.year_time_series
+        time_series_year = self.settings.time.time_series_year
         years = pd.to_datetime(data["utc_timestamp"]).dt.year
-        data_sel = data[years == year_time_series]
+        data_sel = data[years == time_series_year]
         ts = pd.to_datetime(data_sel["utc_timestamp"])
         hour_of_year = (ts.dt.dayofyear - 1) * 24 + ts.dt.hour
         data_sel.index = hour_of_year

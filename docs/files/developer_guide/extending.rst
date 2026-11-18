@@ -9,6 +9,13 @@ readable for everybody who works on it: every value can be traced from the
 element to the data source, and every data source is processed in exactly one
 place.
 
+The base classes (``Model``, ``Element``, ``Attribute``, ``Dataset``,
+``DatasetCollection``, ...) belong to ZEN-creator and are described in its
+`API reference <https://zen-creator.readthedocs.io/en/latest/files/api/model.html>`_.
+How to add a new attribute to these base classes is described in the
+`ZEN-creator developer guide
+<https://zen-creator.readthedocs.io/en/latest/files/developer_guide/add_new_params.html>`_.
+
 
 Layers
 ======

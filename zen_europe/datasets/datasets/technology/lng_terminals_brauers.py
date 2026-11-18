@@ -89,7 +89,7 @@ class LNGTerminalsBrauers(Dataset[dict[str, pd.DataFrame]]):
         capex_specific = self.CAPEX_TOTAL / capacity  # Euro/kW
         inflation = ECBInflation(source_path=self.source_path)
         capex_specific = capex_specific * inflation.get_inflation_rate(
-            self.MONEY_YEAR, technology.settings.cost.price_year
+            self.MONEY_YEAR, technology.settings.time.price_year
         )
         attr = technology.capex_specific_conversion
         return attr.set_data(

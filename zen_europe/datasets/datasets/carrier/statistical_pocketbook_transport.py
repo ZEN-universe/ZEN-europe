@@ -43,11 +43,11 @@ class StatisticalPocketbookTransport(Dataset[dict[str, pd.Series]]):
 
     def _set_data(self) -> dict[str, pd.Series]:
         types = ["passenger_mileage", "truck_mileage"]
-        year_time_series = self.settings.time.year_time_series
+        time_series_year = self.settings.time.time_series_year
         data: dict[str, pd.Series] = {}
         for t in types:
             sheet = pd.read_excel(self.path, sheet_name=t).set_index("Column1")
-            data[t] = sheet[str(year_time_series)].str.replace(" ", "").astype(float)
+            data[t] = sheet[str(time_series_year)].str.replace(" ", "").astype(float)
         return data
 
     # -------- methods ------------------------

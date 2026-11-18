@@ -92,7 +92,7 @@ class HydrogenPipelinesMiao(Dataset[dict[str, pd.DataFrame]]):
         )
         return self._correct_for_capacity_dollar_year(
             capex_per_distance=0.34,  # million USD/km for a 1000
-            price_year=technology.settings.cost.price_year,
+            price_year=technology.settings.time.price_year,
         )
 
     def get_capex_per_distance_transport_offshore(
@@ -112,7 +112,7 @@ class HydrogenPipelinesMiao(Dataset[dict[str, pd.DataFrame]]):
         )
         return self._correct_for_capacity_dollar_year(
             capex_per_distance=0.96,  # million USD/km for a 1000
-            price_year=technology.settings.cost.price_year,
+            price_year=technology.settings.time.price_year,
         )
 
     def get_opex_fixed_onshore(self, technology: TransportTechnology) -> float:

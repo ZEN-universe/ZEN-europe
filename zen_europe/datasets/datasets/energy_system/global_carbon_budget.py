@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import io
+import logging
 from pathlib import Path
 
 import pandas as pd
@@ -14,6 +15,8 @@ from zen_europe.settings.cache import get_active_cache_settings
 # that building a model does not depend on the Global Carbon Budget download
 # being reachable. Delete the cached file to pick up a newer data vintage.
 _CACHE_DIRECTORY = ("01-energy_system", "global_carbon_budget")
+
+logger = logging.getLogger(__name__)
 
 SHEET = "Global Carbon Budget"
 # row the column headers are on, 0-indexed, the sheet leads with explanatory
@@ -101,19 +104,51 @@ class GlobalCarbonBudget(Dataset[pd.Series]):
 
     # ------ Outward facing functions ------
 
-    def get_historic_emissions(self, start_year: int, end_year: int) -> pd.Series:
-        """Global CO2 emissions in Gt between two years, inclusive.
+    # def get_historic_emissions(
+    #     self,
+    #     start_year: int,
+    #     end_year: int,
+    #     extrapolate_missing_years: bool = False,
+    # ) -> pd.Series:
+    #     """Global CO2 emissions in Gt between two years, inclusive.
 
-        Args:
-            start_year (int): First year of the period.
-            end_year (int): Last year of the period.
-        """
-        missing = [
-            year for year in (start_year, end_year) if year not in self.data.index
-        ]
-        if missing:
-            raise ValueError(
-                f"The Global Carbon Budget does not report the years {missing}. "
-                f"Available years: {self.data.index.min()}-{self.data.index.max()}."
-            )
-        return self.data.loc[start_year:end_year]
+    #     Args:
+    #         start_year (int): First year of the period.
+    #         end_year (int): Last year of the period.
+    #         extrapolate_missing_years (bool): If True, years after the last
+    #             reported year are filled with a linear fit of the last
+    #             `EXTRAPOLATION_YEARS` reported years. If False, missing years
+    #             raise an error.
+    #     """
+    #     missing = [
+    #         year for year in (start_year, end_year) if year not in self.data.index
+    #     ]
+    #     last_year = int(self.data.index.max())
+    #     only_after_last_year = all(year > last_year for year in missing)
+    #     if missing and not (extrapolate_missing_years and only_after_last_year):
+    #         raise ValueError(
+    #             f"The Global Carbon Budget does not report the years {missing}. "
+    #             f"Available years: {self.data.index.min()}-{last_year}."
+    #         )
+    #     if not missing:
+    #         return self.data.loc[start_year:end_year]
+
+    #     extrapolated_years = range(last_year + 1, end_year + 1)
+    #     year_str = (
+    #         f"{extrapolated_years[0]}-{end_year}"
+    #         if len(extrapolated_years) > 1
+    #         else str(extrapolated_years[0])
+    #     )
+    #     logger.warning(
+    #         f"The Global Carbon Budget {self.VERSION} reports emissions until "
+    #         f"{last_year}. Extrapolating values for {year_str} "
+    #         f"linearly from the last {self.EXTRAPOLATION_YEARS} years."
+    #     )
+    #     reference = self.data.loc[last_year - self.EXTRAPOLATION_YEARS + 1 :]
+    #     slope, intercept = np.polyfit(reference.index, reference.values, deg=1)
+    #     extrapolated = pd.Series(
+    #         [slope * year + intercept for year in extrapolated_years],
+    #         index=pd.Index(extrapolated_years, name=self.data.index.name),
+    #         name=self.data.name,
+    #     )
+    #     return pd.concat([self.data, extrapolated]).loc[start_year:end_year]

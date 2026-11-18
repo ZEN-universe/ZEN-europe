@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from zen_europe.datasets.dataset_collections.SMR_capacity import SMRCapacity
 from zen_europe.datasets.dataset_collections.technology_cost_database import (
     TechnologyCostDatabase,
 )
@@ -20,11 +21,6 @@ from zen_creator import (
     Attribute,
     ConversionTechnology,
     SourceInformation,
-)
-
-from zen_europe.utils.utils import (
-    account_for_decommissioned_capacity,
-    format_capacity_existing,
 )
 
 
@@ -164,25 +160,8 @@ class SMR(ConversionTechnology):
             Attribute: An Attribute object containing the existing capacity data.
         """
         if self.settings.investment.use_existing_capacities:
-            ganter_dataset = HydrogenRolloutGanter(source_path=self.source_path)
-            raw_capacity = ganter_dataset.get_capacity_existing_SMR()
-            capacity_frame = raw_capacity.to_frame(
-                name=self.settings.time.reference_year - 1
-            )
-            capacity_frame = account_for_decommissioned_capacity(capacity_frame, self)
-            capacity_frame.index.name = "node"
-            capacity_existing = format_capacity_existing(capacity_frame)
-            attr = self.capacity_existing
-            source = SourceInformation(
-                description=(
-                    "The existing capacity of SMR is based on data from Ganter et al. "
-                    "(2024). It is assumed that all current ammonia and refinery "
-                    "plants are using SMR technology for hydrogen production."
-                ),
-                metadata=ganter_dataset.metadata,
-            )
-            attr.set_data(df=capacity_existing, source=source, unit="GW")
-            return attr
+            smr_capacity_dataset = SMRCapacity(source_path=self.source_path)
+            return smr_capacity_dataset.get_capacity_existing(self)
         else:
             attr = self.capacity_existing
             attr.set_data(

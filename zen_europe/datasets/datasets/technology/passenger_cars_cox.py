@@ -758,7 +758,7 @@ class PassengerCarsCox(Dataset[pd.DataFrame]):
                 f"{_COST_COLUMNS}."
             )
         inflation = self.get_inflation_rate(
-            base_year=self.MONEY_YEAR, target_year=element.settings.cost.price_year
+            base_year=self.MONEY_YEAR, target_year=element.settings.time.price_year
         )
         return float(self.get_parameter(element.name, parameter)) * inflation
 
@@ -855,7 +855,7 @@ class PassengerCarsCox(Dataset[pd.DataFrame]):
                     "(2020), taken at the manufacturing cost rather than at "
                     "the consumer price, i.e. divided by the markup factor. "
                     f"Monetary values are rebased from {self.MONEY_YEAR} to "
-                    f"{element.settings.cost.price_year} Euro using ECB "
+                    f"{element.settings.time.price_year} Euro using ECB "
                     "HICP inflation."
                 ),
                 metadata=self.metadata,

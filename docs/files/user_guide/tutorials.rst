@@ -134,7 +134,7 @@ all fields with their type and default value:
    * - ``time``
      - Time horizon (``reference_year``, ``last_year``,
        ``interval_between_years``) and the year of the hourly time series
-       (``year_time_series``).
+       (``time_series_year``).
    * - ``region``
      - The modeled countries (``set_nodes``).
    * - ``structure``

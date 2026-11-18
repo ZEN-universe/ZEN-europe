@@ -170,5 +170,5 @@ class DEACarbonTransport(Dataset[dict[str, pd.DataFrame]]):
             )
         return costs[technology.name] * self.get_inflation_rate(
             base_year=self.MONEY_YEAR,
-            target_year=technology.settings.cost.price_year,
+            target_year=technology.settings.time.price_year,
         )

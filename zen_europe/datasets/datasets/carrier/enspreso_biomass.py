@@ -336,7 +336,7 @@ class EnspresoBiomassPrice(EnspresoBiomass):
         # Convert from 2010 Euro/GJ to Euro/MWh in the configured price year.
         price = price * Constants.GJ_PER_MWH
         inflation_rate = ECBInflation(source_path=self.source_path).get_inflation_rate(
-            base_year=2010, target_year=element.settings.cost.price_year
+            base_year=2010, target_year=element.settings.time.price_year
         )
         price = price * inflation_rate
         price = price.astype(float)

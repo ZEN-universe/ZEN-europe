@@ -63,7 +63,7 @@ class TYNDPFuelPrices(Dataset[pd.Series]):
             cast(float, self.data.loc[element.name]) * Constants.GJ_PER_MWH
         )  # convert from €/GJ to €/MWh
         inflation = ECBInflation(source_path=self.source_path).get_inflation_rate(
-            base_year=2020, target_year=element.settings.cost.price_year
+            base_year=2020, target_year=element.settings.time.price_year
         )
         source = SourceInformation(
             description=(

@@ -340,7 +340,7 @@ class ExistingVehicleCapacity(DatasetCollection):
                     "It is divided by the hourly mileage of the car and "
                     "adjusted for the peak demand share. Monetary values are "
                     f"rebased from {cars.MONEY_YEAR} to "
-                    f"{element.settings.cost.price_year} Euro using ECB "
+                    f"{element.settings.time.price_year} Euro using ECB "
                     "HICP inflation."
                     + (
                         " The battery share of the price follows the battery "

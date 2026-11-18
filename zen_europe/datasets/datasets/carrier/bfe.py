@@ -95,12 +95,12 @@ class BFE(Dataset[dict[str, pd.DataFrame]]):
         Args:
             element (Element): The element for which to get the demand.
         """
-        year_time_series = element.model.settings.time.year_time_series
+        time_series_year = element.model.settings.time.time_series_year
         data_res = self.data["residential"].loc[
-            ["Raumwärme", "Warmwasser"], year_time_series
+            ["Raumwärme", "Warmwasser"], time_series_year
         ]
         data_ser = self.data["service"].loc[
-            ["Raumwärme", "Warmwasser"], year_time_series
+            ["Raumwärme", "Warmwasser"], time_series_year
         ]
         data_res = data_res.rename(
             {"Raumwärme": "space_heating", "Warmwasser": "water_heating"}

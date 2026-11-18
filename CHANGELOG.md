@@ -3,11 +3,39 @@
 This file gets automatically updated in ZEN-europe's continuous integration 
 procedures. Do not edit the file manually.
 
-## [Unversioned Changes] - 2026-10-23 
+## [v1.6.0] - 2026-10-30 
+
+### Bug Fixes 🐛
+- avoid numerical issues/demand shedding in olefin [[🔀 PR #62](https://github.com/ZEN-universe/ZEN-europe/pull/62) @jacob-mannhardt]
+
+### Data Changes 📊
+- add 40% more existing capacity for SMR because of the 70% utilization from the European Hydrogen Observatory. [[🔀 PR #62](https://github.com/ZEN-universe/ZEN-europe/pull/62) @jacob-mannhardt]
+
+## [v1.5.2] - 2026-10-29 
+
+### Bug Fixes 🐛
+- Fix ENTSOE error message when API key is missing. Now it highlights that the user needs to send an email [[🔀 PR #60](https://github.com/ZEN-universe/ZEN-europe/pull/60) @jacob-mannhardt]
+- Rewrite the documentation where it mistakenly said ZEN-creator and remove redundant files [[🔀 PR #60](https://github.com/ZEN-universe/ZEN-europe/pull/60) @jacob-mannhardt]
+
+## [v1.5.1] - 2026-10-29 
+
+### Bug Fixes 🐛
+- fix default value for `capacity_existing_energy` of `reservoir_hydropower` and `pumped_hydropower`. The default value was still set tin `Inf` in countries that did not have existing capacity for these hydropower types.. [[🔀 PR #58](https://github.com/ZEN-universe/ZEN-europe/pull/58) @csfunke]
+
+## [v1.5.0] - 2026-10-28 
+
+### New Features ✨
+- Add switch (`settings.emissions.correct_budget_with_global_emissions`) to indicate whether to calculate the carbon budget as: `2020 global budget -> subtract past global emissions for e.g., 2026 global budget -> European share` or `2020 global budget -> European share -> subtract past European emissions for e.g., 2026 European budget` (lower than the former). [[🔀 PR #56](https://github.com/ZEN-universe/ZEN-europe/pull/56) @jacob-mannhardt]
+
+### Bug Fixes 🐛
+- Extrapolate the historic emissions for years before the reference year that are not included in the data. Provides a warning if some years are not covered (Error if `settings.emissions.extrapolate_missing_years=False`) [[🔀 PR #56](https://github.com/ZEN-universe/ZEN-europe/pull/56) @jacob-mannhardt]
 
 ### Documentation Changes 📝
 - add the link to the read the docs to the readme to find the RtD [[🔀 PR #53](https://github.com/ZEN-universe/ZEN-europe/pull/53) @jacob-mannhardt]
 - add link to the Read the Docs in the README. [[🔀 PR #51](https://github.com/ZEN-universe/ZEN-europe/pull/51) @csfunke]
+
+### Maintenance Tasks 🧹
+- fix the series name in `carbon_emissions_annual_limit` [[🔀 PR #56](https://github.com/ZEN-universe/ZEN-europe/pull/56) @jacob-mannhardt]
 
 ## [v1.4.0] - 2026-10-20 
 
