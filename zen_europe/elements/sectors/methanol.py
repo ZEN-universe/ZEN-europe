@@ -20,10 +20,6 @@ from zen_europe.elements.conversion_technologies.olefin_from_methanol import (
 from zen_europe.elements.conversion_technologies.olefin_from_naphtha import (
     OlefinFromNaphtha,
 )
-from zen_europe.elements.storage_technologies.industry_DSM import (
-    MethanolDSM,
-    OlefinDSM,
-)
 from zen_europe.elements.transport_technologies.methanol_pipeline import (
     MethanolPipeline,
 )
@@ -40,6 +36,7 @@ class MethanolSector(Sector):
         "hydrogen",
         "refining",
         "gas",
+        "industrial_heat",
     ]
 
     def __init__(self) -> None:
@@ -55,6 +52,4 @@ class MethanolSector(Sector):
             MethanolICEShip,
             Methanol,
             Olefin,
-            MethanolDSM,
-            OlefinDSM,
         ]

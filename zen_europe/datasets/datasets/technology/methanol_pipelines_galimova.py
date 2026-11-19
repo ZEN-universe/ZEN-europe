@@ -39,7 +39,7 @@ class MethanolPipelinesGalimova(Dataset[dict[str, pd.DataFrame]]):
             name=self.name,
             title=(
                 "Analysis of green e-methanol supply costs: Domestic production in "
-                "Europe versus imports via pipelines and sea shipping"
+                "Europe versus imports via pipeline and sea shipping"
             ),
             author=[
                 "Tansu Galimova",

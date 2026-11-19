@@ -106,7 +106,7 @@ class SMR_CCS(RetrofittingTechnology):
         100 MW(th) WtE or biomass CHP plant, used as a proxy entry),
         assuming all heat demand for the capture process is supplied from
         natural gas.
-        https://ens.dk/en/our-services/projections-and-models/technology-data/technology-data-carbon-capture-transport-and
+        https://ens.dk/en/analyses-and-statistics/technology-data-carbon-capture-transport-and-storage
         """
         attr = self.conversion_factor
         dea_dataset = DEA(source_path=self.source_path)

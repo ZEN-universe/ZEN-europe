@@ -56,7 +56,7 @@ class Pyrolysis(ConversionTechnology):
         """
         return Attribute(
             name="output_carrier",
-            default_value=["hard_coal", "district_heat", "oil"],
+            default_value=["hard_coal", "heat_industry_150_200", "oil"],
             element=self,
         )
 

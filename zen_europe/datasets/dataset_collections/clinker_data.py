@@ -111,7 +111,7 @@ class ClinkerData(DatasetCollection):
             unit="tproduct/h",
         )
 
-    def get_conversion_factor_cement_kiln(
+    def get_conversion_factor_cement_production(
         self, element: ConversionTechnology
     ) -> Attribute:
         """
@@ -138,7 +138,7 @@ class ClinkerData(DatasetCollection):
                 }
             },
             {
-                "fuel_for_cement": {
+                "cement_fuel": {
                     "default_value": (
                         fuel_consumption_kiln / (Constants.GJ_PER_MWH * 1000)
                     ),
@@ -213,9 +213,9 @@ class ClinkerData(DatasetCollection):
         aidres_dataset = cast(Aidres, self.data["aidres"])
         me_dataset = cast(MaterialEconomics, self.data["material_economics"])
         share = aidres_dataset.get_share_capacity_existing_cement_fuel()
-        assert (
-            element.name in share
-        ), f"Existing capacity share for {element.name} not found."
+        assert element.name in share, (
+            f"Existing capacity share for {element.name} not found."
+        )
         clinker_element = element.model.carriers["clinker"]
         clinker_demand = self._calculate_clinker_demand(clinker_element)
         clinker2fuel = me_dataset.get_fuel_consumption_cement_kiln() / 3600  # GWh/t

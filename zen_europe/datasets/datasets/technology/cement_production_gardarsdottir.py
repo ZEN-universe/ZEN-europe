@@ -29,7 +29,7 @@ class CementProductionGardarsdottir(Dataset[pd.Series]):
             name=self.name,
             title=(
                 "Comparison of Technologies for CO2 Capture from Cement "
-                "Productionâ€”Part 2: Cost Analysis"
+                "Production—Part 2: Cost Analysis"
             ),
             author=[
                 "Stefania Osk Gardarsdottir",
@@ -37,7 +37,7 @@ class CementProductionGardarsdottir(Dataset[pd.Series]):
                 "Matteo Romano",
                 "Simon Roussanaly",
                 "Mari Voldsund",
-                "JosÃ©-Francisco PÃ©rez-Calvo",
+                "José-Francisco Pérez-Calvo",
                 "David Berstad",
                 "Chao Fu",
                 "Rahul Anantharaman",

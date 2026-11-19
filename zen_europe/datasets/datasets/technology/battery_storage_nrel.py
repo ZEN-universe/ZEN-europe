@@ -37,7 +37,7 @@ class BatteryStorageNREL(Dataset[dict[str, pd.DataFrame]]):
             author=["National Renewable Energy Laboratory"],
             publication="National Renewable Energy Laboratory",
             publication_year=2023,
-            url="https://atb.nrel.gov/electricity/2023/utility-scale_battery_storage",
+            url="https://atb.nlr.gov/electricity/2023/utility-scale_battery_storage",
         )
 
     def _set_path(self) -> Path | None:

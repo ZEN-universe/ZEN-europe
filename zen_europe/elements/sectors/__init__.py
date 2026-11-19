@@ -10,6 +10,7 @@ from .gas import GasSector
 from .glass import GlassSector
 from .heat import HeatSector
 from .hydrogen import HydrogenSector
+from .industrial_heat import IndustrialHeatSector
 from .methanol import MethanolSector
 from .paper import PaperSector
 from .passenger_transport import PassengerTransportSector
@@ -34,6 +35,7 @@ __all__ = [
     "ShippingSector",
     "SteelSector",
     "TruckTransportSector",
+    "IndustrialHeatSector",
     "GlassSector",
     "CeramicSector",
     "PaperSector",

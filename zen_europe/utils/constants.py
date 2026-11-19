@@ -23,6 +23,9 @@ class Constants:
     GJ_PER_MWH: float = 3.6
     """1 MWh = 3.6 GJ, from the definition 1 Wh = 3600 J."""
 
+    KELVIN_AT_ZERO_CELSIUS: float = 273.15
+    """Temperature in K = temperature in °C + 273.15."""
+
     TOE_PER_MWH: float = 0.0859845
     """IEA definition: 1 toe = 41.868 GJ = 11.63 MWh, so 1 MWh = 0.0859845 toe."""
 

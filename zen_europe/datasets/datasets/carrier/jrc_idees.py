@@ -483,3 +483,15 @@ class JRCIDEES(Dataset[pd.DataFrame]):
         return self._industry["production"].xs(
             (sector, "physical_output"), level=["sector", "quantity"]
         )[year]
+
+    def get_industry_capacity_utilisation(
+        self, sectors: tuple[str, ...], year: int
+    ) -> float:
+        """Mean EU27 capacity utilisation (physical output / installed capacity) of
+        the industry sectors `sectors`."""
+        utilisation = [
+            self.get_industry_physical_output(sector, year)["EU27"]
+            / self.get_industry_installed_capacity(sector, year)["EU27"]
+            for sector in sectors
+        ]
+        return float(sum(utilisation) / len(utilisation))

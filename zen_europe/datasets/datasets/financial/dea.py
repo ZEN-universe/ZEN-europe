@@ -1155,6 +1155,22 @@ class DEA(Dataset[pd.DataFrame]):
         """Return the parsed, standardized DEA cost/tech data (see `_cost_schema`)."""
         return self.data.copy()
 
+    def get_mean_efficiency_industry_boilers(self) -> float:
+        """Return the mean net efficiency of the industrial boilers of the
+        industrial-process-heat workbook, reference estimate of the first year. Each
+        DEA sheet counts once (the gas and oil boiler share one sheet)."""
+        boilers = {
+            ws: technology for technology, ws in _PH_TECHS.items() if "oiler" in ws
+        }
+        efficiency = self.data.xs(
+            ("ref", "efficiency"), level=("scenario", "variable")
+        )["value"]
+        efficiency = efficiency[
+            efficiency.index.get_level_values("technology").isin(boilers.values())
+        ]
+        first_year = efficiency.index.get_level_values("year").min()
+        return float(efficiency.xs(first_year, level="year").mean())
+
     def get_dh_distribution_data(self) -> pd.DataFrame:
         """Return district heating distribution-network cost/tech data, in DEA's native
         units.
@@ -1188,8 +1204,15 @@ class DEA(Dataset[pd.DataFrame]):
 
         Hydrogen production via PEMEC electrolysis for 100 MW plant,
         https://ens.dk/en/analyses-and-statistics/technology-data-renewable-fuels
+        Version: August 2026
         """
-        return [{"electricity": {"default_value": 1 / 0.526, "unit": "GW/GW"}}]
+        efficiency = 0.601 # LHV 
+        return [
+            {
+                "electricity": {"default_value": 1 / efficiency, "unit": "GW/GW"},
+                "recoverable_waste_heat": {
+                    "default_value": 0.046 / efficiency, "unit": "GW/GW"},
+                }]
 
     def get_conversion_factor_anaerobic_digestion(self):
         """returns the conversion factor for anaerobic digestion.
@@ -1198,11 +1221,13 @@ class DEA(Dataset[pd.DataFrame]):
         plant, Basic plant, large [~6,000 Nm3 CH4/h]), assuming a straw
         feedstock.
         https://ens.dk/en/analyses-and-statistics/technology-data-renewable-fuels
+
+        Version: August 2026
         """
         return [
             {"wet_biomass": {"default_value": 1 / 0.55, "unit": "GWh/GWh"}},
             {"electricity": {"default_value": 0.0211, "unit": "GWh/GWh"}},
-            {"heat": {"default_value": 0.0505, "unit": "GWh/GWh"}},
+            {"heat_industry_0_100": {"default_value": 0.0505, "unit": "GWh/GWh"}},
         ]
 
     def get_conversion_factor_biomethane_conversion(self):
@@ -1214,7 +1239,8 @@ class DEA(Dataset[pd.DataFrame]):
         """
         return [
             {"biomethane": {"default_value": 1 / 0.9905, "unit": "GWh/GWh"}},
-            {"heat": {"default_value": 0.1032 / 0.9905, "unit": "GWh/GWh"}},
+            {"heat_industry_0_100": {"default_value": 0.1032 / 0.9905, 
+                                     "unit": "GWh/GWh"}},
         ]
 
     def get_conversion_factor_gasification(self):
@@ -1224,11 +1250,14 @@ class DEA(Dataset[pd.DataFrame]):
         (Gasifier, biomass, bio-SNG, medium - large scale), assuming a bio-SNG
         conversion efficiency of 60% and heat co-generation of 20% (2020 values).
         https://ens.dk/en/analyses-and-statistics/technology-data-renewable-fuels
+        NOTE: Not available in August 2026, 
+        there only gasifier, biomass, producer gas, small-medium scale
         """
         efficiency = 0.6
         return [
             {"biomass": {"default_value": 1 / efficiency, "unit": "GWh/GWh"}},
-            {"heat": {"default_value": 0.2 / efficiency, "unit": "GWh/GWh"}},
+            {"heat_industry_0_100": {"default_value": 0.2 / efficiency, 
+                                     "unit": "GWh/GWh"}},
         ]
 
     def get_conversion_factor_fischer_tropsch(self):
@@ -1257,7 +1286,7 @@ class DEA(Dataset[pd.DataFrame]):
                 }
             },
             {
-                "district_heat": {
+                "heat_industry_100_150": {
                     "default_value": 0.25 / oil_per_input,
                     "unit": "GWh/GWh",
                 }
@@ -1279,7 +1308,8 @@ class DEA(Dataset[pd.DataFrame]):
         return [
             {"biomass": {"default_value": 0.96 / oil_output, "unit": "GWh/GWh"}},
             {"electricity": {"default_value": 0.04 / oil_output, "unit": "GWh/GWh"}},
-            {"district_heat": {"default_value": 0.24 / oil_output, "unit": "GWh/GWh"}},
+            {"heat_industry_150_200": {"default_value": 0.24 / oil_output, 
+                                       "unit": "GWh/GWh"}},
             {"hard_coal": {"default_value": 0.45 / oil_output, "unit": "GWh/GWh"}},
         ]
 
@@ -1290,10 +1320,12 @@ class DEA(Dataset[pd.DataFrame]):
         Ammonia plant: Hydrogen to ammonia, excl. electrolyzer and excl.
         air-separation unit).
         https://ens.dk/en/analyses-and-statistics/technology-data-renewable-fuels
+        Version: August 2026
         """
         return [
             {"hydrogen": {"default_value": 0.95, "unit": "GWh/GWh"}},
             {"electricity": {"default_value": 0.05, "unit": "GWh/GWh"}},
+            {"heat_industry_150_200": {"default_value": 0.11, "unit": "GWh/GWh"}},
         ]
 
     def get_conversion_factor_methanol_from_hydrogen(self):
@@ -1304,8 +1336,14 @@ class DEA(Dataset[pd.DataFrame]):
         https://ens.dk/en/analyses-and-statistics/technology-data-renewable-fuels
         """
         ton_meoh_to_mwh = Constants.METHANOL_KWH_PER_KG
+        total_meoh_outout = 0.78 # MWh methanol / MWh input 
         return [
-            {"hydrogen": {"default_value": 6.4 / ton_meoh_to_mwh, "unit": "GWh/GWh"}},
+            {
+                "hydrogen": {
+                    "default_value": 6.4 / ton_meoh_to_mwh, 
+                    "unit": "GWh/GWh"
+                            }                 
+            },
             {
                 "carbon": {
                     "default_value": 1.4 / ton_meoh_to_mwh,
@@ -1315,6 +1353,18 @@ class DEA(Dataset[pd.DataFrame]):
             {
                 "electricity": {
                     "default_value": 0.1 / ton_meoh_to_mwh,
+                    "unit": "GWh/GWh",
+                }
+            },
+            {
+                "heat_industry_150_200": {
+                    "default_value": 0.58 / ton_meoh_to_mwh,
+                    "unit": "GWh/GWh",
+                }
+            },
+            {
+                "recoverable_waste_heat": {
+                    "default_value": 0.2 / total_meoh_outout,
                     "unit": "GWh/GWh",
                 }
             },
@@ -1336,7 +1386,7 @@ class DEA(Dataset[pd.DataFrame]):
                 }
             },
             {
-                "district_heat": {
+                "heat_industry_100_150": {
                     "default_value": 0.22 / methanol_production_biomass,
                     "unit": "GWh/GWh",
                 }
@@ -1360,7 +1410,7 @@ class DEA(Dataset[pd.DataFrame]):
         return [
             {"electricity": {"default_value": 0.8, "unit": "GWh/kilotCO2"}},
             {
-                "heat": {
+                "heat_industry_0_100": {
                     "default_value": 9.5 / Constants.GJ_PER_MWH,
                     "unit": "GWh/kilotCO2",
                 }
@@ -1397,14 +1447,14 @@ class DEA(Dataset[pd.DataFrame]):
 
         Values from the DEA technology catalogue for carbon capture,
         transport and storage (Post-combustion carbon capture in a cement
-        plant), assuming the fuel-for-cement input is directly converted
+        plant), assuming the cement fuel input is directly converted
         into heat for the capture process.
         https://ens.dk/en/analyses-and-statistics/technology-data-carbon-capture-transport-and-storage
         """
         return [
             {"electricity": {"default_value": 0.025, "unit": "GWh/kilotCO2"}},
-            {"fuel_for_cement": {"default_value": 0.833, "unit": "GWh/kilotCO2"}},
-            {"district_heat": {"default_value": 1.65, "unit": "GWh/kilotCO2"}},
+            {"cement_fuel": {"default_value": 0.833, "unit": "GWh/kilotCO2"}},
+            {"recoverable_waste_heat": {"default_value": 1.65, "unit": "GWh/kilotCO2"}},
         ]
 
     def get_capture_rate_CCS(self):

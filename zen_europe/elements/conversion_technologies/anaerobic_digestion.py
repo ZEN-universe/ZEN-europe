@@ -39,7 +39,7 @@ class AnaerobicDigestion(ConversionTechnology):
         """
         return Attribute(
             name="input_carrier",
-            default_value=["wet_biomass", "electricity", "heat"],
+            default_value=["wet_biomass", "electricity", "heat_industry_0_100"],
             element=self,
         )
 

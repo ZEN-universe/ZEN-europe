@@ -44,8 +44,9 @@ class LNGRegasificationToledano(Dataset[dict[str, pd.DataFrame]]):
             publication="CCSI",
             publication_year=2018,
             url=(
-                "https://www.researchgate.net/publication/"
-                "329641146_Manual_for_the_Open_LNG_Regasification_Model"
+                "https://ccsi.columbia.edu/sites/default/files/content/docs/"
+                "our%20focus/extractive%20industries/"
+                "LNG-Import-Model-Manual-CCSI-2018.pdf"
             ),
         )
 

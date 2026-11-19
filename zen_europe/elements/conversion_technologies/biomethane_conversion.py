@@ -48,7 +48,9 @@ class BiomethaneConversion(ConversionTechnology):
         Sets the input carrier of biomethane conversion to biomethane and heat.
         """
         return Attribute(
-            name="input_carrier", default_value=["biomethane", "heat"], element=self
+            name="input_carrier",
+            default_value=["biomethane", "heat_industry_0_100"],
+            element=self,
         )
 
     def _set_output_carrier(self) -> Attribute:

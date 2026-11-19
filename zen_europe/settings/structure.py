@@ -40,6 +40,7 @@ class StructureSettings(SettingsCategory):
             "steel",
             "passenger_transport",
             "truck_transport",
+            "industrial_heat",
             "glass",
             "ceramic",
             "paper",

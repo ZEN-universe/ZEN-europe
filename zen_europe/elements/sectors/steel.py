@@ -9,17 +9,13 @@ from zen_europe.elements.conversion_technologies.NG_DRI import NG_DRI
 from zen_europe.elements.conversion_technologies.pyrolysis import Pyrolysis
 from zen_europe.elements.retrofitting_technologies.BF_BOF_CCS import BF_BOF_CCS
 from zen_europe.elements.retrofitting_technologies.NG_DRI_CCS import NG_DRI_CCS
-from zen_europe.elements.storage_technologies.industry_DSM import (
-    PrimarySteelDSM,
-    SecondarySteelDSM,
-)
 
 
 class SteelSector(Sector):
     """Primary and secondary steel production."""
 
     name = "steel"
-    required_sectors = ["electricity", "gas"]
+    required_sectors = ["electricity", "gas", "industrial_heat"]
 
     def __init__(self) -> None:
         super().__init__()
@@ -33,6 +29,4 @@ class SteelSector(Sector):
             NG_DRI_CCS,
             PrimarySteel,
             SecondarySteel,
-            PrimarySteelDSM,
-            SecondarySteelDSM,
         ]

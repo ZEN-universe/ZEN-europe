@@ -13,8 +13,10 @@ from zen_europe.elements.retrofitting_technologies.biomass_plant_CCS import (
 from zen_europe.elements.retrofitting_technologies.cement_post_comb import (
     CementPostComb,
 )
-from zen_europe.elements.retrofitting_technologies.industry_post_comb import (
+from zen_europe.elements.retrofitting_technologies.ceramic_post_comb import (
     CeramicPostComb,
+)
+from zen_europe.elements.retrofitting_technologies.glass_post_comb import (
     GlassPostComb,
 )
 from zen_europe.elements.retrofitting_technologies.natural_gas_turbine_CCS import (
@@ -29,7 +31,7 @@ class CarbonSector(Sector):
     """Carbon capture, transport and storage."""
 
     name = "carbon"
-    required_sectors = ["electricity", "heat"]
+    required_sectors = ["electricity", "heat", "industrial_heat"]
 
     def __init__(self) -> None:
         super().__init__()

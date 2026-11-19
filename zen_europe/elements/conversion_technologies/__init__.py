@@ -4,46 +4,26 @@ from .BEV import BEV
 from .BF_BOF import BF_BOF
 from .biomass_boiler import BiomassBoiler
 from .biomass_boiler_DH import BiomassBoilerDH
+from .biomass_boiler_industry import BiomassBoilerIndustry
 from .biomass_plant import BiomassPlant
 from .biomethane_conversion import BiomethaneConversion
-from .boiler_industry import (
-    BiomassBoilerIndustryCeramic,
-    BiomassBoilerIndustryFood,
-    BiomassBoilerIndustryGlass,
-    BiomassBoilerIndustryPaper,
-    CoalBoilerIndustryCeramic,
-    CoalBoilerIndustryFood,
-    CoalBoilerIndustryGlass,
-    CoalBoilerIndustryPaper,
-    ElectrodeBoilerIndustryCeramic,
-    ElectrodeBoilerIndustryFood,
-    ElectrodeBoilerIndustryGlass,
-    ElectrodeBoilerIndustryPaper,
-    NaturalGasBoilerIndustryCeramic,
-    NaturalGasBoilerIndustryFood,
-    NaturalGasBoilerIndustryGlass,
-    NaturalGasBoilerIndustryPaper,
-    OilBoilerIndustryCeramic,
-    OilBoilerIndustryFood,
-    OilBoilerIndustryGlass,
-    OilBoilerIndustryPaper,
-    WasteBoilerIndustryCeramic,
-    WasteBoilerIndustryFood,
-    WasteBoilerIndustryGlass,
-    WasteBoilerIndustryPaper,
-)
 from .carbon_storage import CarbonStorage
-from .cement_kiln import CementKiln
+from .cement_production import CementProduction
+from .ceramic_production import CeramicProduction
+from .coal_boiler_industry import CoalBoilerIndustry
 from .DAC import DAC
 from .diesel_ICE_ship import DieselICEShip
 from .district_heating_grid import DistrictHeatingGrid
 from .EAF import EAF
 from .electrode_boiler import ElectrodeBoiler
 from .electrode_boiler_DH import ElectrodeBoilerDH
+from .electrode_boiler_industry import ElectrodeBoilerIndustry
 from .electrolysis import Electrolysis
 from .fischer_tropsch import FischerTropsch
+from .food_production import FoodProduction
 from .fuel_cell import FuelCell
 from .gasification import Gasification
+from .glass_production import GlassProduction
 from .H2_DRI import H2_DRI
 from .haber_bosch import HaberBosch
 from .hard_coal_boiler_DH import HardCoalBoilerDH
@@ -51,61 +31,20 @@ from .hard_coal_plant import HardCoalPlant
 from .HDT_BET import HDT_BET
 from .HDT_diesel import HDT_diesel
 from .HDT_FCEV import HDT_FCEV
-from .heat_industry_temp_conversion import (
-    HeatIndustryTempConversion100Ceramic,
-    HeatIndustryTempConversion100Food,
-    HeatIndustryTempConversion100Glass,
-    HeatIndustryTempConversion100Paper,
-    HeatIndustryTempConversion150Ceramic,
-    HeatIndustryTempConversion150Food,
-    HeatIndustryTempConversion150Glass,
-    HeatIndustryTempConversion150Paper,
-)
+from .heat_industry_temp_conversion_100 import HeatIndustryTempConversion100
+from .heat_industry_temp_conversion_150 import HeatIndustryTempConversion150
+from .heat_industry_temp_conversion_rwh import HeatIndustryTempConversionRWH
 from .heat_pump import HeatPump
 from .heat_pump_DH import HeatPumpDH
-from .heat_pump_industry import (
-    HeatPumpIndustry0100WasteHeatCeramic,
-    HeatPumpIndustry0100WasteHeatFood,
-    HeatPumpIndustry0100WasteHeatGlass,
-    HeatPumpIndustry0100WasteHeatPaper,
-    HeatPumpIndustry0100WaterCeramic,
-    HeatPumpIndustry0100WaterFood,
-    HeatPumpIndustry0100WaterGlass,
-    HeatPumpIndustry0100WaterPaper,
-    HeatPumpIndustry100150WasteHeatCeramic,
-    HeatPumpIndustry100150WasteHeatFood,
-    HeatPumpIndustry100150WasteHeatGlass,
-    HeatPumpIndustry100150WasteHeatPaper,
-    HeatPumpIndustry100150WaterCeramic,
-    HeatPumpIndustry100150WaterFood,
-    HeatPumpIndustry100150WaterGlass,
-    HeatPumpIndustry100150WaterPaper,
-    HeatPumpIndustry150200WasteHeatCeramic,
-    HeatPumpIndustry150200WasteHeatFood,
-    HeatPumpIndustry150200WasteHeatGlass,
-    HeatPumpIndustry150200WasteHeatPaper,
-    HeatPumpIndustry150200WaterCeramic,
-    HeatPumpIndustry150200WaterFood,
-    HeatPumpIndustry150200WaterGlass,
-    HeatPumpIndustry150200WaterPaper,
-)
+from .heat_pump_industry_0_100_waste_heat import HeatPumpIndustry0100WasteHeat
+from .heat_pump_industry_0_100_water import HeatPumpIndustry0100Water
+from .heat_pump_industry_100_150_waste_heat import HeatPumpIndustry100150WasteHeat
+from .heat_pump_industry_100_150_water import HeatPumpIndustry100150Water
+from .heat_pump_industry_150_200_waste_heat import HeatPumpIndustry150200WasteHeat
+from .heat_pump_industry_150_200_water import HeatPumpIndustry150200Water
 from .hydrogen_FC_ship import HydrogenFCShip
 from .ICE_diesel import ICE_diesel
 from .ICE_petrol import ICE_petrol
-from .industry_production import (
-    CeramicProduction,
-    FoodProduction,
-    GlassProduction,
-    PaperProduction,
-)
-from .kiln_fuel_industry import (
-    ElectricityToKilnFuelCeramic,
-    ElectricityToKilnFuelGlass,
-    HydrogenToKilnFuelCeramic,
-    HydrogenToKilnFuelGlass,
-    NaturalGasToKilnFuelCeramic,
-    NaturalGasToKilnFuelGlass,
-)
 from .lignite_coal_plant import LigniteCoalPlant
 from .lng_terminal import LNGTerminal
 from .methanation import Methanation
@@ -115,11 +54,13 @@ from .methanol_from_natural_gas import MethanolFromNaturalGas
 from .methanol_ICE_ship import MethanolICEShip
 from .natural_gas_boiler import NaturalGasBoiler
 from .natural_gas_boiler_DH import NaturalGasBoilerDH
+from .natural_gas_boiler_industry import NaturalGasBoilerIndustry
 from .natural_gas_turbine import NaturalGasTurbine
 from .NG_DRI import NG_DRI
 from .nuclear import Nuclear
 from .oil_boiler import OilBoiler
 from .oil_boiler_DH import OilBoilerDH
+from .oil_boiler_industry import OilBoilerIndustry
 from .oil_plant import OilPlant
 from .oil_to_diesel_conversion import OilToDieselConversion
 from .oil_to_gasoline_conversion import OilToGasolineConversion
@@ -127,12 +68,15 @@ from .oil_to_kerosene_conversion import OilToKeroseneConversion
 from .oil_to_naphtha_conversion import OilToNaphthaConversion
 from .olefin_from_methanol import OlefinFromMethanol
 from .olefin_from_naphtha import OlefinFromNaphtha
+from .paper_production import PaperProduction
 from .photovoltaics import Photovoltaics
 from .pyrolysis import Pyrolysis
 from .refining import Refining
 from .run_of_river_hydro import RunOfRiverHydro
 from .SMR import SMR
 from .waste_boiler_DH import WasteBoilerDH
+from .waste_boiler_industry import WasteBoilerIndustry
+from .waste_heat_integration_DH import WasteHeatIntegrationDH
 from .waste_plant import WastePlant
 from .wind_offshore import WindOffshore
 from .wind_onshore import WindOnshore
@@ -180,7 +124,7 @@ __all__ = [
     "OlefinFromMethanol",
     "OlefinFromNaphtha",
     "HaberBosch",
-    "CementKiln",
+    "CementProduction",
     "BF_BOF",
     "H2_DRI",
     "NG_DRI",
@@ -200,70 +144,24 @@ __all__ = [
     "HDT_diesel",
     "HDT_BET",
     "HDT_FCEV",
-    "BiomassBoilerIndustryGlass",
-    "BiomassBoilerIndustryCeramic",
-    "BiomassBoilerIndustryPaper",
-    "BiomassBoilerIndustryFood",
-    "ElectrodeBoilerIndustryGlass",
-    "ElectrodeBoilerIndustryCeramic",
-    "ElectrodeBoilerIndustryPaper",
-    "ElectrodeBoilerIndustryFood",
-    "NaturalGasBoilerIndustryGlass",
-    "NaturalGasBoilerIndustryCeramic",
-    "NaturalGasBoilerIndustryPaper",
-    "NaturalGasBoilerIndustryFood",
-    "OilBoilerIndustryGlass",
-    "OilBoilerIndustryCeramic",
-    "OilBoilerIndustryPaper",
-    "OilBoilerIndustryFood",
-    "CoalBoilerIndustryGlass",
-    "CoalBoilerIndustryCeramic",
-    "CoalBoilerIndustryPaper",
-    "CoalBoilerIndustryFood",
-    "WasteBoilerIndustryGlass",
-    "WasteBoilerIndustryCeramic",
-    "WasteBoilerIndustryPaper",
-    "WasteBoilerIndustryFood",
-    "HeatPumpIndustry0100WasteHeatGlass",
-    "HeatPumpIndustry0100WasteHeatCeramic",
-    "HeatPumpIndustry0100WasteHeatPaper",
-    "HeatPumpIndustry0100WasteHeatFood",
-    "HeatPumpIndustry0100WaterGlass",
-    "HeatPumpIndustry0100WaterCeramic",
-    "HeatPumpIndustry0100WaterPaper",
-    "HeatPumpIndustry0100WaterFood",
-    "HeatPumpIndustry100150WasteHeatGlass",
-    "HeatPumpIndustry100150WasteHeatCeramic",
-    "HeatPumpIndustry100150WasteHeatPaper",
-    "HeatPumpIndustry100150WasteHeatFood",
-    "HeatPumpIndustry100150WaterGlass",
-    "HeatPumpIndustry100150WaterCeramic",
-    "HeatPumpIndustry100150WaterPaper",
-    "HeatPumpIndustry100150WaterFood",
-    "HeatPumpIndustry150200WasteHeatGlass",
-    "HeatPumpIndustry150200WasteHeatCeramic",
-    "HeatPumpIndustry150200WasteHeatPaper",
-    "HeatPumpIndustry150200WasteHeatFood",
-    "HeatPumpIndustry150200WaterGlass",
-    "HeatPumpIndustry150200WaterCeramic",
-    "HeatPumpIndustry150200WaterPaper",
-    "HeatPumpIndustry150200WaterFood",
+    "BiomassBoilerIndustry",
+    "ElectrodeBoilerIndustry",
+    "NaturalGasBoilerIndustry",
+    "OilBoilerIndustry",
+    "CoalBoilerIndustry",
+    "WasteBoilerIndustry",
+    "HeatPumpIndustry0100WasteHeat",
+    "HeatPumpIndustry0100Water",
+    "HeatPumpIndustry100150WasteHeat",
+    "HeatPumpIndustry100150Water",
+    "HeatPumpIndustry150200WasteHeat",
+    "HeatPumpIndustry150200Water",
     "GlassProduction",
     "CeramicProduction",
     "PaperProduction",
     "FoodProduction",
-    "NaturalGasToKilnFuelGlass",
-    "NaturalGasToKilnFuelCeramic",
-    "HydrogenToKilnFuelGlass",
-    "HydrogenToKilnFuelCeramic",
-    "ElectricityToKilnFuelGlass",
-    "ElectricityToKilnFuelCeramic",
-    "HeatIndustryTempConversion150Glass",
-    "HeatIndustryTempConversion150Ceramic",
-    "HeatIndustryTempConversion150Paper",
-    "HeatIndustryTempConversion150Food",
-    "HeatIndustryTempConversion100Glass",
-    "HeatIndustryTempConversion100Ceramic",
-    "HeatIndustryTempConversion100Paper",
-    "HeatIndustryTempConversion100Food",
+    "HeatIndustryTempConversion150",
+    "HeatIndustryTempConversion100",
+    "HeatIndustryTempConversionRWH",
+    "WasteHeatIntegrationDH",
 ]

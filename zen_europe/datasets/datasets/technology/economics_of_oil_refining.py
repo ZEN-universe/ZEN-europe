@@ -27,7 +27,7 @@ class EconomicsOfOilRefining(Dataset[pd.Series]):
     def _set_metadata(self) -> MetaData:
         return MetaData(
             name=self.name,
-            title=("Economics of oil refining for net-zero hydrogen supply chains"),
+            title=("Economics of Oil Refining"),
             author=["Jean-Pierre Favennec"],
             publication="The Palgrave Handbook of International Energy Economics",
             publication_year=2022,

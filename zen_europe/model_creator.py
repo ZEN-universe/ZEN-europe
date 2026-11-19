@@ -9,13 +9,10 @@ from . import settings  # noqa: F401
 # import custom element classes to register them in the registry (side effect)
 from .elements.carriers import Biomass, Electricity  # noqa: F401
 from .elements.conversion_technologies import Photovoltaics  # noqa: F401
-from .elements.conversion_technologies.heat_pump_industry import HeatPumpIndustry
 from .elements.energy_systems import EnergySystemNuts0  # noqa: F401
 from .elements.retrofitting_technologies import SMR_CCS  # noqa: F401
 from .elements.sectors import ElectricitySector  # noqa: F401
 from .elements.storage_technologies import PumpedHydro  # noqa: F401
-from .elements.storage_technologies.industry_DSM import IndustryDSM
-from .elements.storage_technologies.industry_TES import IndustryTES
 from .elements.transport_technologies import PowerLine  # noqa: F401
 from .global_scenarios import define_global_scenarios
 from .settings.cache import set_active_cache_settings
@@ -30,24 +27,6 @@ DEFAULT_OUTPUT_PATH = Path("data") / "created_models"
 def default_models_path(config: Path | str) -> Path:
     """The models file that sits next to the given configuration file."""
     return Path(config).resolve().parent / "models.yaml"
-
-
-def remove_inactive_industry_elements(model: Model) -> None:
-    """Remove the TES, DSM and industry heat pumps that are switched off in the
-    `industry_flexibility` settings."""
-    flexibility = model.settings.industry_flexibility
-    inactive = [
-        name
-        for name, element in model.elements.items()
-        if (isinstance(element, IndustryTES) and not flexibility.use_tes)
-        or (isinstance(element, IndustryDSM) and flexibility.dsm_shiftability == "none")
-        or (
-            isinstance(element, HeatPumpIndustry)
-            and element.temp_level not in flexibility.heat_pump_temp_levels
-        )
-    ]
-    for name in inactive:
-        model.remove_element_by_name(name)
 
 
 def create_model(
@@ -91,7 +70,6 @@ def create_model(
     set_active_cache_settings(model.settings.cache)
     model.output_folder = Path(resolved_output_folder)
     model.name = name
-    remove_inactive_industry_elements(model)
 
     # apply changes
     model.build()

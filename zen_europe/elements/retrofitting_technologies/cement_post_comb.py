@@ -30,7 +30,7 @@ class CementPostComb(RetrofittingTechnology):
     retrofitted with post-combustion carbon capture (CCS)."""
 
     name: str = "cement_post_comb"
-    base_technology_name: str = "cement_kiln"
+    base_technology_name: str = "cement_production"
 
     def __init__(self, model: Model, power_unit: str = "tCO2/h"):
         super().__init__(model=model, power_unit=power_unit)
@@ -53,18 +53,18 @@ class CementPostComb(RetrofittingTechnology):
         """
         return Attribute(
             name="input_carrier",
-            default_value=["fuel_for_cement", "electricity"],
+            default_value=["cement_fuel", "electricity"],
             element=self,
         )
 
     def _set_output_carrier(self) -> Attribute:
         """
         Set the output carrier of cement post-combustion capture to carbon
-        and district heat.
+        and recoverable waste heat.
         """
         return Attribute(
             name="output_carrier",
-            default_value=["carbon", "district_heat"],
+            default_value=["carbon", "recoverable_waste_heat"],
             element=self,
         )
 
@@ -108,7 +108,7 @@ class CementPostComb(RetrofittingTechnology):
 
         Values from the DEA technology catalogue for carbon capture,
         transport and storage (Post-combustion carbon capture in a cement
-        plant), assuming the fuel-for-cement input is directly converted
+        plant), assuming the cement fuel input is directly converted
         into heat for the capture process.
         """
         attr = self.conversion_factor
@@ -120,7 +120,7 @@ class CementPostComb(RetrofittingTechnology):
                 "is a manually derived value based on the DEA technology "
                 "catalogue for carbon capture, transport and storage "
                 "(Post-combustion carbon capture in a cement plant), "
-                "assuming the fuel-for-cement input is directly converted "
+                "assuming the cement fuel input is directly converted "
                 "into heat for the capture process."
             ),
             metadata=dea_dataset.metadata,
@@ -134,7 +134,7 @@ class CementPostComb(RetrofittingTechnology):
         post-combustion capture.
 
         `take_delta_cost_from_base_tech` is `False` for this technology
-        (the base `cement_kiln` technology has no cost-database coverage of
+        (the base `cement_production` technology has no cost-database coverage of
         its own), so the cost-database value is used directly (absolute
         cost), matching the legacy pipeline.
 

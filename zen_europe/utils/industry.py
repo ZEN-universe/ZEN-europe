@@ -5,13 +5,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from zen_europe.utils.utils import (
-    calculate_capacity_addition_from_cumulative,
-    format_capacity_existing,
-)
-
 if TYPE_CHECKING:
-    import pandas as pd
     from zen_creator import Element
 
 # year of the production, energy and heat statistics
@@ -27,14 +21,14 @@ NODES_WITHOUT_IDEES = tuple(PROXY_NODES)
 IDEES_EU = "EU27"
 
 
-def heat_carrier(level: str, sector: str) -> str:
-    """Heat carrier of a sector's temperature band."""
-    return f"heat_industry_{level}_{sector}"
+def heat_carrier(level: str) -> str:
+    """Heat carrier of a temperature band, shared by all industry heat sectors."""
+    return f"heat_industry_{level}"
 
 
-def kiln_fuel(sector: str) -> str:
-    """Kiln fuel carrier of a sector."""
-    return f"kiln_fuel_{sector}"
+def sector_fuel(sector: str) -> str:
+    """Kiln or furnace fuel carrier of a sector."""
+    return f"{sector}_fuel"
 
 
 def model_nodes(element: Element) -> tuple[str, ...]:
@@ -42,9 +36,6 @@ def model_nodes(element: Element) -> tuple[str, ...]:
     return tuple(element.model.config.system.set_nodes)
 
 
-def spread_capacity_existing(capacity: pd.Series, element: Element) -> pd.Series:
-    """Spread today's capacity per node over its construction years, as for all
-    other technologies."""
-    frame = capacity.to_frame(element.settings.time.reference_year - 1)
-    frame = calculate_capacity_addition_from_cumulative(frame, element)
-    return format_capacity_existing(frame)
+def model_sectors(element: Element) -> tuple[str, ...]:
+    """Industry heat sectors of the element's model."""
+    return tuple(sector for sector in SECTORS if sector in element.model.sectors)

@@ -55,9 +55,9 @@ class AgoraIndustrySteel(Dataset[pd.Series]):
                 "Kathy Reimann"
                 "Niklas Wagner"
                 "Ole Zelt"
-                "Alexander JÃ¼lich"
+                "Alexander Jülich"
                 "Clemens Schneider"
-                "Prof. Max Ã…hman"
+                "Prof. Max Åhman"
             ],
             publication="Agora Industry",
             publication_year=2024,

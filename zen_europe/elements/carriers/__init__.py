@@ -2,41 +2,25 @@ from .ammonia import Ammonia
 from .biomass import Biomass
 from .biomethane import Biomethane
 from .carbon import Carbon
+from .cement_fuel import CementFuel
+from .ceramic import Ceramic
+from .ceramic_fuel import CeramicFuel
 from .clinker import Clinker
 from .crude_oil import CrudeOil
 from .diesel import Diesel
 from .district_heat import DistrictHeat
 from .electricity import Electricity
-from .fuel_for_cement import FuelForCement
+from .food import Food
 from .gasoline import Gasoline
+from .glass import Glass
+from .glass_fuel import GlassFuel
 from .hard_coal import HardCoal
 from .heat import Heat
-from .heat_industry import (
-    HeatIndustry0100Ceramic,
-    HeatIndustry0100Food,
-    HeatIndustry0100Glass,
-    HeatIndustry0100Paper,
-    HeatIndustry100150Ceramic,
-    HeatIndustry100150Food,
-    HeatIndustry100150Glass,
-    HeatIndustry100150Paper,
-    HeatIndustry150200Ceramic,
-    HeatIndustry150200Food,
-    HeatIndustry150200Glass,
-    HeatIndustry150200Paper,
-)
+from .heat_industry_0_100 import HeatIndustry0100
+from .heat_industry_100_150 import HeatIndustry100150
+from .heat_industry_150_200 import HeatIndustry150200
 from .hydrogen import Hydrogen
-from .industry_products import (
-    Ceramic,
-    Food,
-    Glass,
-    Paper,
-)
 from .kerosene import Kerosene
-from .kiln_fuel import (
-    KilnFuelCeramic,
-    KilnFuelGlass,
-)
 from .lignite import Lignite
 from .lng import LNG
 from .methanol import Methanol
@@ -44,8 +28,10 @@ from .naphtha import Naphtha
 from .natural_gas import NaturalGas
 from .oil import Oil
 from .olefin import Olefin
+from .paper import Paper
 from .passenger_mileage import PassengerMileage
 from .primary_steel import PrimarySteel
+from .recoverable_waste_heat import RecoverableWasteHeat
 from .secondary_steel import SecondarySteel
 from .shipping import Shipping
 from .truck_mileage import TruckMileage
@@ -82,24 +68,16 @@ __all__ = [
     "PassengerMileage",
     "TruckMileage",
     "CrudeOil",
-    "FuelForCement",
+    "CementFuel",
     "Uranium",
-    "KilnFuelGlass",
-    "KilnFuelCeramic",
-    "HeatIndustry0100Glass",
-    "HeatIndustry0100Ceramic",
-    "HeatIndustry0100Paper",
-    "HeatIndustry0100Food",
-    "HeatIndustry100150Glass",
-    "HeatIndustry100150Ceramic",
-    "HeatIndustry100150Paper",
-    "HeatIndustry100150Food",
-    "HeatIndustry150200Glass",
-    "HeatIndustry150200Ceramic",
-    "HeatIndustry150200Paper",
-    "HeatIndustry150200Food",
+    "GlassFuel",
+    "CeramicFuel",
+    "HeatIndustry0100",
+    "HeatIndustry100150",
+    "HeatIndustry150200",
     "Glass",
     "Ceramic",
     "Paper",
     "Food",
+    "RecoverableWasteHeat",
 ]

@@ -15,9 +15,31 @@ from zen_creator.datasets.datasets.metadata import MetaData, SourceInformation
 
 from zen_europe.utils.constants import Constants
 
+# fuel consumption of the cement kiln routes (GJ/t clinker); hydrogen and waste are
+# the alternative fuel mix
+CEMENT_FUEL_CONSUMPTION = {
+    "hard_coal": 2.13,
+    "hydrogen": 2.46,
+    "biomass": 2.77,
+    "waste": 2.46,
+}
 # kiln fuel input per kiln fuel output of the glass routes, weighted by production
 # share, relative to the natural gas route; also used for ceramic (see docs)
 KILN_FUEL_INPUT = {"natural_gas": 1.0, "hydrogen": 1.0577, "electricity": 0.8438}
+# share of the glass fuel demand that a fuel can cover at most: the glass routes run
+# fully on natural gas, hydrogen or electricity (Tables 19, 21 and 23)
+GLASS_FUEL_MAX_SHARE = {
+    "natural_gas_to_glass_fuel": 1.0,
+    "hydrogen_to_glass_fuel": 1.0,
+    "electricity_to_glass_fuel": 1.0,
+}
+# capex of the glass routes minus the natural gas routes (EUR/t), weighted by
+# production share (Tables 19, 21 and 23); small, so the retrofits have no capex
+GLASS_ROUTE_CAPEX_DIFFERENCE = {
+    "natural_gas_to_glass_fuel": 0.0,
+    "hydrogen_to_glass_fuel": 1.5,
+    "electricity_to_glass_fuel": -3.6,
+}
 
 
 class Aidres(Dataset[dict[str, pd.DataFrame]]):
@@ -217,16 +239,18 @@ class Aidres(Dataset[dict[str, pd.DataFrame]]):
             technologies.
         """
         attr = element.conversion_factor
-        consumption_hard_coal = 2.13  # GJ/ton,
+        consumption = CEMENT_FUEL_CONSUMPTION
         cf: dict[str, dict[str, float]] = {
             "hydrogen_to_cement_fuel": {
-                "hydrogen": 2.46 / consumption_hard_coal
-            },  # alternative fuel mix
+                "hydrogen": consumption["hydrogen"] / consumption["hard_coal"]
+            },
             "biomass_to_cement_fuel": {
-                "biomass": 2.77 / consumption_hard_coal
-            },  # biomass
-            "waste_to_cement_fuel": {"waste": 2.46 / consumption_hard_coal},  # waste
-            "coal_to_cement_fuel": {"hard_coal": 1},  # coal
+                "biomass": consumption["biomass"] / consumption["hard_coal"]
+            },
+            "waste_to_cement_fuel": {
+                "waste": consumption["waste"] / consumption["hard_coal"]
+            },
+            "coal_to_cement_fuel": {"hard_coal": 1},
         }
         assert element.name in cf, f"Conversion factor for {element.name} not found."
 
@@ -277,6 +301,47 @@ class Aidres(Dataset[dict[str, pd.DataFrame]]):
         """EU production share per glass route."""
         return self.data["glass"]["eu_production_share"]
 
+    def get_process_emissions_glass(self) -> float:
+        """
+        Get the process (raw-material decomposition) CO2 of glass production, in t
+        per t of glass.
+
+        Returns:
+            float: The direct emissions of the electric glass routes, which only emit
+                process CO2, weighted by EU production share (Tables 19, 21 and 23).
+        """
+        glass = self.data["glass"]
+        return float(glass["emit_elec"].dot(glass["eu_production_share"]))
+
+    def get_max_fuel_share_glass(self, name: str) -> float:
+        """Share of the glass fuel demand that the glass fuel retrofit `name` can
+        cover at most."""
+        if name not in GLASS_FUEL_MAX_SHARE:
+            raise ValueError(f"Maximum glass fuel share of {name} is not defined.")
+        return GLASS_FUEL_MAX_SHARE[name]
+
+    def get_capex_specific_conversion_glass_fuel(
+        self, element: ConversionTechnology
+    ) -> Attribute:
+        """No capex of the glass fuel retrofit `element`: the AIDRES capex of its
+        routes is close to that of the natural gas routes."""
+        if element.name not in GLASS_ROUTE_CAPEX_DIFFERENCE:
+            raise ValueError(f"Capex difference of {element.name} is not defined.")
+        difference = GLASS_ROUTE_CAPEX_DIFFERENCE[element.name]
+        return element.capex_specific_conversion.set_data(
+            default_value=0.0,
+            unit="Euro/GW",
+            source=SourceInformation(
+                description=(
+                    "No capex: the production-weighted capex of the glass routes "
+                    f"differs from the natural gas routes by {difference:+.1f} EUR/t "
+                    "(Tables 19, 21 and 23). This is optimistic (new furnace, shorter "
+                    "campaigns, size limits)."
+                ),
+                metadata=self.metadata,
+            ),
+        )
+
     def get_conversion_factor_kiln_fuel(
         self, element: ConversionTechnology
     ) -> Attribute:
@@ -291,7 +356,11 @@ class Aidres(Dataset[dict[str, pd.DataFrame]]):
                 }
             ],
             source=SourceInformation(
-                description="Fuel route efficiency of the glass routes.",
+                description=(
+                    "Fuel input per kiln fuel of the glass routes, relative to the "
+                    "natural gas route, weighted by production share (Tables 19, 21 "
+                    "and 23)."
+                ),
                 metadata=self.metadata,
             ),
         )

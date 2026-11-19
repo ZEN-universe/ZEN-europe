@@ -86,10 +86,16 @@ class DIW(Dataset[pd.DataFrame]):
         return MetaData(
             name=self.name,
             title="Current and Prospective Costs of Electricity Generation until 2050",
-            author=["Wolf-Peter Schill", "Alexander Zerrahn", "Fabian Kunz"],
-            publication="DIW Data Documentation 94",
-            publication_year=2018,
-            url="https://www.diw.de/documents/publikationen/73/diw_01.c.573921.de/diwkompakt_2018-128.pdf",
+            author=[
+                "Andreas Schröder",
+                "Friedrich Kunz",
+                "Jan Meiss",
+                "Roman Mendelevitch",
+                "Christian von Hirschhausen",
+            ],
+            publication="DIW Data Documentation 68",
+            publication_year=2013,
+            url="https://www.diw.de/documents/publikationen/73/diw_01.c.424566.de/diw_datadoc_2013-068.pdf",
         )
 
     def _set_path(self) -> Path | None:

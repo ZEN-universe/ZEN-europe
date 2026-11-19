@@ -1,0 +1,289 @@
+from __future__ import annotations
+
+from functools import cached_property
+from pathlib import Path
+from typing import TYPE_CHECKING, Any, cast
+
+import pandas as pd
+from zen_creator import Attribute, DatasetCollection
+from zen_creator.datasets.datasets.metadata import (
+    AssumptionInformation,
+    SourceInformation,
+)
+
+from zen_europe.datasets.dataset_collections.industry_production_data import (
+    IndustryProductionData,
+)
+from zen_europe.datasets.datasets.carrier.ipcc_emission_factors import (
+    IPCCEmissionFactors,
+)
+from zen_europe.datasets.datasets.carrier.rehfeldt2017 import Rehfeldt2017
+from zen_europe.datasets.datasets.technology.cement_production_gardarsdottir import (
+    CementProductionGardarsdottir,
+)
+from zen_europe.datasets.datasets.technology.cerame_unie2021 import CerameUnie2021
+from zen_europe.utils.constants import Constants
+from zen_europe.utils.industry import model_nodes, sector_fuel
+from zen_europe.utils.utils import instance_cache
+
+if TYPE_CHECKING:
+    from zen_creator import Dataset, Element
+    from zen_creator.utils.settings import Settings
+
+SECTOR = "ceramic"
+# fuels without CO2 emissions in the model
+CARBON_NEUTRAL_FUELS = ("biomass",)
+# natural gas, today's fuel of all ceramic kilns, can cover the whole ceramic fuel
+NATURAL_GAS_MAX_SHARE = 1.0
+
+
+class CeramicProductionData(DatasetCollection):
+    """Ceramic production: demand, energy intensity, capacity, costs, process CO2
+    and the fuel of the ceramic kilns."""
+
+    name = "ceramic_production_data"
+
+    def __init__(self, settings: Settings, source_path: Path | str):
+        self.settings = settings
+        super().__init__(source_path=source_path)
+
+    def _get_data(self) -> dict[str, Dataset[Any] | DatasetCollection]:
+        """Load all available data sources."""
+        if self.source_path is None:
+            raise ValueError("source_path must be set to load the dataset collection.")
+        return {
+            "industry_production_data": IndustryProductionData(
+                self.settings, self.source_path
+            ),
+            "rehfeldt2017": Rehfeldt2017(self.source_path),
+            "cement_production_gardarsdottir": CementProductionGardarsdottir(
+                self.source_path
+            ),
+            "ipcc_emission_factors": IPCCEmissionFactors(self.source_path),
+            "cerame_unie2021": CerameUnie2021(self.source_path),
+        }
+
+    # ---------- product ----------
+
+    def get_demand(self, element: Element) -> Attribute:
+        """Get the ceramic demand: today's production."""
+        return self._industry.get_demand(
+            element,
+            self.calculate_production(model_nodes(element)),
+            "The production is the JRC-IDEES thermal energy consumption divided by "
+            "the Rehfeldt et al. (2017) fuel intensity; CH, NO and UK use a proxy "
+            "node (CH as AT, NO as FI, UK as DE scaled by the World Bank "
+            "population).",
+        )
+
+    # ---------- production technology ----------
+
+    def get_input_carrier(self, element: Element) -> Attribute:
+        """Get the input carriers of ceramic production."""
+        return self._industry.get_input_carrier(
+            element,
+            self.calculate_conversion_factors(),
+            "The ceramic kilns are fired with natural gas today, supplied as ceramic "
+            "fuel; its fuel switching is modeled by the ceramic fuel retrofits.",
+        )
+
+    def get_conversion_factor(self, element: Element) -> Attribute:
+        """Get the energy demand per tonne of ceramic."""
+        return self._industry.get_conversion_factor(
+            element,
+            self.calculate_conversion_factors(),
+            "The energy intensity is the activity-weighted energy intensity of the "
+            "ceramic sub-processes from Rehfeldt et al. (2017); the fuel above "
+            "200 °C is supplied as ceramic fuel.",
+        )
+
+    def get_capacity_existing(self, element: Element) -> Attribute:
+        """Get the existing ceramic production capacity."""
+        industry = self._industry
+        return industry.get_capacity_existing(
+            element,
+            self.calculate_production(model_nodes(element))
+            / industry.capacity_utilisation,
+            "The existing production capacity is the production divided by "
+            f"{industry.describe_capacity_utilisation()}.",
+        )
+
+    def get_lifetime(self, element: Element) -> Attribute:
+        """Get the lifetime of the cement plant proxy."""
+        return self._get_cement_plant_proxy(element, "get_lifetime")
+
+    def get_capex_specific_conversion(self, element: Element) -> Attribute:
+        """Get the investment cost of the cement plant proxy."""
+        return self._get_cement_plant_proxy(element, "get_capex_specific")
+
+    def get_opex_specific_fixed(self, element: Element) -> Attribute:
+        """Get the fixed O&M cost of the cement plant proxy."""
+        return self._get_cement_plant_proxy(element, "get_opex_specific_fixed")
+
+    def get_opex_specific_variable(self, element: Element) -> Attribute:
+        """Get the variable O&M cost of the cement plant proxy."""
+        return self._get_cement_plant_proxy(element, "get_opex_specific_variable")
+
+    def get_carbon_intensity_technology(self, element: Element) -> Attribute:
+        """Get the process CO2 of ceramic production."""
+        intensity = self.calculate_process_emissions()
+        return element.carbon_intensity_technology.set_data(
+            default_value=round(intensity, 12),
+            unit="ton/tproduct",
+            source=SourceInformation(
+                description=(
+                    "The process CO2 emissions of ceramic production are "
+                    f"{intensity:.4f} t per t of ceramic: the combustion emissions "
+                    f"of {self._fuel_total:.3f} GJ/t (Rehfeldt et al. (2017)) x "
+                    f"{self._calculate_combustion_emission_factor():.4f} t/GJ "
+                    "(natural gas, IPCC emission factor), times the process per "
+                    "fuel combustion emissions of the European ceramic industry in "
+                    "2020 (17 % process, 64 % fuel combustion and 19 % indirect "
+                    "emissions; Cerame-Unie (2021), Ceramic Roadmap to 2050, p. 30). "
+                    "See docs, 'Production technologies'."
+                ),
+                metadata=self.metadata,
+            ),
+        )
+
+    # ---------- post-combustion capture ----------
+
+    def get_conversion_factor_post_comb(self, element: Element) -> Attribute:
+        """Get the conversion factor of ceramic_post_comb."""
+        return self._industry.get_conversion_factor_post_comb(
+            element, self.calculate_fuel_shares()
+        )
+
+    def get_retrofit_flow_coupling_factor_post_comb(
+        self, element: Element
+    ) -> Attribute:
+        """Get the captured process CO2 per tonne of ceramic."""
+        return self._industry.get_retrofit_flow_coupling_factor_post_comb(
+            element, self.calculate_process_emissions()
+        )
+
+    # ---------- ceramic fuel retrofits ----------
+
+    def get_retrofit_flow_coupling_factor_natural_gas(
+        self, element: Element
+    ) -> Attribute:
+        """Get the ceramic fuel natural_gas_to_ceramic_fuel supplies at most per
+        tonne of ceramic: the whole ceramic fuel demand."""
+        return self._industry.get_retrofit_flow_coupling_factor_fuel(
+            element,
+            NATURAL_GAS_MAX_SHARE,
+            self.calculate_conversion_factors()[sector_fuel(SECTOR)],
+            "natural gas is today's fuel of all ceramic kilns",
+        )
+
+    def get_retrofit_flow_coupling_factor_switchable(
+        self, element: Element
+    ) -> Attribute:
+        """Get the ceramic fuel a switching retrofit (hydrogen, electricity) supplies
+        at most per tonne of ceramic: the switchable share of the ceramic fuel
+        demand."""
+        return self._industry.get_retrofit_flow_coupling_factor_fuel(
+            element,
+            self._switchable_share,
+            self.calculate_conversion_factors()[sector_fuel(SECTOR)],
+            "the ceramic BREF (JRC, Final Draft, April 2026, Sections 4.2.1-4.2.3) "
+            "limits electrified kilns to below 1600 °C; the > 1000 °C fuel of "
+            "technical ceramics in Rehfeldt et al. (2017) is treated as not "
+            "switchable and stays natural gas",
+        )
+
+    # ---------- data used by other collections ----------
+
+    @instance_cache
+    def calculate_production(self, nodes: tuple[str, ...]) -> pd.Series:
+        """Physical production (t/h): JRC-IDEES thermal energy / Rehfeldt fuel
+        intensity, proxy nodes filled."""
+        industry = self._industry
+        thermal = industry.get_industry_thermal_final_energy(SECTOR, nodes)  # ktoe
+        output = thermal * Constants.GJ_PER_KTOE / (self._fuel_total * 1000)  # kt/a
+        return industry.to_t_per_hour(industry.fill_proxy_nodes(output))
+
+    def calculate_demand(self, nodes: tuple[str, ...]) -> pd.Series:
+        """Ceramic demand (t/h): the physical production."""
+        return self.calculate_production(nodes).rename("demand").rename_axis("node")
+
+    def calculate_energy_intensity(self) -> pd.Series:
+        """Fuel (above 200 °C), heat and electricity demand (GW per t/h) from the
+        Rehfeldt et al. (2017) sub-processes."""
+        return self._energy_intensity
+
+    def calculate_heat_conversion_factors(self) -> pd.Series:
+        """Heat demand per band (GW per t/h)."""
+        return self._industry.calculate_heat_conversion_factors(
+            SECTOR, self.calculate_energy_intensity()
+        )
+
+    def calculate_fuel_shares(self) -> pd.Series:
+        """Fuel mix: natural gas, today's fuel of all ceramic kilns."""
+        return pd.Series({"natural_gas": 1.0})
+
+    def calculate_conversion_factors(self) -> pd.Series:
+        """Energy demand (GW per t/h) per input carrier."""
+        return self._industry.calculate_conversion_factors(
+            SECTOR, self.calculate_energy_intensity(), self._calculate_fuel_inputs()
+        )
+
+    def calculate_process_emissions(self) -> float:
+        """Process CO2 of ceramic production (t per t of ceramic): the combustion
+        emissions times the process per combustion emissions of Cerame-Unie."""
+        cerame_unie = cast(CerameUnie2021, self.data["cerame_unie2021"])
+        combustion = self._fuel_total * self._calculate_combustion_emission_factor()
+        return combustion * cerame_unie.get_process_per_combustion_emissions()
+
+    # ---------- helpers ----------
+
+    @property
+    def _industry(self) -> IndustryProductionData:
+        return cast(IndustryProductionData, self.data["industry_production_data"])
+
+    @cached_property
+    def _energy_intensity(self) -> pd.Series:
+        return self._industry.calculate_energy_intensity_rehfeldt(SECTOR)
+
+    @cached_property
+    def _fuel_total(self) -> float:
+        """Total fuel intensity (GJ/t) of the Rehfeldt et al. (2017) sub-processes."""
+        return self._industry.calculate_fuel_total_rehfeldt(SECTOR)
+
+    @property
+    def _switchable_share(self) -> float:
+        """Share of the ceramic fuel that can switch to hydrogen or electricity
+        (Rehfeldt)."""
+        rehfeldt = cast(Rehfeldt2017, self.data["rehfeldt2017"])
+        return rehfeldt.get_switchable_share_ceramic()
+
+    def _calculate_combustion_emission_factor(self) -> float:
+        """CO2 per GJ of fuel (t/GJ) of the ceramic JRC-IDEES fuel mix with the IPCC
+        emission factors; biomass is carbon-neutral."""
+        ipcc = cast(IPCCEmissionFactors, self.data["ipcc_emission_factors"])
+        return sum(
+            fuel_share * ipcc.get_emission_factor(carrier) / Constants.GJ_PER_MWH
+            for carrier, fuel_share in self.calculate_fuel_shares().items()
+            if carrier not in CARBON_NEUTRAL_FUELS
+        )
+
+    def _calculate_fuel_inputs(self) -> pd.Series:
+        """All fuel is ceramic fuel."""
+        return self._industry.calculate_fuel_inputs_kiln(SECTOR)
+
+    def _get_cement_plant_proxy(self, element: Element, method: str) -> Attribute:
+        """Cost or lifetime of the Gardarsdottir et al. (2019) cement plant."""
+        gardarsdottir = cast(
+            CementProductionGardarsdottir, self.data["cement_production_gardarsdottir"]
+        )
+        return getattr(gardarsdottir, method)(element).set_data(
+            source=AssumptionInformation(
+                description=(
+                    "No cost data for ceramic production exist; the cement clinker "
+                    "plant of Gardarsdottir et al. (2019), Comparison of Technologies "
+                    "for CO2 Capture from Cement Production - Part 2: Cost Analysis, "
+                    "Energies 12, 542, doi:10.3390/en12030542, is used as a proxy for "
+                    "a kiln-fired mineral product."
+                )
+            ),
+        )

@@ -40,7 +40,7 @@ class MethanolProductionCollodi(Dataset[pd.Series]):
             publication="Energy Procedia",
             publication_year=2017,
             url="https://www.sciencedirect.com/science/article/pii/S1876610217313280",
-            doi="https://doi.org/10.1016/j.enconman.2021.115052",
+            doi="https://doi.org/10.1016/j.egypro.2017.03.1155",
         )
 
     def _set_path(self) -> Path | None:
