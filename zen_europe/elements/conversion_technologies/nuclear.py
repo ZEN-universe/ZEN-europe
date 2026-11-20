@@ -225,7 +225,7 @@ class Nuclear(ConversionTechnology):
         """
         potencia_db = Potencia(source_path=self.source_path)
         attr = potencia_db.get_max_load(self)
-        if self.settings.max_load.use_seasonal_nuclear_max_load:
+        if self.settings.operation.use_seasonal_nuclear_max_load:
             nuclear_max_load = NuclearMaxLoad(
                 settings=self.settings,
                 set_nodes=self.model.config.system.set_nodes,
@@ -233,7 +233,7 @@ class Nuclear(ConversionTechnology):
             )
             nodal_ml_df, total_ml_df = nuclear_max_load.get_max_load(self)
             data: pd.DataFrame | pd.Series
-            if self.settings.max_load.use_nodal_nuclear_max_load:
+            if self.settings.operation.use_nodal_nuclear_max_load:
                 data = nodal_ml_df
             else:
                 data = total_ml_df

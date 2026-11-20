@@ -32,7 +32,7 @@ class CementSector(Sector):
     """Cement clinker production."""
 
     name = "cement"
-    required_sectors = []
+    required_sectors = ["industrial_heat"]
 
     def __init__(self) -> None:
         super().__init__()

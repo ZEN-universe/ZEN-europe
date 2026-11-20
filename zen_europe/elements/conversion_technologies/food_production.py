@@ -9,6 +9,10 @@ from zen_creator.utils.attribute import Attribute
 from zen_europe.datasets.dataset_collections.food_production_data import (
     FoodProductionData,
 )
+from zen_europe.datasets.dataset_collections.industrial_waste_heat import (
+    IndustrialWasteHeat,
+)
+from zen_europe.utils.industry import waste_heat_carrier
 
 if TYPE_CHECKING:
     from zen_creator.model import Model
@@ -36,16 +40,21 @@ class FoodProduction(ConversionTechnology):
         )
 
     def _set_output_carrier(self) -> Attribute:
-        """Food."""
-        return Attribute("output_carrier", default_value=["food"], element=self)
+        """Food and the waste heat of the process."""
+        return Attribute(
+            "output_carrier",
+            default_value=["food", *waste_heat_carrier(self)],
+            element=self,
+        )
 
     # ---------- Required methods that are called during object build ----------
 
     def _set_conversion_factor(self) -> Attribute:
-        """Energy intensity from Rehfeldt (2017)."""
-        return FoodProductionData(
+        """Energy intensity from Rehfeldt (2017), plus the waste heat from sEEnergies
+        (paper as proxy)."""
+        return IndustrialWasteHeat(
             self.settings, self.source_path
-        ).get_conversion_factor(self)
+        ).get_conversion_factor_food_production(self)
 
     def _set_lifetime(self) -> Attribute:
         """Lifetime from the literature."""

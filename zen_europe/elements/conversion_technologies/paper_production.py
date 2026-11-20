@@ -6,9 +6,13 @@ from zen_creator import ConversionTechnology
 from zen_creator.datasets.datasets.metadata import AssumptionInformation
 from zen_creator.utils.attribute import Attribute
 
+from zen_europe.datasets.dataset_collections.industrial_waste_heat import (
+    IndustrialWasteHeat,
+)
 from zen_europe.datasets.dataset_collections.paper_production_data import (
     PaperProductionData,
 )
+from zen_europe.utils.industry import waste_heat_carrier
 
 if TYPE_CHECKING:
     from zen_creator.model import Model
@@ -36,16 +40,21 @@ class PaperProduction(ConversionTechnology):
         )
 
     def _set_output_carrier(self) -> Attribute:
-        """Paper."""
-        return Attribute("output_carrier", default_value=["paper"], element=self)
+        """Paper and the waste heat of the process."""
+        return Attribute(
+            "output_carrier",
+            default_value=["paper", *waste_heat_carrier(self)],
+            element=self,
+        )
 
     # ---------- Required methods that are called during object build ----------
 
     def _set_conversion_factor(self) -> Attribute:
-        """Energy intensity from Rehfeldt (2017)."""
-        return PaperProductionData(
+        """Energy intensity from Rehfeldt (2017), plus the waste heat from
+        sEEnergies."""
+        return IndustrialWasteHeat(
             self.settings, self.source_path
-        ).get_conversion_factor(self)
+        ).get_conversion_factor_paper_production(self)
 
     def _set_lifetime(self) -> Attribute:
         """Lifetime from JRC-EU-TIMES."""

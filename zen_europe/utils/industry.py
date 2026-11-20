@@ -39,3 +39,11 @@ def model_nodes(element: Element) -> tuple[str, ...]:
 def model_sectors(element: Element) -> tuple[str, ...]:
     """Industry heat sectors of the element's model."""
     return tuple(sector for sector in SECTORS if sector in element.model.sectors)
+
+
+def waste_heat_carrier(element: Element) -> list[str]:
+    """The recoverable waste heat carrier of an industrial process, if industrial
+    waste heat is used."""
+    if element.settings.operation.use_industrial_waste_heat:
+        return ["recoverable_waste_heat"]
+    return []

@@ -7,11 +7,15 @@ from zen_europe.elements.carriers.recoverable_waste_heat import RecoverableWaste
 from zen_europe.elements.conversion_technologies.anaerobic_digestion import (
     AnaerobicDigestion,
 )
+from zen_europe.elements.conversion_technologies.BF_BOF import BF_BOF
 from zen_europe.elements.conversion_technologies.biomass_boiler_industry import (
     BiomassBoilerIndustry,
 )
 from zen_europe.elements.conversion_technologies.biomethane_conversion import (
     BiomethaneConversion,
+)
+from zen_europe.elements.conversion_technologies.cement_production import (
+    CementProduction,
 )
 from zen_europe.elements.conversion_technologies.ceramic_production import (
     CeramicProduction,
@@ -20,6 +24,7 @@ from zen_europe.elements.conversion_technologies.coal_boiler_industry import (
     CoalBoilerIndustry,
 )
 from zen_europe.elements.conversion_technologies.DAC import DAC
+from zen_europe.elements.conversion_technologies.EAF import EAF
 from zen_europe.elements.conversion_technologies.electrode_boiler_industry import (
     ElectrodeBoilerIndustry,
 )
@@ -30,6 +35,7 @@ from zen_europe.elements.conversion_technologies.gasification import Gasificatio
 from zen_europe.elements.conversion_technologies.glass_production import (
     GlassProduction,
 )
+from zen_europe.elements.conversion_technologies.H2_DRI import H2_DRI
 from zen_europe.elements.conversion_technologies.haber_bosch import HaberBosch
 from zen_europe.elements.conversion_technologies.heat_industry_temp_conversion_100 import (  # noqa: E501
     HeatIndustryTempConversion100,
@@ -67,6 +73,7 @@ from zen_europe.elements.conversion_technologies.methanol_from_hydrogen import (
 from zen_europe.elements.conversion_technologies.natural_gas_boiler_industry import (
     NaturalGasBoilerIndustry,
 )
+from zen_europe.elements.conversion_technologies.NG_DRI import NG_DRI
 from zen_europe.elements.conversion_technologies.oil_boiler_industry import (
     OilBoilerIndustry,
 )
@@ -88,6 +95,18 @@ from zen_europe.elements.retrofitting_technologies.ceramic_post_comb import (
 )
 from zen_europe.elements.retrofitting_technologies.glass_post_comb import (
     GlassPostComb,
+)
+from zen_europe.elements.retrofitting_technologies.hydrogen_to_ceramic_fuel import (
+    HydrogenToCeramicFuel,
+)
+from zen_europe.elements.retrofitting_technologies.hydrogen_to_glass_fuel import (
+    HydrogenToGlassFuel,
+)
+from zen_europe.elements.retrofitting_technologies.natural_gas_to_ceramic_fuel import (
+    NaturalGasToCeramicFuel,
+)
+from zen_europe.elements.retrofitting_technologies.natural_gas_to_glass_fuel import (
+    NaturalGasToGlassFuel,
 )
 
 
@@ -147,4 +166,14 @@ class IndustrialHeatSector(Sector):
             GlassPostComb,
             CeramicPostComb,
             WasteHeatIntegrationDH,
+            # industrial processes with recoverable waste heat
+            NaturalGasToGlassFuel,
+            HydrogenToGlassFuel,
+            NaturalGasToCeramicFuel,
+            HydrogenToCeramicFuel,
+            CementProduction,
+            BF_BOF,
+            NG_DRI,
+            H2_DRI,
+            EAF,
         ]

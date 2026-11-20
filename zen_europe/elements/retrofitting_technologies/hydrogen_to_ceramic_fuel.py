@@ -7,13 +7,16 @@ from zen_creator import Attribute, RetrofittingTechnology
 from zen_europe.datasets.dataset_collections.ceramic_production_data import (
     CeramicProductionData,
 )
+from zen_europe.datasets.dataset_collections.industrial_waste_heat import (
+    IndustrialWasteHeat,
+)
 from zen_europe.datasets.dataset_collections.industry_production_data import (
     IndustryProductionData,
 )
-from zen_europe.datasets.datasets.carrier.aidres import Aidres
 from zen_europe.datasets.datasets.technology.technology_diffusion_mannhardt import (
     TechnologyDiffusionMannhardt,
 )
+from zen_europe.utils.industry import waste_heat_carrier
 
 if TYPE_CHECKING:
     from zen_creator.model import Model
@@ -45,8 +48,12 @@ class HydrogenToCeramicFuel(RetrofittingTechnology):
         return Attribute("input_carrier", default_value=["hydrogen"], element=self)
 
     def _set_output_carrier(self) -> Attribute:
-        """Ceramic fuel."""
-        return Attribute("output_carrier", default_value=["ceramic_fuel"], element=self)
+        """Ceramic fuel and the waste heat of the kiln."""
+        return Attribute(
+            "output_carrier",
+            default_value=["ceramic_fuel", *waste_heat_carrier(self)],
+            element=self,
+        )
 
     def _set_retrofit_reference_carrier(self) -> Attribute:
         """Ceramic fuel."""
@@ -63,8 +70,11 @@ class HydrogenToCeramicFuel(RetrofittingTechnology):
         ).get_lifetime_fuel_retrofit(self)
 
     def _set_conversion_factor(self) -> Attribute:
-        """Hydrogen per ceramic fuel of the AIDRES glass hydrogen routes."""
-        return Aidres(self.source_path).get_conversion_factor_kiln_fuel(self)
+        """Hydrogen per ceramic fuel of the AIDRES glass hydrogen routes, plus the
+        waste heat from sEEnergies (glass as proxy)."""
+        return IndustrialWasteHeat(
+            self.settings, self.source_path
+        ).get_conversion_factor_kiln_fuel(self)
 
     def _set_retrofit_flow_coupling_factor(self) -> Attribute:
         """The switchable share of the ceramic fuel demand."""

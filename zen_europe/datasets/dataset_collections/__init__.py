@@ -4,6 +4,7 @@ from .edges import Edges
 from .food_production_data import FoodProductionData
 from .glass_production_data import GlassProductionData
 from .hydropower_existing_capacities import HydropowerExistingCapacities
+from .industrial_waste_heat import IndustrialWasteHeat
 from .industry_heat_supply import IndustryHeatSupply
 from .industry_production_data import IndustryProductionData
 from .methanol_demand import MethanolDemand
@@ -19,6 +20,7 @@ __all__ = [
     "TechnologyCostDatabase",
     "HydropowerExistingCapacities",
     "IndustryHeatSupply",
+    "IndustrialWasteHeat",
     "IndustryProductionData",
     "GlassProductionData",
     "CeramicProductionData",

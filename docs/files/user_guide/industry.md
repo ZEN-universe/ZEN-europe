@@ -26,9 +26,11 @@ Input data are computed in `IndustryProductionData` (`industry_production_data.p
   consumes or produces one of its four carriers: the production technologies of the four
   sectors, `electrolysis`, `gasification`, `anaerobic_digestion`, `biomethane_conversion`,
   `fischer_tropsch`, `haber_bosch`, `methanol_from_biomass`, `methanol_from_hydrogen`,
-  `pyrolysis`, `DAC`, the post-combustion captures of cement, glass and ceramic, and
-  `waste_heat_integration_DH`. A technology declared by several sectors is only added
-  when all of them are active.
+  `pyrolysis`, `DAC`, the post-combustion captures of cement, glass and ceramic,
+  `waste_heat_integration_DH`, and the processes with [industrial waste
+  heat](#industrial-waste-heat): the natural gas and hydrogen furnace fuels of glass and
+  ceramic, `cement_production`, `BF_BOF`, `NG_DRI`, `H2_DRI` and `EAF`. A technology
+  declared by several sectors is only added when all of them are active.
 - **Default dataset**: the four sectors and `industrial_heat` are part of the default
   `structure.set_sectors` in `zen_europe/settings/structure.py`; the `zen_europe_legacy`
   model in `data/models.yaml` removes the four sectors. It cannot remove
@@ -36,8 +38,8 @@ Input data are computed in `IndustryProductionData` (`industry_production_data.p
 - **Sector links**: `industrial_heat` requires `electricity`, `gas` and `district_heating`.
   `glass` and `ceramic` require these, `industrial_heat` and `hydrogen` (kiln fuel); `paper`
   and `food` require these and `industrial_heat`. `carbon`, `hydrogen`, `ammonia`,
-  `methanol` and `steel` require `industrial_heat`, since some of their technologies
-  consume or produce its carriers. `glass_post_comb` and `ceramic_post_comb` are also
+  `methanol`, `steel` and `cement` require `industrial_heat`, since some of their
+  technologies consume or produce its carriers. `glass_post_comb` and `ceramic_post_comb` are also
   declared by `carbon` and `cement` and only added when all are active.
 
 ### General assumptions
@@ -66,8 +68,7 @@ production, energy and heat statistics is `DATA_YEAR` (2023) in
 ## Product demand and existing capacity
 
 Demand (t/h) = annual physical production ÷ 8760 h, flat over the year. Net trade is not
-modeled. Existing boilers, the cascade, the waste heat limit and the kiln fuel are all
-based on this demand. Existing production capacity (t/h) = installed capacity ÷ 8760 h
+modeled. Existing boilers, the cascade and the kiln fuel are all based on this demand. Existing production capacity (t/h) = installed capacity ÷ 8760 h
 where JRC-IDEES reports it (glass, paper: about 26–29 % headroom above demand) and demand ÷
 the capacity utilisation (0.783, the mean EU27 output / capacity of glass and paper,
 `get_industry_capacity_utilisation`) otherwise.
@@ -300,14 +301,21 @@ existing capacity.
 | sink temperature | 75 °C | 125 °C | 175 °C |
 | COP, waste heat (50 °C) | 6.96 | 2.65 | 1.79 |
 | COP, water (15 °C) | 2.90 | 1.81 | 1.40 |
+| waste heat per heat (1 − 1/COP) | 0.856 | 0.623 | 0.441 |
 | capex (DEA) | 2.a, 1,200 EUR/kW | 2.b, 1,550 EUR/kW | 2.b, 1,550 EUR/kW |
+| waste heat recovery (Stark) | 1,355 EUR/kW | 986 EUR/kW | 699 EUR/kW |
 
 - COP = 0.5 × Carnot; source temperatures from Bever (2024) and Agora (2023). Lifetime 20 yr.
+- Waste-heat variants take electricity (1/COP) and `recoverable_waste_heat` (1 − 1/COP)
+  per heat output (`get_conversion_factor_heat_pump_waste_heat`), so the waste heat they
+  use is bounded by the carrier balance at the node, see [Industrial waste
+  heat](#industrial-waste-heat). They have no capacity limit.
 - Waste-heat variants add the heat recovery of Stark et al. (2025), 1,788 USD/kWth
   (2025 USD), converted with the ECB exchange rate of 2025 and inflated to the price
-  year (~1,583 EUR/kW in 2025 EUR).
-- Water-source heat pumps are unlimited; waste-heat heat pumps are limited by the
-  [waste heat limit](#waste-heat-limit).
+  year (~1,583 EUR/kW in 2025 EUR). It is per kW of recovered waste heat, so it is
+  multiplied by the waste heat per heat output (1 − 1/COP); the values in the table
+  are per kW of heat output, 2025 EUR.
+- Water-source heat pumps have no capacity limit.
 
 ### Temperature cascade
 
@@ -317,16 +325,52 @@ without losses or costs. Existing capacity = lower-band demand; capacity limit =
 
 `heat_industry_temp_conversion_rwh` ends the cascade: it passes 0–100 °C heat to
 `recoverable_waste_heat` without losses or costs. No existing capacity and no capacity
-limit, since no technology with a diffusion rate shares its reference carrier. No process
-uses `recoverable_waste_heat`; it is either fed into district heating (see
-[District heat integration](#district-heat-integration)) or exported (blown off) without
-limit. Other technologies, e.g. `electrolysis`, also output `recoverable_waste_heat`.
+limit, since no technology with a diffusion rate shares its reference carrier.
+`recoverable_waste_heat` is used by the waste-heat heat pumps (see [Heat
+pumps](#heat-pumps)), fed into district heating (see [District heat
+integration](#district-heat-integration)) or exported (blown off) without limit. Other technologies, e.g. `electrolysis` and the processes with [industrial waste
+heat](#industrial-waste-heat), also output `recoverable_waste_heat`.
+
+### Industrial waste heat
+
+The industrial processes output the recoverable waste heat of their exhaust, cooled to
+55 °C (sEEnergies D5.1, Fleiter et al. 2020, `SeenergiesIndustrialWasteHeat`), as a
+share of their energy input or, for steel, per tonne (`IndustrialWasteHeat` in
+`industrial_waste_heat.py`). `settings.operation.use_industrial_waste_heat` (default
+`true`) switches it off.
+
+| technologies | waste heat | of | sEEnergies process |
+|---|---|---|---|
+| `natural_gas_to_glass_fuel`, `hydrogen_to_glass_fuel` | 11 % | fuel input | regenerative furnace: without minus with batch/cullet preheating |
+| `natural_gas_to_ceramic_fuel`, `hydrogen_to_ceramic_fuel` | 11 % | fuel input | as glass (proxy) |
+| `cement_production` | 17 % | `cement_fuel` | dry kiln with preheater (3.7 GJ/t clinker, as the model's kiln) |
+| `paper_production` | 1 % | total input | board & packaging paper: boilers without minus with heat recovery |
+| `food_production` | 1 % | total input | as paper (proxy) |
+| `BF_BOF` | 0.624 GJ/t | steel | blast stove exhaust: 10 % of 1.5 GJ/t without minus 4 % of 1.4 GJ/t with heat recovery; plus BOF off-gases: 0.55 GJ/t without minus 0.02 GJ/t with heat recovery; no coke ovens |
+| `EAF` | 0.201 GJ/t | steel | EAF: 12 % of 1.8 GJ/t without minus 1 % of 1.5 GJ/t with scrap preheating |
+| `NG_DRI`, `H2_DRI` | 0.201 GJ/t | steel | as EAF (proxy; no DRI data) |
+
+sEEnergies gives the steel shares per fuel of the blast stove or the EAF alone, not per
+input of the whole route, so the steel waste heat is not scaled by the Agora input.
+
+Electric furnaces and kilns (`electricity_to_glass_fuel`, `electricity_to_ceramic_fuel`)
+have no exhaust and output no waste heat.
+
+The DEA heat output of `cement_post_comb` (1.65 MWh/tCO2) includes the pre-cooling of the
+kiln flue gas and the kiln waste heat recovery units (DEA 401.c, notes A, I, M). The kiln
+exhaust heat that `cement_production` outputs is therefore subtracted per captured CO2:
+17 % × 3.7 GJ/t clinker ÷ (0.54 tCO2/t clinker × 0.9 capture rate) = 0.36 MWh/tCO2,
+so 1.29 MWh/tCO2 remain. Without industrial waste heat, the full 1.65 MWh/tCO2 is kept.
+`glass_post_comb` and `ceramic_post_comb` keep the full 1.65 MWh/tCO2: they capture only
+the process CO2, and the furnace exhaust depends on the glass or ceramic fuel technology
+(none for electric furnaces).
 
 ### District heat integration
 
 `waste_heat_integration_DH` (sectors `industrial_heat` and `district_heating`) feeds
-`recoverable_waste_heat` into `district_heat` without losses. Capex: the waste-heat recovery of Stark et al. (2025), as for the
-waste-heat heat pumps; no O&M. Lifetime of `district_heating_grid`, diffusion rate of
+`recoverable_waste_heat` into `district_heat` without losses. Capex: the waste-heat
+recovery of Stark et al. (2025) per kW of recovered heat, as for the waste-heat heat pumps
+(here one kW of district heat is one kW of recovered heat); no O&M. Lifetime of `district_heating_grid`, diffusion rate of
 `heat_pump_DH`; no existing capacity.
 
 ### Existing boiler fleet
@@ -341,29 +385,6 @@ intensity) × the sector's JRC-IDEES fuel mix in the country (EU27 for NO/UK).
 
 **Cut-off**: node totals (summed over the sectors) below `MIN_BOILER_CAPACITY` (0.005 GW) are set to
 0. Capacity can still be built.
-
-## Waste heat limit
-
-Waste-heat heat pumps use the > 200 °C exhaust heat of the industry sectors at the node,
-distributed over bands by each sector's heat demand:
-
-    capacity_limit[band, n] = Σ_s production[s, n] × fuel_intensity_>200°C[s] × heat[s, band] / Σ heat[s, :]
-
-The limit is applied to heat pump output; the physical bound (× COP/(COP − 1)) is
-1.17–2.26× larger. Contributions summed over all nodes (GW, glass/ceramic/paper/food):
-0–100 °C 0.48/6.55/0.02/0.61; 100–150 °C 1.56/1.91/0.48/0.20; 150–200 °C
-3.11/3.83/0.30/0.22.
-
-Validation against Heat Roadmap Europe (Mathiesen et al.), 2015, non-metallic minerals +
-paper:
-
-| node | model (GW) | HRE (GW) | ratio |
-|---|---|---|---|
-| DE | 3.24 | 3.87 | 0.84 |
-| FR | 1.67 | 2.42 | 0.69 |
-| HU | 0.16 | 0.26 | 0.62 |
-| PL | 1.24 | 1.58 | 0.78 |
-| ES | 2.00 | 2.38 | 0.84 |
 
 ## Diffusion
 
@@ -380,9 +401,6 @@ alternative kiln fuels that of `hydrogen_to_cement_fuel`, post-combustion captur
   EU industry heat demand, by heat source and by node. Summed over nodes, all industry heat
   pumps share one DH build-out per period. Required for feasibility. `HP_SEED_YEARS` = 15
   ≈ fleet / recent DH additions (~0.15 GW/yr).
-- **First-year heat pump cap** (`capacity_limit`): in the reference year, at most
-  `HP_SHARE_FIRST_YEAR` (2 %) of the band demand per node, split by heat source (no
-  industrial heat pumps today). Without it, term (2) alone allows ~8 % of the demand.
 - **Pass-through technologies** (cascade, `natural_gas_to_glass_fuel`,
   `natural_gas_to_ceramic_fuel`) share the reference
   carrier with heat pumps and alternative kiln fuels. Without capex or limit, their
@@ -430,7 +448,6 @@ budget is slightly generous.
 - JRC-EU-TIMES (2019.11). Industry technologies, `JRC_EU_TIMES_model_input.xls`.
 - JRC-IDEES-2023. Rózsai, M. et al. *The Integrated Database of the European Energy System.* doi:10.2760/6945021.
 - Mannhardt, J. (2026). PhD dissertation, Appendix A.2.
-- Mathiesen, B. V. et al. *Heat Roadmap Europe*, Ch. 2 "Waste heat potential and data for EU".
 - ONS (2026). *Atmospheric emissions: greenhouse gases by industry and gas.*
 - Rehfeldt, M., Fleiter, T., Toro, F. (2017). A bottom-up estimation of the heating and cooling demand in European industry. *Energy Efficiency.* doi:10.1007/s12053-017-9571-y.
 - Stark et al. (2025). Waste heat is mostly a waste of time. *Joule* 9, 102157.

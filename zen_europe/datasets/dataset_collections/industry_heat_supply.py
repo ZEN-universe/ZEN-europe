@@ -27,6 +27,7 @@ from zen_europe.datasets.dataset_collections.technology_cost_database import (
 from zen_europe.datasets.datasets.carrier.bfe_industry import BFEIndustry
 from zen_europe.datasets.datasets.carrier.eurostat import Eurostat
 from zen_europe.datasets.datasets.carrier.jrc_idees import JRCIDEES
+from zen_europe.datasets.datasets.technology.bever2024 import Bever2024
 from zen_europe.datasets.datasets.technology.stark2025 import Stark2025
 from zen_europe.utils.industry import (
     BOILER_FUELS,
@@ -69,14 +70,18 @@ EUROSTAT_EU = "EU27_2020"
 MIN_BOILER_CAPACITY = 0.005
 # capacity limit of the zero-cost pass-through technologies (temperature cascade,
 # natural gas kiln fuel) as a multiple of the flat demand they serve, so that the
-# optimization does not overbuild them to expand other technologies
-CAPACITY_LIMIT_MARGIN = 2.0
+# optimization does not overbuild them to expand other technologies. The lower level
+# of the temperature cascade is limited to 8 times the demand, since the there are 
+# endogenous demands in the lower bands, while the upper level only has the flat 
+# demand 
+CAPACITY_LIMIT_MARGIN = {
+    "heat_industry_temp_conversion_100": 8,
+    "heat_industry_temp_conversion_150": 2,
+}
+CAPACITY_LIMIT_DEFAULT = 2
 # build-out years of the DH heat pump fleet; its annual build-out seeds the unbounded
 # capacity addition of the industry heat pumps, see docs, 'Diffusion'
 HP_SEED_YEARS = 15
-# share of the band demand per node the industry heat pumps are capped at in the
-# first optimized year, see docs, 'Diffusion'
-HP_SHARE_FIRST_YEAR = 0.02
 
 
 class IndustryHeatSupply(DatasetCollection):
@@ -110,6 +115,7 @@ class IndustryHeatSupply(DatasetCollection):
                 self.settings, self.source_path
             ),
             "stark2025": Stark2025(self.source_path),
+            "bever2024": Bever2024(self.source_path),
         }
 
     # ---------- boilers ----------
@@ -173,11 +179,30 @@ class IndustryHeatSupply(DatasetCollection):
 
     # ---------- heat pumps ----------
 
+    def get_conversion_factor_heat_pump_waste_heat(self, element: Element) -> Attribute:
+        """Get the electricity per heat of Bever et al. (2024) plus the recoverable
+        waste heat per heat: the rest of the heat output, 1 - 1/COP."""
+        attr = cast(Bever2024, self.data["bever2024"]).get_conversion_factor_heat_pump(
+            element
+        )
+        share = self._waste_heat_share_heat_pump(element)
+        entry = {"default_value": round(share, 12), "unit": "GW/GW"}
+        return attr.set_data(
+            default_value=[*attr.default_value, {"recoverable_waste_heat": entry}],
+            source=SourceInformation(
+                description=(
+                    "The heat pump takes the heat output not supplied by electricity "
+                    f"from the recoverable waste heat: 1 - 1/COP = {share:.3f}."
+                ),
+                metadata=self.metadata,
+            ),
+        )
+
     def get_capex_specific_conversion_heat_pump_waste_heat(
         self, element: Element
     ) -> Attribute:
         """Get the DEA investment cost of the heat pump plus the waste-heat recovery
-        of Stark et al. (2025)."""
+        of Stark et al. (2025) per recovered waste heat."""
         tech_db = cast(TechnologyCostDatabase, self.data["technology_cost_database"])
         capex = tech_db.get_capex_specific_conversion(
             element, proxy_element_name=element.cost_proxy
@@ -186,9 +211,11 @@ class IndustryHeatSupply(DatasetCollection):
         recovery = cast(
             Stark2025, self.data["stark2025"]
         ).get_capex_waste_heat_recovery(price_year)
+        share = self._waste_heat_share_heat_pump(element)
+        recovery_per_output = recovery * share
         return capex.set_data(
-            default_value=capex.default_value + recovery,
-            df=None if capex.df is None else capex.df + recovery,
+            default_value=capex.default_value + recovery_per_output,
+            df=None if capex.df is None else capex.df + recovery_per_output,
             source=SourceInformation(
                 description=(
                     f"The DEA investment cost of '{element.cost_proxy}' (Danish Energy "
@@ -196,7 +223,10 @@ class IndustryHeatSupply(DatasetCollection):
                     "https://www.ens.dk/technologydata) plus the waste-heat recovery "
                     "of 1,788 USD/kWth (2025 USD) in Stark et al. (2025), converted "
                     f"to {recovery:.0f} Euro/kW ({price_year} Euro) with the ECB "
-                    "dollar-to-euro exchange rate of 2025 and the ECB inflation."
+                    "dollar-to-euro exchange rate of 2025 and the ECB inflation. The "
+                    "recovery cost is per kW of recovered waste heat, so it is "
+                    f"multiplied by the waste heat per heat output, 1 - 1/COP = "
+                    f"{share:.3f}, giving {recovery_per_output:.0f} Euro/kW of heat."
                 ),
                 metadata=self.metadata,
             ),
@@ -209,57 +239,6 @@ class IndustryHeatSupply(DatasetCollection):
             unit="GW",
             source=SourceInformation(
                 description="There are no existing industrial heat pumps.",
-                metadata=self.metadata,
-            ),
-        )
-
-    def get_capacity_limit_heat_pump(self, element: Element) -> Attribute:
-        """Get the first-year cap (share of band demand) and, for waste heat, the
-        industry heat sectors' waste heat in the band."""
-        nodes = pd.Index(model_nodes(element), name="node")
-        years = pd.Index(self.settings.time.years, name="year")
-        sectors = model_sectors(element)
-        limit = pd.Series(np.inf, index=nodes)
-        description = ""
-        if element.heat_source == "waste_heat":
-            limit = pd.Series(0.0, index=nodes)
-            for sector in sectors:
-                production = self._production_data(sector)
-                heat = production.calculate_heat_conversion_factors()
-                share = heat[element.temp_level] / heat[list(HEAT_LEVELS)].sum()
-                fuel = production.calculate_energy_intensity()["fuel"]
-                waste_heat = (
-                    production.calculate_production(tuple(nodes)) * fuel * share
-                )
-                limit = limit.add(waste_heat.reindex(nodes, fill_value=0.0))
-            description = (
-                "Waste heat of the industry heat sectors' processes > 200 °C (their "
-                "fuel demand), split by band heat demand. "
-            )
-        demand = self._calculate_heat_demand(
-            sectors, (element.temp_level,), tuple(nodes)
-        )
-        first_year = (
-            demand.reindex(nodes, fill_value=0.0)
-            * HP_SHARE_FIRST_YEAR
-            / len(HEAT_SOURCES)
-        )
-        limit = pd.DataFrame({year: limit for year in years})
-        limit[years[0]] = np.minimum(limit[years[0]], first_year)
-        return element.capacity_limit.set_data(
-            default_value=np.inf,
-            unit="GW",
-            df=limit.stack()
-            .rename_axis(["node", "year"])
-            .rename("capacity_limit")
-            .to_frame(),
-            source=SourceInformation(
-                description=(
-                    description
-                    + f"{years[0]}: at most {HP_SHARE_FIRST_YEAR:.0%} of band demand "
-                    "per node, since there are no industrial heat pumps today, split "
-                    "by heat source, see docs, 'Diffusion'."
-                ),
                 metadata=self.metadata,
             ),
         )
@@ -391,6 +370,14 @@ class IndustryHeatSupply(DatasetCollection):
         """Production data collection of the industry heat sector `sector`."""
         return cast(SectorProductionData, self.data[f"{sector}_production_data"])
 
+    def _waste_heat_share_heat_pump(self, element: Element) -> float:
+        """Recoverable waste heat per heat output of a waste-heat heat pump:
+        1 - 1/COP."""
+        cop = cast(Bever2024, self.data["bever2024"]).get_cop(
+            element.temp_level, element.heat_source
+        )
+        return 1.0 - 1.0 / cop
+
     def _set_capacity_limit(
         self,
         element: Element,
@@ -400,10 +387,12 @@ class IndustryHeatSupply(DatasetCollection):
     ) -> Attribute:
         """Limit a technology to the demand times the capacity limit margin, see
         docs, 'Diffusion'. With `nodes`, the limit is 0 at nodes without demand."""
-        limit = demand * CAPACITY_LIMIT_MARGIN
+        capacity_limit_margin = CAPACITY_LIMIT_MARGIN.get(
+            element.name, CAPACITY_LIMIT_DEFAULT)
+        limit = demand * capacity_limit_margin
         description = (
             f"{description} times the capacity limit margin of "
-            f"{CAPACITY_LIMIT_MARGIN}, see docs, 'Diffusion'."
+            f"{capacity_limit_margin}, see docs, 'Diffusion'."
         )
         if nodes is not None:
             limit = limit.reindex(pd.Index(nodes, name="node")).fillna(0.0)

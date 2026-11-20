@@ -2,6 +2,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from zen_europe.datasets.dataset_collections.industrial_waste_heat import (
+    IndustrialWasteHeat,
+)
 from zen_europe.datasets.dataset_collections.technology_cost_database import (
     TechnologyCostDatabase,
 )
@@ -109,24 +112,12 @@ class CementPostComb(RetrofittingTechnology):
         Values from the DEA technology catalogue for carbon capture,
         transport and storage (Post-combustion carbon capture in a cement
         plant), assuming the cement fuel input is directly converted
-        into heat for the capture process.
+        into heat for the capture process. The heat output excludes the kiln
+        exhaust heat, which cement_production already outputs.
         """
-        attr = self.conversion_factor
-        dea_dataset = DEA(source_path=self.source_path)
-        cf = dea_dataset.get_conversion_factor_cement_post_comb()
-        source = SourceInformation(
-            description=(
-                "The conversion factor of cement post-combustion capture "
-                "is a manually derived value based on the DEA technology "
-                "catalogue for carbon capture, transport and storage "
-                "(Post-combustion carbon capture in a cement plant), "
-                "assuming the cement fuel input is directly converted "
-                "into heat for the capture process."
-            ),
-            metadata=dea_dataset.metadata,
-        )
-        attr.set_data(default_value=cf, source=source)
-        return attr
+        return IndustrialWasteHeat(
+            self.settings, self.source_path
+        ).get_conversion_factor_cement_post_comb(self)
 
     def _set_capex_specific_conversion(self) -> Attribute:
         """

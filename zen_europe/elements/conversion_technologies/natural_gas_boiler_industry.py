@@ -22,6 +22,7 @@ from zen_europe.datasets.datasets.technology.technology_diffusion_mannhardt impo
 if TYPE_CHECKING:
     from zen_creator.model import Model
 
+import logging
 
 class NaturalGasBoilerIndustry(ConversionTechnology):
     """Industrial natural gas boiler supplying the 150-200 °C band."""

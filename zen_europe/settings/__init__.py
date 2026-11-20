@@ -7,7 +7,7 @@ from .cost import CostSettings  # noqa: F401
 from .data_source import DataSourceSettings  # noqa: F401
 from .emissions import EmissionsSettings  # noqa: F401
 from .investment import InvestmentSettings  # noqa: F401
-from .max_load import MaxLoadSettings  # noqa: F401
+from .operation import OperationSettings  # noqa: F401
 from .output import OutputSettings  # noqa: F401
 from .region import RegionSettings  # noqa: F401
 from .scenario import ScenarioSettings  # noqa: F401
@@ -21,7 +21,7 @@ __all__ = [
     "EmissionsSettings",
     "DataSourceSettings",
     "AvailabilitySettings",
-    "MaxLoadSettings",
+    "OperationSettings",
     "OutputSettings",
     "ScenarioSettings",
     "CacheSettings",

@@ -2,6 +2,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from zen_europe.datasets.dataset_collections.industrial_waste_heat import (
+    IndustrialWasteHeat,
+)
 from zen_europe.datasets.datasets.technology.agora_industry_steel import (
     AgoraIndustrySteel,
 )
@@ -11,6 +14,7 @@ from zen_europe.datasets.datasets.technology.steel_technologies_woertler import 
 from zen_europe.datasets.datasets.technology.technology_diffusion_mannhardt import (
     TechnologyDiffusionMannhardt,
 )
+from zen_europe.utils.industry import waste_heat_carrier
 
 if TYPE_CHECKING:
     from zen_creator.model import Model
@@ -50,10 +54,13 @@ class H2_DRI(ConversionTechnology):
 
     def _set_output_carrier(self) -> Attribute:
         """
-        Set the output carrier of H2-DRI to primary steel.
+        Set the output carrier of H2-DRI to primary steel and the waste heat of the
+        process.
         """
         return Attribute(
-            name="output_carrier", default_value=["primary_steel"], element=self
+            name="output_carrier",
+            default_value=["primary_steel", *waste_heat_carrier(self)],
+            element=self,
         )
 
     # ---------- Required methods that are called during object build ----------
@@ -68,11 +75,11 @@ class H2_DRI(ConversionTechnology):
 
     def _set_conversion_factor(self) -> Attribute:
         """
-        Return the conversion factor of H2-DRI.
+        Return the conversion factor of H2-DRI, including the waste heat.
 
         """
-        agora_dataset = AgoraIndustrySteel(source_path=self.source_path)
-        return agora_dataset.get_conversion_factor(self)
+        waste_heat_dataset = IndustrialWasteHeat(self.settings, self.source_path)
+        return waste_heat_dataset.get_conversion_factor_steel(self)
 
     def _set_opex_specific_variable(self) -> Attribute:
         """

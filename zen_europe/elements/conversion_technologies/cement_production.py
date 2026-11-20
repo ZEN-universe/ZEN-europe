@@ -2,11 +2,14 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from zen_europe.datasets.dataset_collections.clinker_data import ClinkerData
+from zen_europe.datasets.dataset_collections.industrial_waste_heat import (
+    IndustrialWasteHeat,
+)
 from zen_europe.datasets.datasets.carrier.material_economics import MaterialEconomics
 from zen_europe.datasets.datasets.technology.cement_production_gardarsdottir import (
     CementProductionGardarsdottir,
 )
+from zen_europe.utils.industry import waste_heat_carrier
 
 if TYPE_CHECKING:
     from zen_creator.model import Model
@@ -46,9 +49,14 @@ class CementProduction(ConversionTechnology):
 
     def _set_output_carrier(self) -> Attribute:
         """
-        Set the output carrier of cement production to clinker.
+        Set the output carrier of cement production to clinker and the waste heat of
+        the kiln.
         """
-        return Attribute(name="output_carrier", default_value=["clinker"], element=self)
+        return Attribute(
+            name="output_carrier",
+            default_value=["clinker", *waste_heat_carrier(self)],
+            element=self,
+        )
 
     # ---------- Required methods that are called during object build ----------
 
@@ -73,11 +81,12 @@ class CementProduction(ConversionTechnology):
 
     def _set_conversion_factor(self) -> Attribute:
         """
-        Return the conversion factor of cement production.
+        Return the conversion factor of cement production, including the waste heat
+        of the kiln.
 
         """
-        clinker_demand_dataset = ClinkerData(source_path=self.source_path)
-        return clinker_demand_dataset.get_conversion_factor_cement_production(self)
+        waste_heat_dataset = IndustrialWasteHeat(self.settings, self.source_path)
+        return waste_heat_dataset.get_conversion_factor_cement_production(self)
 
     def _set_carbon_intensity_technology(self) -> Attribute:
         """

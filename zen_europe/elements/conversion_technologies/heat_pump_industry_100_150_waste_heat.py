@@ -11,7 +11,6 @@ from zen_europe.datasets.dataset_collections.industry_heat_supply import (
 from zen_europe.datasets.dataset_collections.technology_cost_database import (
     TechnologyCostDatabase,
 )
-from zen_europe.datasets.datasets.technology.bever2024 import Bever2024
 from zen_europe.datasets.datasets.technology.technology_diffusion_mannhardt import (
     TechnologyDiffusionMannhardt,
 )
@@ -43,8 +42,12 @@ class HeatPumpIndustry100150WasteHeat(ConversionTechnology):
         )
 
     def _set_input_carrier(self) -> Attribute:
-        """Electricity."""
-        return Attribute("input_carrier", default_value=["electricity"], element=self)
+        """Electricity and recoverable waste heat."""
+        return Attribute(
+            "input_carrier",
+            default_value=["electricity", "recoverable_waste_heat"],
+            element=self,
+        )
 
     def _set_output_carrier(self) -> Attribute:
         """Heat of the 100-150 °C band."""
@@ -55,8 +58,11 @@ class HeatPumpIndustry100150WasteHeat(ConversionTechnology):
     # ---------- Required methods that are called during object build ----------
 
     def _set_conversion_factor(self) -> Attribute:
-        """Electricity per heat: the inverse of the COP of Bever et al. (2024)."""
-        return Bever2024(self.source_path).get_conversion_factor_heat_pump(self)
+        """Electricity per heat (1/COP of Bever et al. (2024)) and recoverable waste
+        heat per heat (1 - 1/COP)."""
+        return IndustryHeatSupply(
+            self.settings, self.source_path
+        ).get_conversion_factor_heat_pump_waste_heat(self)
 
     def _set_lifetime(self) -> Attribute:
         """Lifetime from DEA."""
@@ -95,12 +101,6 @@ class HeatPumpIndustry100150WasteHeat(ConversionTechnology):
         return IndustryHeatSupply(
             self.settings, self.source_path
         ).get_capacity_existing_heat_pump(self)
-
-    def _set_capacity_limit(self) -> Attribute:
-        """First-year cap and waste heat limit."""
-        return IndustryHeatSupply(
-            self.settings, self.source_path
-        ).get_capacity_limit_heat_pump(self)
 
     def _set_capacity_addition_unbounded(self) -> Attribute:
         """Seed from the existing district heating heat pumps."""

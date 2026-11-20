@@ -96,12 +96,6 @@ class HeatPumpIndustry150200Water(ConversionTechnology):
             self.settings, self.source_path
         ).get_capacity_existing_heat_pump(self)
 
-    def _set_capacity_limit(self) -> Attribute:
-        """First-year cap."""
-        return IndustryHeatSupply(
-            self.settings, self.source_path
-        ).get_capacity_limit_heat_pump(self)
-
     def _set_capacity_addition_unbounded(self) -> Attribute:
         """Seed from the existing district heating heat pumps."""
         return IndustryHeatSupply(

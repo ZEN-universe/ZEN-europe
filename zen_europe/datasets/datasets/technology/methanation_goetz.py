@@ -74,6 +74,8 @@ class MethanationGoetz(Dataset[pd.Series]):
                     "unit": "ktCO2/GWh",
                 }
             },
+            {"heat_industry_150_200": {
+                "default_value": 1-efficiency, "unit": "GWh/GWh"}},
         ]
         source = SourceInformation(
             description=(

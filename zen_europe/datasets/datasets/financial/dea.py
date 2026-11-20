@@ -1417,19 +1417,22 @@ class DEA(Dataset[pd.DataFrame]):
             },
         ]
 
-    def get_conversion_factor_SMR_CCS(self):
-        """returns the conversion factor for SMR CCS.
+    def get_conversion_factor_biomass_CCS(self):
+        """returns the conversion factor for biomass CCS.
 
         Values from the DEA technology catalogue for carbon capture,
         transport and storage (Post-combustion carbon capture retrofit -
         100 MW(th) WtE or biomass CHP plant, used as a proxy entry),
-        assuming all heat demand for the capture process is supplied from
-        natural gas.
+        supplied heat demand is 100-150°C and the output heat is recoverable waste heat.
+        This technology is used for multiple CCS applications, including SMR CCS,
+        biomass plant CCS, and natural gas turbine CCS
         https://ens.dk/en/analyses-and-statistics/technology-data-carbon-capture-transport-and-storage
         """
         return [
-            {"natural_gas": {"default_value": 0.833, "unit": "GWh/kilotCO2"}},
+            {"heat_industry_100_150": {"default_value": 0.833, "unit": "GWh/kilotCO2"}},
             {"electricity": {"default_value": 0.03, "unit": "GWh/kilotCO2"}},
+            {"recoverable_waste_heat": {"default_value": 0.833, 
+                                        "unit": "GWh/kilotCO2"}},
         ]
 
     def get_conversion_factor_district_heating_grid(self):
