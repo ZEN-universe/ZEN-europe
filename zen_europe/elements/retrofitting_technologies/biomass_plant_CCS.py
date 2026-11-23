@@ -174,7 +174,7 @@ class BiomassPlantCCS(RetrofittingTechnology):
 
         Values from the DEA technology catalogue for carbon capture,
         transport and storage (Post-combustion carbon capture retrofit -
-        500 MW(th) biomass-fired boiler, used as a proxy entry),
+        100 MW(th) WtE or biomass CHP plant, used as a proxy entry),
         assuming all heat demand is supplied from industry heat (100-150°C).
         https://ens.dk/en/analyses-and-statistics/technology-data-carbon-capture-transport-and-storage
         """
@@ -183,7 +183,7 @@ class BiomassPlantCCS(RetrofittingTechnology):
         cf = dea_dataset.get_conversion_factor_biomass_CCS()
         source = SourceInformation(
             description=(
-                "The conversion factor of SMR CCS is a manually derived "
+                "The conversion factor of biomass plant CCS is a manually derived "
                 "value based on the DEA technology catalogue for carbon "
                 "capture, transport and storage (Post-combustion carbon "
                 "capture retrofit - 100 MW(th) WtE or biomass CHP plant, "

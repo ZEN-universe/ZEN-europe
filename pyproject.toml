@@ -14,7 +14,7 @@ authors = [
 ]
 
 dependencies = [
-    "zen-creator>=2.0.0",
+    "zen-creator>=3.0.0",
     "eurostat",
     "requests",
     "scikit-learn",

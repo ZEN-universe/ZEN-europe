@@ -116,9 +116,9 @@ class SteelDemand(DatasetCollection):
                 "and Eurofer EU exports for CH), given as the default demand, times "
                 "the yearly share of the route as the yearly variation. The secondary "
                 "share starts at the 2024 electric arc furnace share per node "
-                "(worldsteel; Global Iron and Steel Tracker for CH and NO); every "
-                "node closes the same fraction of its gap to a full secondary share "
-                "so that all nodes together reach the Material Economics end share."
+                "(worldsteel; Global Iron and Steel Tracker for CH and NO) and is "
+                "interpolated linearly to its 2050 value, which is at least the "
+                "Material Economics end share (60%) at every node."
             ),
             metadata=self.metadata,
         )

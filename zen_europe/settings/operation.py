@@ -4,7 +4,8 @@ from zen_creator.utils.settings import SettingsCategory
 
 
 class OperationSettings(SettingsCategory):
-    """Max-load settings."""
+    """Operation settings: the maximum load of nuclear plants and the recoverable
+    waste heat of the industrial processes."""
 
     name: ClassVar[str] = "operation"
 

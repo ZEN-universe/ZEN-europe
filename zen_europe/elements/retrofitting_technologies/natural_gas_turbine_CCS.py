@@ -183,7 +183,8 @@ class NaturalGasTurbineCCS(RetrofittingTechnology):
         cf = dea_dataset.get_conversion_factor_biomass_CCS()
         source = SourceInformation(
             description=(
-                "The conversion factor of SMR CCS is a manually derived "
+                "The conversion factor of natural gas turbines with CCS is a "
+                "manually derived "
                 "value based on the DEA technology catalogue for carbon "
                 "capture, transport and storage (Post-combustion carbon "
                 "capture retrofit - 100 MW(th) WtE or biomass CHP plant, "

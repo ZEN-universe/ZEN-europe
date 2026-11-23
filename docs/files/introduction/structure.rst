@@ -90,7 +90,7 @@ carriers and carrier flows, in :ref:`model_structure.index`.
 
 The sectors ``glass``, ``ceramic``, ``paper`` and ``food`` contain the
 production of these products. Their process heat below 200 °C comes from the
-shared ``industrial_heat`` sector (see :doc:`../user_guide/industry`), which
+shared ``industrial_heat`` sector, which
 also holds ``recoverable_waste_heat`` and every technology that consumes or
 produces one of these heat carriers.
 
