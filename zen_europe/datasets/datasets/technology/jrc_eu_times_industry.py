@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import cast
 
 import pandas as pd
 from zen_creator.datasets.datasets.dataset import Dataset
@@ -76,4 +77,4 @@ class JRCEUTIMESIndustry(Dataset[pd.DataFrame]):
         """
         if technology not in self.data.index:
             raise ValueError(f"{technology!r} not found in JRC-EU-TIMES.")
-        return self.data.loc[technology]
+        return cast(pd.Series, self.data.loc[technology])

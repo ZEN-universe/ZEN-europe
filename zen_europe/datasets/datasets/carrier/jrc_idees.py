@@ -427,7 +427,7 @@ class JRCIDEES(Dataset[pd.DataFrame]):
         """Return the first block of year columns, with the row labels as index."""
         first, last = _JRC_IDEES_INDUSTRY_FIRST_YEAR, _JRC_IDEES_INDUSTRY_LAST_YEAR
         data = sheet.iloc[:, 1 : last - first + 2]
-        data.columns = range(first, last + 1)
+        data.columns = pd.Index(range(first, last + 1))
         data.index = sheet[0]
         return data
 
@@ -508,7 +508,7 @@ class JRCIDEES(Dataset[pd.DataFrame]):
         if data.isna().any():
             raise ValueError(f"No {year} value for all thermal carriers of {sector}.")
         # carriers not reported for a node are not consumed there
-        return data.unstack("carrier", fill_value=0.0)
+        return data.unstack("carrier", fill_value=0)
 
     def get_industry_thermal_final_energy_by_fuel(
         self, sector: str, year: int, use: str

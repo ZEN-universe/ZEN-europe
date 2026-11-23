@@ -17,7 +17,7 @@ from zen_europe.utils.constants import Constants
 from zen_europe.utils.utils import instance_cache
 
 if TYPE_CHECKING:
-    from zen_creator import Dataset, Element
+    from zen_creator import Carrier, ConversionTechnology, Dataset
     from zen_creator.utils.settings import Settings
 
 SECTOR = "food"
@@ -57,7 +57,7 @@ class FoodProductionData(DatasetCollection):
 
     # ---------- product ----------
 
-    def get_demand(self, element: Element) -> Attribute:
+    def get_demand(self, element: Carrier) -> Attribute:
         """Get the food demand: today's production."""
         return self._industry.get_demand(
             element,
@@ -69,7 +69,7 @@ class FoodProductionData(DatasetCollection):
 
     # ---------- production technology ----------
 
-    def get_input_carrier(self, element: Element) -> Attribute:
+    def get_input_carrier(self, element: ConversionTechnology) -> Attribute:
         """Get the input carriers of food production."""
         return self._industry.get_input_carrier(
             element,
@@ -78,7 +78,7 @@ class FoodProductionData(DatasetCollection):
             "fuel share cut-off.",
         )
 
-    def get_conversion_factor(self, element: Element) -> Attribute:
+    def get_conversion_factor(self, element: ConversionTechnology) -> Attribute:
         """Get the energy demand per tonne of food."""
         return self._industry.get_conversion_factor(
             element,
@@ -88,7 +88,7 @@ class FoodProductionData(DatasetCollection):
             "is split by the JRC-IDEES fuel mix.",
         )
 
-    def get_capacity_existing(self, element: Element) -> Attribute:
+    def get_capacity_existing(self, element: ConversionTechnology) -> Attribute:
         """Get the existing food production capacity."""
         industry = self._industry
         return industry.get_capacity_existing(
@@ -99,7 +99,7 @@ class FoodProductionData(DatasetCollection):
             f"{industry.describe_capacity_utilisation()}.",
         )
 
-    def get_lifetime(self, element: Element) -> Attribute:
+    def get_lifetime(self, element: ConversionTechnology) -> Attribute:
         """Get the lifetime of the JRC-EU-TIMES proxy process."""
         return self._industry.get_lifetime(
             element,

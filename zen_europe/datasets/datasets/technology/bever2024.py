@@ -9,6 +9,7 @@ from zen_creator.datasets.datasets.metadata import MetaData, SourceInformation
 from zen_creator.utils.attribute import Attribute
 
 from zen_europe.utils.constants import Constants
+from zen_europe.utils.utils import class_attribute
 
 if TYPE_CHECKING:
     from zen_creator import ConversionTechnology
@@ -91,7 +92,9 @@ class Bever2024(Dataset[pd.Series]):
         Returns:
             Attribute: An Attribute object containing the conversion factor.
         """
-        cop = self.get_cop(element.temp_level, element.heat_source)
+        temp_level = class_attribute(element, "temp_level")
+        heat_source = class_attribute(element, "heat_source")
+        cop = self.get_cop(temp_level, heat_source)
         return element.conversion_factor.set_data(
             default_value=[
                 {
@@ -105,9 +108,9 @@ class Bever2024(Dataset[pd.Series]):
                 description=(
                     f"The COP of {cop} is {self.CARNOT_EFFICIENCY:.0%} of the Carnot "
                     "COP between the heat source "
-                    f"({self.SOURCE_TEMPERATURE[element.heat_source]:.0f} °C) and the "
+                    f"({self.SOURCE_TEMPERATURE[heat_source]:.0f} °C) and the "
                     "centre of the temperature band "
-                    f"({self.SUPPLY_TEMPERATURE[element.temp_level]:.0f} °C), based "
+                    f"({self.SUPPLY_TEMPERATURE[temp_level]:.0f} °C), based "
                     "on Bever et al. (2024); the waste heat temperature is based on "
                     "Agora Energiewende and Fraunhofer IEG (2023), Roll-out von "
                     "Großwärmepumpen in Deutschland."

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -54,5 +54,5 @@ class DfTRoadTraffic(Dataset[pd.DataFrame]):
         Args:
             year (int): The year of the data.
         """
-        billion_miles = float(self.data.loc[year, "Cars and Taxis"])
+        billion_miles = float(cast(float, self.data.loc[year, "Cars and Taxis"]))
         return billion_miles * Constants.KM_PER_MILE * 1000

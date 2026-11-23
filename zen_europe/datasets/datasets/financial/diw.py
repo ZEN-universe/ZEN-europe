@@ -85,8 +85,10 @@ class DIW(Dataset[pd.DataFrame]):
     def _set_metadata(self) -> MetaData:
         return MetaData(
             name=self.name,
-            title=("GENeSYS-MOD v2.0 – Enhancing the Global Energy System Model Model " 
-                   "Improvements, Framework Changes, and European Data Set"),
+            title=(
+                "GENeSYS-MOD v2.0 – Enhancing the Global Energy System Model Model "
+                "Improvements, Framework Changes, and European Data Set"
+            ),
             author=[
                 "Thorsten Burandt",
                 "Konstantin Löffler",

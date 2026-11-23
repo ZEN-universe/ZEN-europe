@@ -100,7 +100,6 @@ class Eurofer(Dataset[dict[str, pd.DataFrame]]):
                 f"Node {node} not found in the manual values of the Eurofer dataset."
             )
 
-
     # -------- methods ------------------------
 
 

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 from zen_europe.datasets.datasets.financial.ECB import ECBInflation
 
@@ -14,6 +14,7 @@ from zen_creator.datasets.datasets.dataset import Dataset
 from zen_creator.datasets.datasets.metadata import MetaData, SourceInformation
 
 from zen_europe.utils.constants import Constants
+from zen_europe.utils.utils import class_attribute
 
 # fuel consumption of the cement kiln routes (GJ/t clinker); hydrogen and waste are
 # the alternative fuel mix
@@ -311,7 +312,7 @@ class Aidres(Dataset[dict[str, pd.DataFrame]]):
                 process CO2, weighted by EU production share (Tables 19, 21 and 23).
         """
         glass = self.data["glass"]
-        return float(glass["emit_elec"].dot(glass["eu_production_share"]))
+        return float(cast(float, glass["emit_elec"].dot(glass["eu_production_share"])))
 
     def get_max_fuel_share_glass(self, name: str) -> float:
         """Share of the glass fuel demand that the glass fuel retrofit `name` can
@@ -349,8 +350,10 @@ class Aidres(Dataset[dict[str, pd.DataFrame]]):
         return element.conversion_factor.set_data(
             default_value=[
                 {
-                    element.fuel: {
-                        "default_value": KILN_FUEL_INPUT[element.fuel],
+                    class_attribute(element, "fuel"): {
+                        "default_value": KILN_FUEL_INPUT[
+                            class_attribute(element, "fuel")
+                        ],
                         "unit": "GW/GW",
                     }
                 }

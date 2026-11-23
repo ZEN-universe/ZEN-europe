@@ -15,7 +15,12 @@ from zen_europe.datasets.datasets.carrier.aidres import Aidres
 from zen_europe.utils.utils import instance_cache
 
 if TYPE_CHECKING:
-    from zen_creator import Dataset, Element
+    from zen_creator import (
+        Carrier,
+        ConversionTechnology,
+        Dataset,
+        RetrofittingTechnology,
+    )
     from zen_creator.utils.settings import Settings
 
 SECTOR = "glass"
@@ -50,7 +55,7 @@ class GlassProductionData(DatasetCollection):
 
     # ---------- product ----------
 
-    def get_demand(self, element: Element) -> Attribute:
+    def get_demand(self, element: Carrier) -> Attribute:
         """Get the glass demand: today's production."""
         return self._industry.get_demand(
             element,
@@ -62,7 +67,7 @@ class GlassProductionData(DatasetCollection):
 
     # ---------- production technology ----------
 
-    def get_input_carrier(self, element: Element) -> Attribute:
+    def get_input_carrier(self, element: ConversionTechnology) -> Attribute:
         """Get the input carriers of glass production."""
         return self._industry.get_input_carrier(
             element,
@@ -71,7 +76,7 @@ class GlassProductionData(DatasetCollection):
             "supplied as glass fuel.",
         )
 
-    def get_conversion_factor(self, element: Element) -> Attribute:
+    def get_conversion_factor(self, element: ConversionTechnology) -> Attribute:
         """Get the energy demand per tonne of glass."""
         return self._industry.get_conversion_factor(
             element,
@@ -80,7 +85,7 @@ class GlassProductionData(DatasetCollection):
             "weighted by EU production share; the fuel is supplied as glass fuel.",
         )
 
-    def get_capacity_existing(self, element: Element) -> Attribute:
+    def get_capacity_existing(self, element: ConversionTechnology) -> Attribute:
         """Get the existing glass production capacity."""
         return self._industry.get_capacity_existing(
             element,
@@ -89,7 +94,7 @@ class GlassProductionData(DatasetCollection):
             "at 8760 hours per year; CH, NO and UK use a proxy node.",
         )
 
-    def get_lifetime(self, element: Element) -> Attribute:
+    def get_lifetime(self, element: ConversionTechnology) -> Attribute:
         """Get the lifetime from JRC-EU-TIMES."""
         aidres = cast(Aidres, self.data["aidres"])
         return self._industry.get_lifetime(
@@ -100,7 +105,9 @@ class GlassProductionData(DatasetCollection):
             "(2023) EU production shares of the glass routes.",
         )
 
-    def get_carbon_intensity_technology(self, element: Element) -> Attribute:
+    def get_carbon_intensity_technology(
+        self, element: ConversionTechnology
+    ) -> Attribute:
         """Get the process CO2 of glass production."""
         intensity = self.calculate_process_emissions()
         return element.carbon_intensity_technology.set_data(
@@ -120,14 +127,16 @@ class GlassProductionData(DatasetCollection):
 
     # ---------- post-combustion capture ----------
 
-    def get_conversion_factor_post_comb(self, element: Element) -> Attribute:
+    def get_conversion_factor_post_comb(
+        self, element: RetrofittingTechnology
+    ) -> Attribute:
         """Get the conversion factor of glass_post_comb."""
         return self._industry.get_conversion_factor_post_comb(
             element, self.calculate_fuel_shares()
         )
 
     def get_retrofit_flow_coupling_factor_post_comb(
-        self, element: Element
+        self, element: RetrofittingTechnology
     ) -> Attribute:
         """Get the captured process CO2 per tonne of glass."""
         return self._industry.get_retrofit_flow_coupling_factor_post_comb(
@@ -136,7 +145,9 @@ class GlassProductionData(DatasetCollection):
 
     # ---------- glass fuel retrofits ----------
 
-    def get_retrofit_flow_coupling_factor_fuel(self, element: Element) -> Attribute:
+    def get_retrofit_flow_coupling_factor_fuel(
+        self, element: RetrofittingTechnology
+    ) -> Attribute:
         """Get the glass fuel a glass fuel retrofit supplies at most per tonne of
         glass: the fuel's maximum share times the glass fuel demand."""
         aidres = cast(Aidres, self.data["aidres"])

@@ -15,7 +15,7 @@ from zen_europe.datasets.datasets.carrier.rehfeldt2017 import Rehfeldt2017
 from zen_europe.utils.utils import instance_cache
 
 if TYPE_CHECKING:
-    from zen_creator import Dataset, Element
+    from zen_creator import Carrier, ConversionTechnology, Dataset
     from zen_creator.utils.settings import Settings
 
 SECTOR = "paper"
@@ -50,7 +50,7 @@ class PaperProductionData(DatasetCollection):
 
     # ---------- product ----------
 
-    def get_demand(self, element: Element) -> Attribute:
+    def get_demand(self, element: Carrier) -> Attribute:
         """Get the paper demand: today's production."""
         return self._industry.get_demand(
             element,
@@ -61,7 +61,7 @@ class PaperProductionData(DatasetCollection):
 
     # ---------- production technology ----------
 
-    def get_input_carrier(self, element: Element) -> Attribute:
+    def get_input_carrier(self, element: ConversionTechnology) -> Attribute:
         """Get the input carriers of paper production."""
         return self._industry.get_input_carrier(
             element,
@@ -70,7 +70,7 @@ class PaperProductionData(DatasetCollection):
             "fuel share cut-off.",
         )
 
-    def get_conversion_factor(self, element: Element) -> Attribute:
+    def get_conversion_factor(self, element: ConversionTechnology) -> Attribute:
         """Get the energy demand per tonne of paper."""
         return self._industry.get_conversion_factor(
             element,
@@ -80,7 +80,7 @@ class PaperProductionData(DatasetCollection):
             "is split by the JRC-IDEES fuel mix.",
         )
 
-    def get_capacity_existing(self, element: Element) -> Attribute:
+    def get_capacity_existing(self, element: ConversionTechnology) -> Attribute:
         """Get the existing paper production capacity."""
         return self._industry.get_capacity_existing(
             element,
@@ -91,7 +91,7 @@ class PaperProductionData(DatasetCollection):
             f"{self._industry.describe_capacity_utilisation()}.",
         )
 
-    def get_lifetime(self, element: Element) -> Attribute:
+    def get_lifetime(self, element: ConversionTechnology) -> Attribute:
         """Get the lifetime from JRC-EU-TIMES."""
         rehfeldt = cast(Rehfeldt2017, self.data["rehfeldt2017"])
         return self._industry.get_lifetime(

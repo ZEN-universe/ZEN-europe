@@ -28,7 +28,12 @@ from zen_europe.utils.utils import (
 )
 
 if TYPE_CHECKING:
-    from zen_creator import Dataset, Element
+    from zen_creator import (
+        Carrier,
+        ConversionTechnology,
+        Dataset,
+        RetrofittingTechnology,
+    )
     from zen_creator.utils.settings import Settings
 
 # year of the production, energy and heat statistics of the industry heat sectors
@@ -72,7 +77,7 @@ class IndustryProductionData(DatasetCollection):
     # ---------- attributes of the products and production technologies ----------
 
     def get_demand(
-        self, element: Element, production: pd.Series, description: str
+        self, element: Carrier, production: pd.Series, description: str
     ) -> Attribute:
         """Get the product demand: today's physical production `production` (t/h),
         flat over the year."""
@@ -90,7 +95,10 @@ class IndustryProductionData(DatasetCollection):
         )
 
     def get_input_carrier(
-        self, element: Element, conversion_factors: pd.Series, description: str
+        self,
+        element: ConversionTechnology,
+        conversion_factors: pd.Series,
+        description: str,
     ) -> Attribute:
         """Get the input carriers of a production technology: the carriers of its
         `conversion_factors`."""
@@ -100,7 +108,10 @@ class IndustryProductionData(DatasetCollection):
         )
 
     def get_conversion_factor(
-        self, element: Element, conversion_factors: pd.Series, description: str
+        self,
+        element: ConversionTechnology,
+        conversion_factors: pd.Series,
+        description: str,
     ) -> Attribute:
         """Get the conversion factor of a production technology: the energy demand
         `conversion_factors` (GW per t/h) per input carrier."""
@@ -124,7 +135,7 @@ class IndustryProductionData(DatasetCollection):
         )
 
     def get_capacity_existing(
-        self, element: Element, capacity: pd.Series, description: str
+        self, element: ConversionTechnology, capacity: pd.Series, description: str
     ) -> Attribute:
         """Get the existing production capacity `capacity` (t/h), built evenly over
         the lifetime."""
@@ -154,7 +165,7 @@ class IndustryProductionData(DatasetCollection):
     # ---------- post-combustion capture ----------
 
     def get_conversion_factor_post_comb(
-        self, element: Element, fuel_shares: pd.Series
+        self, element: RetrofittingTechnology, fuel_shares: pd.Series
     ) -> Attribute:
         """
         Get the conversion factor of the post-combustion capture of a sector.
@@ -198,7 +209,7 @@ class IndustryProductionData(DatasetCollection):
         )
 
     def get_retrofit_flow_coupling_factor_post_comb(
-        self, element: Element, intensity: float
+        self, element: RetrofittingTechnology, intensity: float
     ) -> Attribute:
         """Get the captured process CO2 per tonne of product, for process emissions
         of `intensity` t per t of product."""
@@ -219,10 +230,11 @@ class IndustryProductionData(DatasetCollection):
 
     # ---------- fuel retrofits ----------
 
-    def get_lifetime_fuel_retrofit(self, element: Element) -> Attribute:
+    def get_lifetime_fuel_retrofit(self, element: RetrofittingTechnology) -> Attribute:
         """Get the lifetime of a fuel retrofit: that of its base technology, since the
         fuel supply is tied to the operation of the kiln or furnace."""
-        base = element.model.conversion_technologies[element.base_technology_name]
+        base_name = cast(str, element.base_technology_name)
+        base = element.model.conversion_technologies[base_name]
         return element.lifetime.set_data(
             default_value=base.lifetime.default_value,
             unit=base.lifetime.unit,
@@ -236,12 +248,16 @@ class IndustryProductionData(DatasetCollection):
         )
 
     def get_retrofit_flow_coupling_factor_fuel(
-        self, element: Element, max_share: float, fuel_intensity: float, reason: str
+        self,
+        element: RetrofittingTechnology,
+        max_share: float,
+        fuel_intensity: float,
+        reason: str,
     ) -> Attribute:
         """Get the sector fuel a fuel retrofit supplies at most per tonne of product:
         the fuel's maximum share `max_share` times the sector fuel demand
         `fuel_intensity` (GWh per t of product)."""
-        sector = element.retrofit_reference_carrier.default_value[0]
+        sector = cast(list[str], element.retrofit_reference_carrier.default_value)[0]
         return element.retrofit_flow_coupling_factor.set_data(
             default_value=round(max_share * fuel_intensity, 12),
             unit="GWh/tproduct",
@@ -271,8 +287,8 @@ class IndustryProductionData(DatasetCollection):
         """
         rehfeldt = cast(Rehfeldt2017, self.data["rehfeldt2017"])
         temperatures = rehfeldt.get_sub_processes(sector).loc[weights.index]
-        share_0_100 = weights.dot(temperatures["temp_lt100"])
-        share_100_200 = weights.dot(temperatures["temp_100_200"])
+        share_0_100 = cast(float, weights.dot(temperatures["temp_lt100"]))
+        share_100_200 = cast(float, weights.dot(temperatures["temp_100_200"]))
         efficiency = self.reference_boiler_efficiency
         heat_0_100 = fuel_total * share_0_100 * efficiency
         heat_100_200 = fuel_total * share_100_200 * efficiency
@@ -292,7 +308,9 @@ class IndustryProductionData(DatasetCollection):
         sub-processes, weighted by activity."""
         rehfeldt = cast(Rehfeldt2017, self.data["rehfeldt2017"])
         weights = rehfeldt.get_activity_weights(sector)
-        electricity = weights.dot(rehfeldt.get_sub_processes(sector)["elec_GJ_t"])
+        electricity = cast(
+            float, weights.dot(rehfeldt.get_sub_processes(sector)["elec_GJ_t"])
+        )
         return self.calculate_energy_intensity(
             sector, self.calculate_fuel_total_rehfeldt(sector), electricity, weights
         )
@@ -302,7 +320,9 @@ class IndustryProductionData(DatasetCollection):
         sub-processes, weighted by activity."""
         rehfeldt = cast(Rehfeldt2017, self.data["rehfeldt2017"])
         weights = rehfeldt.get_activity_weights(sector)
-        return float(weights.dot(rehfeldt.get_sub_processes(sector)["fuels_GJ_t"]))
+        return cast(
+            float, weights.dot(rehfeldt.get_sub_processes(sector)["fuels_GJ_t"])
+        )
 
     def calculate_heat_conversion_factors(
         self, sector: str, energy: pd.Series
@@ -343,9 +363,12 @@ class IndustryProductionData(DatasetCollection):
         """Fuel mix of the sector's thermal energy (JRC-IDEES, EU27), fuels below
         the cut-off dropped."""
         idees = cast(JRCIDEES, self.data["jrc_idees"])
-        thermal = idees.get_industry_thermal_final_energy_by_fuel(
-            sector, DATA_YEAR, "production"
-        ).loc[IDEES_EU]
+        thermal = cast(
+            pd.Series,
+            idees.get_industry_thermal_final_energy_by_fuel(
+                sector, DATA_YEAR, "production"
+            ).loc[IDEES_EU],
+        )
         shares = (thermal / thermal.sum()).drop("other", errors="ignore")
         shares = shares[shares >= FUEL_SHARE_CUTOFF]
         return shares / shares.sum()
@@ -412,7 +435,7 @@ class IndustryProductionData(DatasetCollection):
 
     def get_lifetime(
         self,
-        element: Element,
+        element: ConversionTechnology,
         processes: dict[str, str],
         weights: pd.Series,
         description: str,
@@ -427,7 +450,9 @@ class IndustryProductionData(DatasetCollection):
             }
         )
         return element.lifetime.set_data(
-            default_value=float(round(lifetimes.dot(weights[lifetimes.index]))),
+            default_value=float(
+                round(cast(float, lifetimes.dot(weights[lifetimes.index])))
+            ),
             source=SourceInformation(description=description, metadata=self.metadata),
         )
 

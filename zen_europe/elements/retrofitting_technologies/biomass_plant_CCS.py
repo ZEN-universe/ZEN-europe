@@ -50,7 +50,8 @@ class BiomassPlantCCS(RetrofittingTechnology):
 
     def _set_input_carrier(self) -> Attribute:
         """
-        Sets the input carrier of biomass plant CCS to industry heat (100-150°C) and electricity.
+        Set the input carrier of biomass plant CCS to industry heat (100-150°C)
+        and electricity.
         """
         return Attribute(
             name="input_carrier",
@@ -60,11 +61,14 @@ class BiomassPlantCCS(RetrofittingTechnology):
 
     def _set_output_carrier(self) -> Attribute:
         """
-        Set the output carrier of biomass plant CCS to carbon and recoverable waste heat.
+        Set the output carrier of biomass plant CCS to carbon and recoverable
+        waste heat.
         """
-        return Attribute(name="output_carrier", 
-                         default_value=["carbon", "recoverable_waste_heat"], 
-                         element=self)
+        return Attribute(
+            name="output_carrier",
+            default_value=["carbon", "recoverable_waste_heat"],
+            element=self,
+        )
 
     def _set_retrofit_reference_carrier(self) -> Attribute:
         """
@@ -73,6 +77,7 @@ class BiomassPlantCCS(RetrofittingTechnology):
         return Attribute(
             name="retrofit_reference_carrier", default_value=["carbon"], element=self
         )
+
     # ---------- Required methods that are called during object build ----------
 
     def _set_lifetime(self) -> Attribute:

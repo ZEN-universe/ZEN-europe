@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import cast
 
 import pandas as pd
 from zen_creator.datasets.datasets.dataset import Dataset
@@ -49,7 +50,7 @@ class Rehfeldt2017(Dataset[pd.DataFrame]):
                 share of the heat per temperature bin (columns `temp_*`), indexed
                 by sub-process.
         """
-        return self.data.loc[sector]
+        return cast(pd.DataFrame, self.data.loc[sector])
 
     def get_activity_weights(self, sector: str) -> pd.Series:
         """Share of each sub-process in the sector's activity."""

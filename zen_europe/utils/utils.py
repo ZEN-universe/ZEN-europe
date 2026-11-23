@@ -6,12 +6,26 @@ import pandas as pd
 
 # instance_cache memoizes a method per instance and arguments, keeping the datasets
 # read for the cached value in sources.md
-from zen_creator import Technology, instance_cache  # noqa: F401
+from zen_creator import Attribute, Technology, instance_cache  # noqa: F401
 
 MIN_CAPACITY_ADDITION = 1e-5
 # ISO 3166-1 alpha-2 codes that differ from the NUTS0 codes of the model nodes
 ISO2_TO_NODE = {"GR": "EL", "GB": "UK"}
 NODE_TO_ISO2 = {node: iso2 for iso2, node in ISO2_TO_NODE.items()}
+
+
+def conversion_entries(attr: Attribute) -> list[dict[str, Any]]:
+    """The entries of a conversion factor attribute: one dict per input carrier."""
+    return cast(list[dict[str, Any]], attr.default_value)
+
+
+def class_attribute(element: Technology, name: str) -> Any:
+    """Read a class attribute that only the concrete element class defines.
+
+    Elements such as the industrial boilers or heat pumps define attributes like
+    ``sector`` or ``temp_level`` that their ``zen_creator`` base class does not know.
+    """
+    return getattr(element, name)
 
 
 # maps the country names used in the raw source file to NUTS0 node codes,

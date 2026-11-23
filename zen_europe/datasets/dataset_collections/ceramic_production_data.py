@@ -20,7 +20,12 @@ from zen_europe.utils.constants import Constants
 from zen_europe.utils.utils import instance_cache
 
 if TYPE_CHECKING:
-    from zen_creator import Dataset, Element
+    from zen_creator import (
+        Carrier,
+        ConversionTechnology,
+        Dataset,
+        RetrofittingTechnology,
+    )
     from zen_creator.utils.settings import Settings
 
 SECTOR = "ceramic"
@@ -56,7 +61,7 @@ class CeramicProductionData(DatasetCollection):
 
     # ---------- product ----------
 
-    def get_demand(self, element: Element) -> Attribute:
+    def get_demand(self, element: Carrier) -> Attribute:
         """Get the ceramic demand: today's production."""
         return self._industry.get_demand(
             element,
@@ -69,7 +74,7 @@ class CeramicProductionData(DatasetCollection):
 
     # ---------- production technology ----------
 
-    def get_input_carrier(self, element: Element) -> Attribute:
+    def get_input_carrier(self, element: ConversionTechnology) -> Attribute:
         """Get the input carriers of ceramic production."""
         return self._industry.get_input_carrier(
             element,
@@ -78,7 +83,7 @@ class CeramicProductionData(DatasetCollection):
             "fuel; its fuel switching is modeled by the ceramic fuel retrofits.",
         )
 
-    def get_conversion_factor(self, element: Element) -> Attribute:
+    def get_conversion_factor(self, element: ConversionTechnology) -> Attribute:
         """Get the energy demand per tonne of ceramic."""
         return self._industry.get_conversion_factor(
             element,
@@ -88,7 +93,7 @@ class CeramicProductionData(DatasetCollection):
             "200 °C is supplied as ceramic fuel.",
         )
 
-    def get_capacity_existing(self, element: Element) -> Attribute:
+    def get_capacity_existing(self, element: ConversionTechnology) -> Attribute:
         """Get the existing ceramic production capacity."""
         industry = self._industry
         return industry.get_capacity_existing(
@@ -99,7 +104,7 @@ class CeramicProductionData(DatasetCollection):
             f"{industry.describe_capacity_utilisation()}.",
         )
 
-    def get_lifetime(self, element: Element) -> Attribute:
+    def get_lifetime(self, element: ConversionTechnology) -> Attribute:
         """Get the lifetime of the JRC-EU-TIMES proxy process."""
         return self._industry.get_lifetime(
             element,
@@ -109,7 +114,9 @@ class CeramicProductionData(DatasetCollection):
             f"process heat of non-metallic minerals ({JRC_PROCESS}) is used.",
         )
 
-    def get_carbon_intensity_technology(self, element: Element) -> Attribute:
+    def get_carbon_intensity_technology(
+        self, element: ConversionTechnology
+    ) -> Attribute:
         """Get the process CO2 of ceramic production."""
         intensity = self.calculate_process_emissions()
         return element.carbon_intensity_technology.set_data(
@@ -133,14 +140,16 @@ class CeramicProductionData(DatasetCollection):
 
     # ---------- post-combustion capture ----------
 
-    def get_conversion_factor_post_comb(self, element: Element) -> Attribute:
+    def get_conversion_factor_post_comb(
+        self, element: RetrofittingTechnology
+    ) -> Attribute:
         """Get the conversion factor of ceramic_post_comb."""
         return self._industry.get_conversion_factor_post_comb(
             element, self.calculate_fuel_shares()
         )
 
     def get_retrofit_flow_coupling_factor_post_comb(
-        self, element: Element
+        self, element: RetrofittingTechnology
     ) -> Attribute:
         """Get the captured process CO2 per tonne of ceramic."""
         return self._industry.get_retrofit_flow_coupling_factor_post_comb(
@@ -150,7 +159,7 @@ class CeramicProductionData(DatasetCollection):
     # ---------- ceramic fuel retrofits ----------
 
     def get_retrofit_flow_coupling_factor_natural_gas(
-        self, element: Element
+        self, element: RetrofittingTechnology
     ) -> Attribute:
         """Get the ceramic fuel natural_gas_to_ceramic_fuel supplies at most per
         tonne of ceramic: the whole ceramic fuel demand."""
@@ -162,7 +171,7 @@ class CeramicProductionData(DatasetCollection):
         )
 
     def get_retrofit_flow_coupling_factor_switchable(
-        self, element: Element
+        self, element: RetrofittingTechnology
     ) -> Attribute:
         """Get the ceramic fuel a switching retrofit (hydrogen, electricity) supplies
         at most per tonne of ceramic: the switchable share of the ceramic fuel
@@ -247,7 +256,7 @@ class CeramicProductionData(DatasetCollection):
         emission factors; biomass is carbon-neutral."""
         ipcc = cast(IPCCEmissionFactors, self.data["ipcc_emission_factors"])
         return sum(
-            fuel_share * ipcc.get_emission_factor(carrier) / Constants.GJ_PER_MWH
+            fuel_share * ipcc.get_emission_factor(str(carrier)) / Constants.GJ_PER_MWH
             for carrier, fuel_share in self.calculate_fuel_shares().items()
         )
 

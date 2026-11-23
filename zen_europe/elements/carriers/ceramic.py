@@ -25,4 +25,3 @@ class Ceramic(Carrier):
     def _set_demand(self) -> Attribute:
         """Demand from JRC-IDEES and Rehfeldt (2017)."""
         return CeramicProductionData(self.settings, self.source_path).get_demand(self)
-

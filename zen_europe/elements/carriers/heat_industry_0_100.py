@@ -3,8 +3,9 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from zen_creator import Attribute
-from zen_creator.elements import Carrier
 from zen_creator.datasets.datasets.metadata import AssumptionInformation
+from zen_creator.elements import Carrier
+
 if TYPE_CHECKING:
     from zen_creator.model import Model
 
@@ -25,7 +26,8 @@ class HeatIndustry0100(Carrier):
             default_value=np.inf,
             unit=self.power_unit,
             source=AssumptionInformation(
-                description="Allow unlimited export to blow off excess heat."),
+                description="Allow unlimited export to blow off excess heat."
+            ),
         )
 
     def _set_availability_export_yearly(self) -> Attribute:
@@ -34,5 +36,6 @@ class HeatIndustry0100(Carrier):
             default_value=np.inf,
             unit=self.energy_unit,
             source=AssumptionInformation(
-                description="Allow unlimited export to blow off excess heat."),
+                description="Allow unlimited export to blow off excess heat."
+            ),
         )

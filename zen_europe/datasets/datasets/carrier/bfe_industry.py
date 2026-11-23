@@ -35,8 +35,8 @@ class BFEIndustry(Dataset[pd.DataFrame]):
         return MetaData(
             name=self.name,
             title="Energieverbrauch in der Industrie und im Dienstleistungssektor",
-            author=["Bundesamt für Energie BFE"],
-            publication="Bundesamt für Energie BFE",
+            author=["Bundesamt für Energie (BFE)"],
+            publication="Bundesamt für Energie (BFE)",
             publication_year=2025,
             url="https://pubdb.bfe.admin.ch/de/publication/download/12230",
             note="Branches 1 (food), 3 (paper) and 6 (other non-metallic minerals).",
@@ -74,7 +74,7 @@ class BFEIndustry(Dataset[pd.DataFrame]):
             pd.Series: Fuel consumption in TJ per boiler fuel, in the latest year up
                 to `year`.
         """
-        latest_year = max(y for y in self.data.columns if y <= year)
+        latest_year = max(y for y in self.data.columns if int(y) <= year)
         consumption = self.data[latest_year]
         return consumption.groupby(
             consumption.index.get_level_values("sheet").map(SHEETS)

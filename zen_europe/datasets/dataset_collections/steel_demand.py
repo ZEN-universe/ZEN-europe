@@ -59,8 +59,8 @@ class SteelDemand(DatasetCollection):
 
         The production is the 2020-2024 mean of Eurofer; nodes missing there take the
         2024 worldsteel production (PT, UK), NO and CH the manual values. The secondary
-        share starts at the 2024 electric arc furnace share of each node. 
-        We assume that in 2050, every node reaches at least the 60% secondary share 
+        share starts at the 2024 electric arc furnace share of each node.
+        We assume that in 2050, every node reaches at least the 60% secondary share
         of Material Economics. This raises the total secondary share of all nodes
         above the Material Economics share.
         Another approach would be that every node
@@ -82,8 +82,8 @@ class SteelDemand(DatasetCollection):
         production["CH"] = eurofer.get_manual_steel_demand_eurofer("CH")
         # worldsteel lists every EU producer, so the other nodes produce no steel
         production = (
-            production.reindex(nodes, fill_value=0.0) 
-            * 1000 / Constants.HOURS_PER_YEAR)  # Mt/a -> kt/h
+            production.reindex(nodes, fill_value=0.0) * 1000 / Constants.HOURS_PER_YEAR
+        )  # Mt/a -> kt/h
 
         share_start = (
             worldsteel.get_secondary_steel_share()

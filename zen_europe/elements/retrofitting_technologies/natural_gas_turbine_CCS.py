@@ -50,7 +50,8 @@ class NaturalGasTurbineCCS(RetrofittingTechnology):
 
     def _set_input_carrier(self) -> Attribute:
         """
-        Sets the input carrier of natural gas turbines with CCS to industry heat (100-150°C) and electricity.
+        Set the input carrier of natural gas turbines with CCS to industry heat
+        (100-150°C) and electricity.
         """
         return Attribute(
             name="input_carrier",
@@ -60,11 +61,14 @@ class NaturalGasTurbineCCS(RetrofittingTechnology):
 
     def _set_output_carrier(self) -> Attribute:
         """
-        Set the output carrier of natural gas turbines with CCS to carbon and recoverable waste heat.
+        Set the output carrier of natural gas turbines with CCS to carbon and
+        recoverable waste heat.
         """
-        return Attribute(name="output_carrier", 
-                         default_value=["carbon", "recoverable_waste_heat"], 
-                         element=self)
+        return Attribute(
+            name="output_carrier",
+            default_value=["carbon", "recoverable_waste_heat"],
+            element=self,
+        )
 
     def _set_retrofit_reference_carrier(self) -> Attribute:
         """

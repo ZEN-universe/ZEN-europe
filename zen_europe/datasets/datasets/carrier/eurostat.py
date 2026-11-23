@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import hashlib
 import json
@@ -561,7 +561,7 @@ class Eurostat(Dataset[pd.DataFrame]):
         )
         data = self._convert_availability(data, {}, cutoff_year=year)
         data = data.droplevel("nrg_bal").astype(float).fillna(0.0)
-        data = data.T.groupby(_PAPER_BIOMASS_WASTE_SIEC).sum().T
+        data = data.T.groupby(pd.Series(_PAPER_BIOMASS_WASTE_SIEC)).sum().T
         total = data.sum(axis=1)
         share = data.get("waste", 0.0) / total.where(total > 0)
         share.index.name = "node"

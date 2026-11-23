@@ -62,9 +62,11 @@ class SMR_CCS(RetrofittingTechnology):
         """
         Set the output carrier of SMR CCS to carbon and recoverable waste heat.
         """
-        return Attribute(name="output_carrier", 
-                         default_value=["carbon", "recoverable_waste_heat"], 
-                         element=self)
+        return Attribute(
+            name="output_carrier",
+            default_value=["carbon", "recoverable_waste_heat"],
+            element=self,
+        )
 
     def _set_retrofit_reference_carrier(self) -> Attribute:
         """

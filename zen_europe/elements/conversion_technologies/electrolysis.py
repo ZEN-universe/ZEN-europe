@@ -56,8 +56,9 @@ class Electrolysis(ConversionTechnology):
         Set the output carrier of electrolysis to hydrogen.
         """
         return Attribute(
-            name="output_carrier", 
-            default_value=["hydrogen", "recoverable_waste_heat"], element=self
+            name="output_carrier",
+            default_value=["hydrogen", "recoverable_waste_heat"],
+            element=self,
         )
 
     # ---------- Required methods that are called during object build ----------

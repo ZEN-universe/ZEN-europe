@@ -83,7 +83,12 @@ class ClinkerData(DatasetCollection):
         for country in missing_countries:
             data.loc[country] = bgs_dataset.get_manual_cement_demand(country)
 
-        data = data.sort_index() * 1000 / Constants.HOURS_PER_YEAR * aidres_dataset.get_CEM2_clinker_ratio()
+        data = (
+            data.sort_index()
+            * 1000
+            / Constants.HOURS_PER_YEAR
+            * aidres_dataset.get_CEM2_clinker_ratio()
+        )
 
         data.index.name = "node"
         return data
@@ -213,9 +218,9 @@ class ClinkerData(DatasetCollection):
         aidres_dataset = cast(Aidres, self.data["aidres"])
         me_dataset = cast(MaterialEconomics, self.data["material_economics"])
         share = aidres_dataset.get_share_capacity_existing_cement_fuel()
-        assert element.name in share, (
-            f"Existing capacity share for {element.name} not found."
-        )
+        assert (
+            element.name in share
+        ), f"Existing capacity share for {element.name} not found."
         clinker_element = element.model.carriers["clinker"]
         clinker_demand = self._calculate_clinker_demand(clinker_element)
         fuel = me_dataset.get_fuel_consumption_cement_kiln()  # GJ/t

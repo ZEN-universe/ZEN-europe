@@ -25,4 +25,3 @@ class Food(Carrier):
     def _set_demand(self) -> Attribute:
         """Demand from Rehfeldt (2017) and FAOSTAT."""
         return FoodProductionData(self.settings, self.source_path).get_demand(self)
-

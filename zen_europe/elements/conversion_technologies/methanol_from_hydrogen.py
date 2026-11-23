@@ -39,14 +39,16 @@ class MethanolFromHydrogen(ConversionTechnology):
         """
         Sets the input carrier of methanol from hydrogen to hydrogen,
         electricity and carbon. Steam (150-200°C) is added as an input, with waste heat
-        as a by-product. 
+        as a by-product.
         """
         return Attribute(
             name="input_carrier",
-            default_value=["hydrogen", 
-                           "electricity", 
-                           "carbon", 
-                           "heat_industry_150_200"],
+            default_value=[
+                "hydrogen",
+                "electricity",
+                "carbon",
+                "heat_industry_150_200",
+            ],
             element=self,
         )
 
@@ -55,8 +57,9 @@ class MethanolFromHydrogen(ConversionTechnology):
         Set the output carrier of methanol from hydrogen to methanol.
         """
         return Attribute(
-            name="output_carrier", 
-            default_value=["methanol","recoverable_waste_heat"], element=self
+            name="output_carrier",
+            default_value=["methanol", "recoverable_waste_heat"],
+            element=self,
         )
 
     # ---------- Required methods that are called during object build ----------

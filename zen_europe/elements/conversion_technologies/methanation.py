@@ -48,8 +48,9 @@ class Methanation(ConversionTechnology):
         Set the output carrier of methanation to natural gas.
         """
         return Attribute(
-            name="output_carrier", 
-            default_value=["natural_gas","heat_industry_150_200"], element=self
+            name="output_carrier",
+            default_value=["natural_gas", "heat_industry_150_200"],
+            element=self,
         )
 
     # ---------- Required methods that are called during object build ----------

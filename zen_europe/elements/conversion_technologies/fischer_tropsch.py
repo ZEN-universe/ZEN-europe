@@ -50,8 +50,9 @@ class FischerTropsch(ConversionTechnology):
         district heat.
         """
         return Attribute(
-            name="output_carrier", 
-            default_value=["oil", "heat_industry_100_150"], element=self
+            name="output_carrier",
+            default_value=["oil", "heat_industry_100_150"],
+            element=self,
         )
 
     # ---------- Required methods that are called during object build ----------

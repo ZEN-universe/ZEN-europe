@@ -14,7 +14,7 @@ class SeenergiesIndustrialWasteHeat(Dataset[dict[str, pd.DataFrame]]):
     """
     sEEnergies industrial waste heat dataset class.
 
-    This class implements the specific behavior for the 
+    This class implements the specific behavior for the
     sEEnergies industrial waste heat dataset.
     """
 
@@ -29,14 +29,16 @@ class SeenergiesIndustrialWasteHeat(Dataset[dict[str, pd.DataFrame]]):
             title=(
                 "sEEnergies - Excess heat potentials of industrial sites in Europe D5.1"
             ),
-            author=["Tobias Fleiter",
-                    "Pia Manz",
-                    "Marius Neuwirth",
-                    "Felix Mildner",
-                    "Urban Persson",
-                    "Katerina Kermeli",
-                    "Wina Crijns-Graus",
-                    "Cathelijne Rutten",],
+            author=[
+                "Tobias Fleiter",
+                "Pia Manz",
+                "Marius Neuwirth",
+                "Felix Mildner",
+                "Urban Persson",
+                "Katerina Kermeli",
+                "Wina Crijns-Graus",
+                "Cathelijne Rutten",
+            ],
             publication="Horizon 2020 - sEEnergies",
             publication_year=2020,
             url="https://www.seenergies.eu/wp-content/uploads/sites/25/2020/04/sEEnergies-WP5_D5.1-Excess_heat_potentials_of_industrial_sites_in_Europe.pdf",
@@ -46,11 +48,11 @@ class SeenergiesIndustrialWasteHeat(Dataset[dict[str, pd.DataFrame]]):
     def _set_path(self) -> Path | None:
         return None
 
-    def _set_data(self) -> pd.Series:
+    def _set_data(self) -> dict[str, pd.DataFrame]:
         """
         No data to be set.
         """
-        return pd.Series({})
+        return {}
 
     # -------- methods ------------------------
     def get_waste_heat_share_glass(self) -> float:
@@ -106,6 +108,4 @@ class SeenergiesIndustrialWasteHeat(Dataset[dict[str, pd.DataFrame]]):
         Paper making, board&packaging paper, difference between no boiler heat recovery
             and boiler heat recovery.
         """
-        return 0.03-0.02
-
-    
+        return 0.03 - 0.02

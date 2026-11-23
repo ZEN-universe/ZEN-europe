@@ -23,9 +23,10 @@ from zen_europe.datasets.datasets.technology.agora_industry_steel import (
     AgoraIndustrySteel,
 )
 from zen_europe.utils.constants import Constants
+from zen_europe.utils.utils import class_attribute, conversion_entries
 
 if TYPE_CHECKING:
-    from zen_creator import Dataset, Element
+    from zen_creator import ConversionTechnology, Dataset, RetrofittingTechnology
     from zen_creator.utils.settings import Settings
 
 
@@ -60,7 +61,9 @@ class IndustrialWasteHeat(DatasetCollection):
 
     # ---------- conversion factors with waste heat ----------
 
-    def get_conversion_factor_kiln_fuel(self, element: Element) -> Attribute:
+    def get_conversion_factor_kiln_fuel(
+        self, element: ConversionTechnology
+    ) -> Attribute:
         """Get the AIDRES fuel input per kiln fuel plus the waste heat of the glass
         furnaces per fuel input; glass is the proxy for the ceramic kilns."""
         attr = cast(Aidres, self.data["aidres"]).get_conversion_factor_kiln_fuel(
@@ -68,19 +71,21 @@ class IndustrialWasteHeat(DatasetCollection):
         )
         proxy = (
             " Glass is the proxy for the ceramic kilns."
-            if element.sector == "ceramic"
+            if class_attribute(element, "sector") == "ceramic"
             else ""
         )
         return self._add_waste_heat(
             element,
             attr,
             self._seenergies.get_waste_heat_share_glass(),
-            [element.fuel],
+            [class_attribute(element, "fuel")],
             "of the fuel input of a regenerative glass furnace: the difference "
             f"between the exhaust without and with batch/cullet preheating.{proxy}",
         )
 
-    def get_conversion_factor_cement_production(self, element: Element) -> Attribute:
+    def get_conversion_factor_cement_production(
+        self, element: ConversionTechnology
+    ) -> Attribute:
         """Get the conversion factor of the cement kilns plus their waste heat per
         cement fuel input."""
         attr = cast(
@@ -94,7 +99,9 @@ class IndustrialWasteHeat(DatasetCollection):
             "of the cement fuel input of a dry cement kiln with preheater.",
         )
 
-    def get_conversion_factor_cement_post_comb(self, element: Element) -> Attribute:
+    def get_conversion_factor_cement_post_comb(
+        self, element: RetrofittingTechnology
+    ) -> Attribute:
         """Get the DEA conversion factor of the cement capture. Its heat output
         includes the pre-cooling of the kiln flue gas, so the kiln exhaust heat that
         cement_production already outputs is subtracted per captured CO2."""
@@ -122,7 +129,7 @@ class IndustrialWasteHeat(DatasetCollection):
         captured = intensity * dea.get_capture_rate_CCS()  # tCO2/t clinker
         kiln_heat = share * fuel / captured / Constants.GJ_PER_MWH  # MWh/tCO2
         conversion_factor = []
-        for entry in attr.default_value:
+        for entry in conversion_entries(attr):
             ((carrier, values),) = entry.items()
             if carrier == "recoverable_waste_heat":
                 heat = round(values["default_value"] - kiln_heat, 12)
@@ -143,7 +150,9 @@ class IndustrialWasteHeat(DatasetCollection):
             ),
         )
 
-    def get_conversion_factor_paper_production(self, element: Element) -> Attribute:
+    def get_conversion_factor_paper_production(
+        self, element: ConversionTechnology
+    ) -> Attribute:
         """Get the energy demand per tonne of paper plus the waste heat per total
         energy input."""
         attr = cast(
@@ -158,7 +167,9 @@ class IndustrialWasteHeat(DatasetCollection):
             "difference between boilers without and with heat recovery.",
         )
 
-    def get_conversion_factor_food_production(self, element: Element) -> Attribute:
+    def get_conversion_factor_food_production(
+        self, element: ConversionTechnology
+    ) -> Attribute:
         """Get the energy demand per tonne of food plus the waste heat per total
         energy input, with paper as the proxy."""
         attr = cast(
@@ -174,7 +185,7 @@ class IndustrialWasteHeat(DatasetCollection):
             "the proxy for food.",
         )
 
-    def get_conversion_factor_steel(self, element: Element) -> Attribute:
+    def get_conversion_factor_steel(self, element: ConversionTechnology) -> Attribute:
         """Get the Agora conversion factor of a steel route plus its waste heat per
         tonne of steel. sEEnergies gives the waste heat per fuel of the blast stove
         or the EAF only, so it is not scaled by the Agora input of the route."""
@@ -214,11 +225,11 @@ class IndustrialWasteHeat(DatasetCollection):
     @staticmethod
     def _carriers(attr: Attribute) -> list[str]:
         """All carriers of the conversion factor `attr`."""
-        return [carrier for entry in attr.default_value for carrier in entry]
+        return [carrier for entry in conversion_entries(attr) for carrier in entry]
 
     def _add_waste_heat(
         self,
-        element: Element,
+        element: ConversionTechnology,
         attr: Attribute,
         share: float,
         carriers: list[str],
@@ -228,7 +239,7 @@ class IndustrialWasteHeat(DatasetCollection):
         factor `attr`, if industrial waste heat is used."""
         flows = {
             carrier: values
-            for entry in attr.default_value
+            for entry in conversion_entries(attr)
             for carrier, values in entry.items()
         }
         units = {flows[carrier]["unit"] for carrier in carriers}
@@ -245,7 +256,7 @@ class IndustrialWasteHeat(DatasetCollection):
 
     def _append_waste_heat(
         self,
-        element: Element,
+        element: ConversionTechnology,
         attr: Attribute,
         waste_heat: float,
         unit: str,
@@ -257,6 +268,9 @@ class IndustrialWasteHeat(DatasetCollection):
             return attr
         entry = {"default_value": round(waste_heat, 12), "unit": unit}
         return attr.set_data(
-            default_value=[*attr.default_value, {"recoverable_waste_heat": entry}],
+            default_value=[
+                *conversion_entries(attr),
+                {"recoverable_waste_heat": entry},
+            ],
             source=SourceInformation(description=description, metadata=self.metadata),
         )

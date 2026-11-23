@@ -50,14 +50,14 @@ class AgoraIndustrySteel(Dataset[pd.Series]):
             name=self.name,
             title=("Low-carbon technologies for the global steel transformation"),
             author=[
-                "Wido K. Witecka"
-                "Julian Somers"
-                "Kathy Reimann"
-                "Niklas Wagner"
-                "Ole Zelt"
-                "Alexander Jülich"
-                "Clemens Schneider"
-                "Prof. Max Åhman"
+                "Wido K. Witecka",
+                "Julian Somers",
+                "Kathy Reimann",
+                "Niklas Wagner",
+                "Ole Zelt",
+                "Alexander Jülich",
+                "Clemens Schneider",
+                "Max Åhman",
             ],
             publication="Agora Industry",
             publication_year=2024,

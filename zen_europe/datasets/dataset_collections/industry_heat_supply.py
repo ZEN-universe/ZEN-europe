@@ -39,12 +39,14 @@ from zen_europe.datasets.datasets.technology.bever2024 import Bever2024
 from zen_europe.datasets.datasets.technology.stark2025 import Stark2025
 from zen_europe.utils.utils import (
     calculate_capacity_addition_from_cumulative,
+    class_attribute,
+    conversion_entries,
     format_capacity_existing,
     instance_cache,
 )
 
 if TYPE_CHECKING:
-    from zen_creator import ConversionTechnology, Dataset, Element
+    from zen_creator import ConversionTechnology, Dataset
     from zen_creator.utils.settings import Settings
 
 logger = logging.getLogger(__name__)
@@ -122,7 +124,7 @@ class IndustryHeatSupply(DatasetCollection):
 
     # ---------- boilers ----------
 
-    def get_capacity_existing_boiler(self, element: Element) -> Attribute:
+    def get_capacity_existing_boiler(self, element: ConversionTechnology) -> Attribute:
         """
         Get the existing capacity of an industrial boiler.
 
@@ -135,7 +137,7 @@ class IndustryHeatSupply(DatasetCollection):
                 tuple(element.model.config.system.set_nodes)
             ),
         )
-        capacity = boilers[element.fuel].groupby(level="node").sum()
+        capacity = boilers[class_attribute(element, "fuel")].groupby(level="node").sum()
         # drop the smallest boilers of a node
         capacity = capacity.where(capacity >= MIN_BOILER_CAPACITY, 0.0)
         data = capacity.to_frame(element.settings.time.reference_year - 1)
@@ -161,7 +163,9 @@ class IndustryHeatSupply(DatasetCollection):
             ),
         )
 
-    def get_attribute_waste_boiler(self, element: Element, name: str) -> Attribute:
+    def get_attribute_waste_boiler(
+        self, element: ConversionTechnology, name: str
+    ) -> Attribute:
         """Get the attribute `name` of the industrial waste boiler: that of
         waste_boiler_DH, since DEA has no industrial waste boiler."""
         dh_attribute = getattr(
@@ -182,7 +186,9 @@ class IndustryHeatSupply(DatasetCollection):
 
     # ---------- heat pumps ----------
 
-    def get_conversion_factor_heat_pump_waste_heat(self, element: Element) -> Attribute:
+    def get_conversion_factor_heat_pump_waste_heat(
+        self, element: ConversionTechnology
+    ) -> Attribute:
         """Get the electricity per heat of Bever et al. (2024) plus the recoverable
         waste heat per heat: the rest of the heat output, 1 - 1/COP."""
         attr = cast(Bever2024, self.data["bever2024"]).get_conversion_factor_heat_pump(
@@ -191,7 +197,10 @@ class IndustryHeatSupply(DatasetCollection):
         share = self._waste_heat_share_heat_pump(element)
         entry = {"default_value": round(share, 12), "unit": "GW/GW"}
         return attr.set_data(
-            default_value=[*attr.default_value, {"recoverable_waste_heat": entry}],
+            default_value=[
+                *conversion_entries(attr),
+                {"recoverable_waste_heat": entry},
+            ],
             source=SourceInformation(
                 description=(
                     "The heat pump takes the heat output not supplied by electricity "
@@ -202,13 +211,14 @@ class IndustryHeatSupply(DatasetCollection):
         )
 
     def get_capex_specific_conversion_heat_pump_waste_heat(
-        self, element: Element
+        self, element: ConversionTechnology
     ) -> Attribute:
         """Get the DEA investment cost of the heat pump plus the waste-heat recovery
         of Stark et al. (2025) per recovered waste heat."""
         tech_db = cast(TechnologyCostDatabase, self.data["technology_cost_database"])
+        cost_proxy = class_attribute(element, "cost_proxy")
         capex = tech_db.get_capex_specific_conversion(
-            element, proxy_element_name=element.cost_proxy
+            element, proxy_element_name=cost_proxy
         )
         price_year = self.settings.time.price_year
         recovery = cast(
@@ -217,11 +227,11 @@ class IndustryHeatSupply(DatasetCollection):
         share = self._waste_heat_share_heat_pump(element)
         recovery_per_output = recovery * share
         return capex.set_data(
-            default_value=capex.default_value + recovery_per_output,
+            default_value=cast(float, capex.default_value) + recovery_per_output,
             df=None if capex.df is None else capex.df + recovery_per_output,
             source=SourceInformation(
                 description=(
-                    f"The DEA investment cost of '{element.cost_proxy}' (Danish Energy "
+                    f"The DEA investment cost of '{cost_proxy}' (Danish Energy "
                     "Agency, Technology Data for Industrial Process Heat, "
                     "https://www.ens.dk/technologydata) plus the waste-heat recovery "
                     "of 1,788 USD/kWth (2025 USD) in Stark et al. (2025), converted "
@@ -235,7 +245,9 @@ class IndustryHeatSupply(DatasetCollection):
             ),
         )
 
-    def get_capacity_existing_heat_pump(self, element: Element) -> Attribute:
+    def get_capacity_existing_heat_pump(
+        self, element: ConversionTechnology
+    ) -> Attribute:
         """Get the existing capacity of an industrial heat pump: none today."""
         return element.capacity_existing.set_data(
             default_value=0.0,
@@ -246,7 +258,9 @@ class IndustryHeatSupply(DatasetCollection):
             ),
         )
 
-    def get_capacity_addition_unbounded_heat_pump(self, element: Element) -> Attribute:
+    def get_capacity_addition_unbounded_heat_pump(
+        self, element: ConversionTechnology
+    ) -> Attribute:
         """Get the seed: annual build-out of today's DH heat pump fleet, split by
         band demand share, heat source and node."""
         fleet = self._calculate_dh_heat_pump_fleet(
@@ -257,7 +271,11 @@ class IndustryHeatSupply(DatasetCollection):
             element, self._calculate_band_demand(nodes)
         ).sum(axis=1)
         # no seed without industry heat sectors in the model
-        band_demand = demand.groupby(level="level").sum().get(element.temp_level, 0.0)
+        band_demand = (
+            demand.groupby(level="level")
+            .sum()
+            .get(class_attribute(element, "temp_level"), 0.0)
+        )
         share = band_demand / demand.sum() if demand.sum() > 0 else 0.0
         heat_sources = len(HEAT_SOURCES)
         interval = self.settings.time.interval_between_years
@@ -278,10 +296,12 @@ class IndustryHeatSupply(DatasetCollection):
 
     # ---------- temperature cascade ----------
 
-    def get_conversion_factor_temp_conversion(self, element: Element) -> Attribute:
+    def get_conversion_factor_temp_conversion(
+        self, element: ConversionTechnology
+    ) -> Attribute:
         """Get the lossless downgrade: one unit of heat of the higher band per unit of
         the lower band."""
-        higher_band = element.input_carrier.default_value[0]
+        higher_band = cast(list[str], element.input_carrier.default_value)[0]
         return element.conversion_factor.set_data(
             default_value=[{higher_band: {"default_value": 1.0, "unit": "GW/GW"}}],
             source=SourceInformation(
@@ -290,10 +310,14 @@ class IndustryHeatSupply(DatasetCollection):
             ),
         )
 
-    def get_capacity_existing_temp_conversion(self, element: Element) -> Attribute:
+    def get_capacity_existing_temp_conversion(
+        self, element: ConversionTechnology
+    ) -> Attribute:
         """Get today's heat flow down the cascade: all lower bands are supplied by
         boilers."""
-        capacity = self._calculate_heat_demand(element, element.served_levels)
+        capacity = self._calculate_heat_demand(
+            element, class_attribute(element, "served_levels")
+        )
         data = capacity.to_frame(element.settings.time.reference_year - 1)
         capacity_addition = calculate_capacity_addition_from_cumulative(data, element)
         return element.capacity_existing.set_data(
@@ -309,20 +333,30 @@ class IndustryHeatSupply(DatasetCollection):
             ),
         )
 
-    def get_capacity_limit_temp_conversion(self, element: Element) -> Attribute:
+    def get_capacity_limit_temp_conversion(
+        self, element: ConversionTechnology
+    ) -> Attribute:
         """Get the heat demand of the lower bands times the capacity limit margin."""
-        capacity = self._calculate_heat_demand(element, element.served_levels)
+        capacity = self._calculate_heat_demand(
+            element, class_attribute(element, "served_levels")
+        )
         return self._set_capacity_limit(element, capacity)
 
     # ---------- thermal energy storage ----------
 
     # ---------- kiln fuel ----------
 
-    def get_capacity_existing_kiln_fuel(self, element: Element) -> Attribute:
+    def get_capacity_existing_kiln_fuel(
+        self, element: ConversionTechnology
+    ) -> Attribute:
         """Get today's natural gas demand of the sector's kilns or furnaces."""
-        capacity = self._production_data(element.sector).calculate_production(
+        capacity = self._production_data(
+            class_attribute(element, "sector")
+        ).calculate_production(
             tuple(element.model.config.system.set_nodes)
-        ) * self._kiln_fuel_intensity(element)
+        ) * self._kiln_fuel_intensity(
+            element
+        )
         data = capacity.to_frame(element.settings.time.reference_year - 1)
         capacity_addition = calculate_capacity_addition_from_cumulative(data, element)
         return element.capacity_existing.set_data(
@@ -338,12 +372,16 @@ class IndustryHeatSupply(DatasetCollection):
             ),
         )
 
-    def get_capacity_limit_kiln_fuel(self, element: Element) -> Attribute:
+    def get_capacity_limit_kiln_fuel(self, element: ConversionTechnology) -> Attribute:
         """Get today's natural gas demand of the sector's kilns or furnaces times the
         capacity limit margin."""
-        demand = self._production_data(element.sector).calculate_demand(
+        demand = self._production_data(
+            class_attribute(element, "sector")
+        ).calculate_demand(
             tuple(element.model.config.system.set_nodes)
-        ) * self._kiln_fuel_intensity(element)
+        ) * self._kiln_fuel_intensity(
+            element
+        )
         return self._set_capacity_limit(element, demand)
 
     # ---------- helpers ----------
@@ -352,17 +390,18 @@ class IndustryHeatSupply(DatasetCollection):
         """Production data collection of the industry heat sector `sector`."""
         return cast(SectorProductionData, self.data[f"{sector}_production_data"])
 
-    def _waste_heat_share_heat_pump(self, element: Element) -> float:
+    def _waste_heat_share_heat_pump(self, element: ConversionTechnology) -> float:
         """Recoverable waste heat per heat output of a waste-heat heat pump:
         1 - 1/COP."""
         cop = cast(Bever2024, self.data["bever2024"]).get_cop(
-            element.temp_level, element.heat_source
+            class_attribute(element, "temp_level"),
+            class_attribute(element, "heat_source"),
         )
         return 1.0 - 1.0 / cop
 
     def _set_capacity_limit(
         self,
-        element: Element,
+        element: ConversionTechnology,
         demand: pd.Series,
         description: str = "The flat demand",
         nodes: tuple[str, ...] | None = None,
@@ -390,19 +429,22 @@ class IndustryHeatSupply(DatasetCollection):
             ),
         )
 
-    def _kiln_fuel_intensity(self, element: Element) -> float:
-        return self._production_data(element.sector).calculate_conversion_factors()[
-            f"{element.sector}_fuel"
+    def _kiln_fuel_intensity(self, element: ConversionTechnology) -> float:
+        sector = class_attribute(element, "sector")
+        return self._production_data(sector).calculate_conversion_factors()[
+            f"{sector}_fuel"
         ]
 
     @staticmethod
-    def _select_model_sectors(element: Element, data: pd.DataFrame) -> pd.DataFrame:
+    def _select_model_sectors(
+        element: ConversionTechnology, data: pd.DataFrame
+    ) -> pd.DataFrame:
         """Rows of `data` of the industry heat sectors in the element's model."""
         sectors = data.index.get_level_values("sector")
         return data[sectors.isin(list(element.model.sectors))]
 
     def _calculate_heat_demand(
-        self, element: Element, levels: tuple[str, ...]
+        self, element: ConversionTechnology, levels: tuple[str, ...]
     ) -> pd.Series:
         """Heat demand (GW) of the model's industry heat sectors in the given
         bands."""
@@ -459,7 +501,7 @@ class IndustryHeatSupply(DatasetCollection):
         ]
         node_index = pd.Index(list(nodes), name="node")
         paper_waste_share = self._calculate_paper_waste_share(nodes)
-        shares = {}
+        sector_shares = {}
         for sector in SECTORS:
             thermal = idees.get_industry_thermal_final_energy_by_fuel(
                 sector, DATA_YEAR, "boiler"
@@ -478,8 +520,8 @@ class IndustryHeatSupply(DatasetCollection):
             fuels[COMBUSTION_FUELS] = fuels[COMBUSTION_FUELS].fillna(
                 1.0 / len(COMBUSTION_FUELS)
             )
-            shares[sector] = fuels.fillna(0.0)
-        shares = pd.concat(shares, names=["sector", "node"])
+            sector_shares[sector] = fuels.fillna(0.0)
+        shares = pd.concat(sector_shares, names=["sector", "node"])
         # CH: fuel mix of the BFE industry branches for all sectors
         if "CH" in nodes:
             bfe = cast(BFEIndustry, self.data["bfe_industry"])
