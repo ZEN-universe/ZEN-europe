@@ -14,6 +14,7 @@ from zen_creator.datasets.datasets.dataset import Dataset
 from zen_creator.datasets.datasets.metadata import MetaData, SourceInformation
 
 from zen_europe.settings.cache import get_active_cache_settings
+from zen_europe.utils.utils import ISO2_TO_NODE
 
 
 class PECDHydroCapacities(Dataset[pd.DataFrame]):
@@ -45,9 +46,6 @@ class PECDHydroCapacities(Dataset[pd.DataFrame]):
         "Cumulated (upper or head) reservoir capacity (GWh)": "energy",
     }
 
-    # market zone prefixes that differ from the NUTS0 node code
-    NODE_MAPPING = {"GR": "EL"}
-
     def __init__(self, source_path: Path | str | None = None):
         super().__init__(source_path=source_path)
 
@@ -76,7 +74,7 @@ class PECDHydroCapacities(Dataset[pd.DataFrame]):
             logging.info(f"Downloading {self.name} from {self.URL}...")
             pd.read_csv(self.URL).to_csv(file_path, index=False)
         data = pd.read_csv(file_path)
-        data["node"] = data["zone"].str[:2].replace(self.NODE_MAPPING)
+        data["node"] = data["zone"].str[:2].replace(ISO2_TO_NODE)
         data["variable"] = data["variable"].map(self.VARIABLE_MAPPING)
 
         capacities = data.pivot_table(
@@ -148,7 +146,7 @@ class PECDHydroCapacities(Dataset[pd.DataFrame]):
         """
         file_path = self.path / "PECD-hydro-capacities.csv"
         data = pd.read_csv(file_path)
-        data["node"] = data["zone"].str[:2].replace(self.NODE_MAPPING)
+        data["node"] = data["zone"].str[:2].replace(ISO2_TO_NODE)
         data["variable"] = data["variable"].map(self.VARIABLE_MAPPING)
         capacities = data.pivot_table(
             index=["type", "node"],
@@ -163,6 +161,35 @@ class PECDHydroCapacities(Dataset[pd.DataFrame]):
         return shares
 
     # -------- methods ------------------------
+    def calculate_capacity_existing(
+        self, element: Technology, power: bool
+    ) -> pd.Series:
+        """
+        Calculate today's hydro fleet without writing it to the element, so that
+        attributes derived from the fleet are independent of whether existing
+        capacities are used.
+
+        Args:
+            element: The element for which to calculate the existing capacity.
+            power: If True, the power capacity (GW); if False, the energy capacity
+                (GWh).
+
+        Returns:
+            pd.Series: The capacity per node and year of construction.
+        """
+        assert element.name in self.data.index.get_level_values("technology"), (
+            f"Existing capacity data for {element.name} is not available in the "
+            "PECD hydro capacities dataset."
+        )
+        column = "capacity_existing" if power else "capacity_existing_energy"
+        data = cast(pd.Series, self.data.loc[element.name, column])
+        set_nodes = element.model.config.system.set_nodes
+        data = data[data.index.isin(set_nodes)]
+        data = data[data > 0]
+        year_construction = element.settings.time.reference_year - 1
+        data = pd.concat({year_construction: data}, names=["year_construction"])
+        return data.swaplevel(0, 1).sort_index()
+
     def get_capacity_existing(self, element: Technology, power: bool) -> Attribute:
         """
         Get the existing capacity for a hydro technology.
@@ -174,28 +201,14 @@ class PECDHydroCapacities(Dataset[pd.DataFrame]):
         Returns:
             Attribute: The existing capacity attribute of the element.
         """
-        assert element.name in self.data.index.get_level_values("technology"), (
-            f"Existing capacity data for {element.name} is not available in the "
-            "PECD hydro capacities dataset."
-        )
+        data = self.calculate_capacity_existing(element, power)
         if power:
-            data = cast(pd.Series, self.data.loc[element.name, "capacity_existing"])
             attr = element.capacity_existing
             unit = "GW"
         else:
-            data = cast(
-                pd.Series, self.data.loc[element.name, "capacity_existing_energy"]
-            )
             # only storage technologies have an energy capacity
             attr = cast(StorageTechnology, element).capacity_existing_energy
             unit = "GWh"
-
-        set_nodes = element.model.config.system.set_nodes
-        data = data[data.index.isin(set_nodes)]
-        data = data[data > 0]
-        year_construction = element.settings.time.reference_year - 1
-        data = pd.concat({year_construction: data}, names=["year_construction"])
-        data = data.swaplevel(0, 1).sort_index()
 
         capacity_type = "turbining power" if power else "storage-energy capacity"
         if element.name == "run-of-river_hydro":

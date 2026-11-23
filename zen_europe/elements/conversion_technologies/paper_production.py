@@ -9,10 +9,12 @@ from zen_creator.utils.attribute import Attribute
 from zen_europe.datasets.dataset_collections.industrial_waste_heat import (
     IndustrialWasteHeat,
 )
+from zen_europe.datasets.dataset_collections.industry_production_data import (
+    IndustryProductionData,
+)
 from zen_europe.datasets.dataset_collections.paper_production_data import (
     PaperProductionData,
 )
-from zen_europe.utils.industry import waste_heat_carrier
 
 if TYPE_CHECKING:
     from zen_creator.model import Model
@@ -43,7 +45,7 @@ class PaperProduction(ConversionTechnology):
         """Paper and the waste heat of the process."""
         return Attribute(
             "output_carrier",
-            default_value=["paper", *waste_heat_carrier(self)],
+            default_value=["paper", *self.settings.operation.waste_heat_carriers],
             element=self,
         )
 
@@ -61,22 +63,16 @@ class PaperProduction(ConversionTechnology):
         return PaperProductionData(self.settings, self.source_path).get_lifetime(self)
 
     def _set_capex_specific_conversion(self) -> Attribute:
-        """Investment cost from the literature."""
-        return PaperProductionData(
-            self.settings, self.source_path
-        ).get_capex_specific_conversion(self)
+        """No cost: the capacity follows the fixed demand."""
+        return self._industry.get_no_cost(self.capex_specific_conversion)
 
     def _set_opex_specific_fixed(self) -> Attribute:
-        """Fixed O&M cost from JRC-EU-TIMES."""
-        return PaperProductionData(
-            self.settings, self.source_path
-        ).get_opex_specific_fixed(self)
+        """No cost: the capacity follows the fixed demand."""
+        return self._industry.get_no_cost(self.opex_specific_fixed)
 
     def _set_opex_specific_variable(self) -> Attribute:
-        """Variable O&M cost from JRC-EU-TIMES."""
-        return PaperProductionData(
-            self.settings, self.source_path
-        ).get_opex_specific_variable(self)
+        """No cost: the production follows the fixed demand."""
+        return self._industry.get_no_cost(self.opex_specific_variable)
 
     def _set_capacity_existing(self) -> Attribute:
         """Production capacity from JRC-IDEES and the JRC BAT document."""
@@ -91,3 +87,7 @@ class PaperProduction(ConversionTechnology):
         return PaperProductionData(
             self.settings, self.source_path
         ).get_capacity_existing(self)
+
+    @property
+    def _industry(self) -> IndustryProductionData:
+        return IndustryProductionData(self.settings, self.source_path)

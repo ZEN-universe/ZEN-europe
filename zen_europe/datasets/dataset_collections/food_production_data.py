@@ -6,15 +6,14 @@ from typing import TYPE_CHECKING, Any, cast
 
 import pandas as pd
 from zen_creator import Attribute, DatasetCollection
-from zen_creator.datasets.datasets.metadata import AssumptionInformation
 
 from zen_europe.datasets.dataset_collections.industry_production_data import (
+    DATA_YEAR,
     IndustryProductionData,
 )
 from zen_europe.datasets.datasets.carrier.faostat_food import FAOSTATFood
 from zen_europe.datasets.datasets.carrier.rehfeldt2017 import Rehfeldt2017
 from zen_europe.utils.constants import Constants
-from zen_europe.utils.industry import DATA_YEAR, model_nodes
 from zen_europe.utils.utils import instance_cache
 
 if TYPE_CHECKING:
@@ -22,6 +21,9 @@ if TYPE_CHECKING:
     from zen_creator.utils.settings import Settings
 
 SECTOR = "food"
+# JRC-EU-TIMES process whose lifetime is used: gas-fired process heat of other
+# industries, as JRC-EU-TIMES has no food process
+JRC_PROCESS = "IOIPRCGAS01"
 # FAOSTAT item of each Rehfeldt (2017) food sub-process
 FOOD_ITEMS = {
     "dairy": "Milk, Total",
@@ -33,7 +35,7 @@ FOOD_ITEMS = {
 
 
 class FoodProductionData(DatasetCollection):
-    """Food production: demand, energy intensity, capacity and costs."""
+    """Food production: demand, energy intensity, capacity and lifetime."""
 
     name = "food_production_data"
 
@@ -59,7 +61,7 @@ class FoodProductionData(DatasetCollection):
         """Get the food demand: today's production."""
         return self._industry.get_demand(
             element,
-            self.calculate_production(model_nodes(element)),
+            self.calculate_production(tuple(element.model.config.system.set_nodes)),
             "The production is the Rehfeldt et al. (2017) activity of the food "
             "sub-processes, split to the nodes by the FAOSTAT production of a proxy "
             "item per sub-process.",
@@ -91,47 +93,20 @@ class FoodProductionData(DatasetCollection):
         industry = self._industry
         return industry.get_capacity_existing(
             element,
-            self.calculate_production(model_nodes(element))
+            self.calculate_production(tuple(element.model.config.system.set_nodes))
             / industry.capacity_utilisation,
             "The existing production capacity is the production divided by "
             f"{industry.describe_capacity_utilisation()}.",
         )
 
     def get_lifetime(self, element: Element) -> Attribute:
-        """Get the lifetime from the literature."""
-        return element.lifetime.set_data(
-            default_value=self._industry.calculate_literature_cost(SECTOR, "lifetime"),
-            source=self._literature_source("lifetime"),
-        )
-
-    def get_capex_specific_conversion(self, element: Element) -> Attribute:
-        """Get the investment cost from the literature."""
-        capex = self._industry.calculate_literature_cost(SECTOR, "capex")
-        return element.capex_specific_conversion.set_data(
-            # Euro/(t/a) -> Euro/(t/h)
-            default_value=round(capex * Constants.HOURS_PER_YEAR, 2),
-            unit="Euro/(tproduct/h)",
-            source=self._literature_source("capex"),
-        )
-
-    def get_opex_specific_fixed(self, element: Element) -> Attribute:
-        """Get the fixed O&M cost from the literature."""
-        opex = self._industry.calculate_literature_cost(SECTOR, "opex_fixed")
-        return element.opex_specific_fixed.set_data(
-            # Euro/(t/a) -> Euro/(t/h)
-            default_value=round(opex * Constants.HOURS_PER_YEAR, 2),
-            unit="Euro/(tproduct/h)",
-            source=self._literature_source("opex_fixed"),
-        )
-
-    def get_opex_specific_variable(self, element: Element) -> Attribute:
-        """Get the variable O&M cost from the literature, without energy."""
-        return element.opex_specific_variable.set_data(
-            default_value=self._industry.calculate_literature_cost(
-                SECTOR, "opex_variable"
-            ),
-            unit="Euro/tproduct",
-            source=self._literature_source("opex_variable"),
+        """Get the lifetime of the JRC-EU-TIMES proxy process."""
+        return self._industry.get_lifetime(
+            element,
+            {SECTOR: JRC_PROCESS},
+            pd.Series({SECTOR: 1.0}),
+            "JRC-EU-TIMES has no food process; the lifetime of its gas-fired process "
+            f"heat of other industries ({JRC_PROCESS}) is used.",
         )
 
     # ---------- data used by other collections ----------
@@ -190,12 +165,3 @@ class FoodProductionData(DatasetCollection):
     @cached_property
     def _energy_intensity(self) -> pd.Series:
         return self._industry.calculate_energy_intensity_rehfeldt(SECTOR)
-
-    def _literature_source(self, parameter: str) -> AssumptionInformation:
-        return AssumptionInformation(
-            description=(
-                self._industry.describe_literature_cost(SECTOR, parameter)
-                + " "
-                + self._industry.describe_inflation()
-            )
-        )

@@ -12,6 +12,7 @@ from zen_creator.datasets.datasets.metadata import MetaData
 
 from zen_europe.datasets.datasets.financial.ECB import ECBInflation
 from zen_europe.settings.cache import get_active_cache_settings
+from zen_europe.utils.constants import Constants
 
 logger = logging.getLogger(__name__)
 
@@ -142,9 +143,8 @@ _HEATING_VALUE = {"petrol mass": 42.4, "diesel mass": 48.0, "CNG mass": 55.5}  #
 _UTILITY_FACTOR_SLOPE = -0.01147
 _UTILITY_FACTOR_EXPONENT = 1.186185
 
-_HOURS_PER_YEAR = 8760
 # TtW energy is given in kJ/vkm; 3.6e9 kJ make one GWh.
-_KJ_PER_GWH = 3.6e9
+_KJ_PER_GWH = Constants.GJ_PER_GWH * 1e6
 
 _OUTPUT_COLUMNS = [
     "km per h",
@@ -216,7 +216,7 @@ class PassengerCarsCox(Dataset[pd.DataFrame]):
             publication="Applied Energy",
             publication_year=2020,
             url=("https://www.sciencedirect.com/science/article/pii/S030626192030533X"),
-            doi="10.1016/j.apenergy.2020.115021",
+            doi="https://doi.org/10.1016/j.apenergy.2020.115021",
         )
 
     def _set_path(self) -> Path | None:
@@ -422,11 +422,21 @@ class PassengerCarsCox(Dataset[pd.DataFrame]):
 
         # energy contained in the fuel carried on board, in kWh
         if powertrain == _GAS_CAR:
-            fuel_energy = car["CNG mass"] * _HEATING_VALUE["CNG mass"] / 3.6
+            fuel_energy = (
+                car["CNG mass"] * _HEATING_VALUE["CNG mass"] / Constants.GJ_PER_MWH
+            )
         elif powertrain == _DIESEL_CAR:
-            fuel_energy = car["diesel mass"] * _HEATING_VALUE["diesel mass"] / 3.6
+            fuel_energy = (
+                car["diesel mass"]
+                * _HEATING_VALUE["diesel mass"]
+                / Constants.GJ_PER_MWH
+            )
         elif powertrain != _ELECTRIC_CAR:
-            fuel_energy = car["petrol mass"] * _HEATING_VALUE["petrol mass"] / 3.6
+            fuel_energy = (
+                car["petrol mass"]
+                * _HEATING_VALUE["petrol mass"]
+                / Constants.GJ_PER_MWH
+            )
         else:
             fuel_energy = 0.0
 
@@ -585,7 +595,7 @@ class PassengerCarsCox(Dataset[pd.DataFrame]):
         cars.index = pd.MultiIndex.from_tuples(cars.index, names=["time", "powertrain"])
         cars["range"] = (
             cars["energy stored"]
-            * 3600
+            * Constants.GJ_PER_GWH
             * cars["battery DoD"].fillna(1)
             / cars["TtW energy"]
         )
@@ -649,7 +659,7 @@ class PassengerCarsCox(Dataset[pd.DataFrame]):
             car = cast(pd.Series, current.loc[powertrain])
             markup = car["markup factor"]
             # the capacity of a vehicle is its hourly mileage
-            mileage = car["kilometers per year"] / _HOURS_PER_YEAR
+            mileage = car["kilometers per year"] / Constants.HOURS_PER_YEAR
             # the cost components are reported at the consumer price, whereas
             # zen_europe uses the manufacturing cost
             parameters.loc[technology, "km per h"] = mileage
@@ -714,11 +724,6 @@ class PassengerCarsCox(Dataset[pd.DataFrame]):
         return car["TtW energy"]
 
     # -------- outward-facing accessors ------------------
-
-    def get_parameters(self) -> pd.DataFrame:
-        """All calculated parameters, indexed by the zen_europe technology
-        name."""
-        return self.data
 
     def get_parameter(self, technology: str, parameter: str) -> float:
         """One calculated parameter of one passenger car technology.

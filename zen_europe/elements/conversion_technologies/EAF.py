@@ -12,7 +12,6 @@ from zen_europe.datasets.datasets.technology.agora_industry_steel import (
 from zen_europe.datasets.datasets.technology.steel_technologies_woertler import (
     SteelTechnologiesWoertler,
 )
-from zen_europe.utils.industry import waste_heat_carrier
 
 if TYPE_CHECKING:
     from zen_creator.model import Model
@@ -56,7 +55,10 @@ class EAF(ConversionTechnology):
         """
         return Attribute(
             name="output_carrier",
-            default_value=["secondary_steel", *waste_heat_carrier(self)],
+            default_value=[
+                "secondary_steel",
+                *self.settings.operation.waste_heat_carriers,
+            ],
             element=self,
         )
 

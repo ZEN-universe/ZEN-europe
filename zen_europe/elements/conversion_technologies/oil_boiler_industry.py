@@ -28,8 +28,6 @@ class OilBoilerIndustry(ConversionTechnology):
 
     name: str = "oil_boiler_industry"
     fuel: ClassVar[str] = "oil"
-    # DEA technology the costs, lifetime and construction time are taken from
-    cost_proxy: ClassVar[str] = "oil_boiler_industry"
     # technology the diffusion rate is taken from
     diffusion_proxy: ClassVar[str] = "oil_boiler_DH"
 
@@ -59,15 +57,13 @@ class OilBoilerIndustry(ConversionTechnology):
     def _set_conversion_factor(self) -> Attribute:
         """Inverse of the DEA efficiency."""
         tech_db = TechnologyCostDatabase(self.settings, self.source_path)
-        efficiency, agencies = tech_db.get_efficiency(
-            self, proxy_element_name=self.cost_proxy
-        )
+        efficiency, agencies = tech_db.get_efficiency(self)
         efficiency = efficiency.loc[self.settings.time.reference_year]
         return self.conversion_factor.set_data(
             default_value=[{"oil": {"default_value": 1 / efficiency, "unit": "GW/GW"}}],
             source=SourceInformation(
                 description=(
-                    f"Inverse of the efficiency of '{self.cost_proxy}' "
+                    f"Inverse of the efficiency of '{self.name}' "
                     f"from {', '.join(agencies)}."
                 ),
                 metadata=tech_db.metadata,
@@ -77,7 +73,7 @@ class OilBoilerIndustry(ConversionTechnology):
     def _set_lifetime(self) -> Attribute:
         """Lifetime from DEA."""
         return TechnologyCostDatabase(self.settings, self.source_path).get_lifetime(
-            self, proxy_element_name=self.cost_proxy
+            self
         )
 
     def _set_construction_time(self) -> Attribute:
@@ -86,25 +82,25 @@ class OilBoilerIndustry(ConversionTechnology):
             return self.construction_time
         return TechnologyCostDatabase(
             self.settings, self.source_path
-        ).get_construction_time(self, proxy_element_name=self.cost_proxy)
+        ).get_construction_time(self)
 
     def _set_capex_specific_conversion(self) -> Attribute:
         """Investment cost from DEA."""
         return TechnologyCostDatabase(
             self.settings, self.source_path
-        ).get_capex_specific_conversion(self, proxy_element_name=self.cost_proxy)
+        ).get_capex_specific_conversion(self)
 
     def _set_opex_specific_fixed(self) -> Attribute:
         """Fixed O&M cost from DEA."""
         return TechnologyCostDatabase(
             self.settings, self.source_path
-        ).get_opex_specific_fixed(self, proxy_element_name=self.cost_proxy)
+        ).get_opex_specific_fixed(self)
 
     def _set_opex_specific_variable(self) -> Attribute:
         """Variable O&M cost from DEA."""
         return TechnologyCostDatabase(
             self.settings, self.source_path
-        ).get_opex_specific_variable(self, proxy_element_name=self.cost_proxy)
+        ).get_opex_specific_variable(self)
 
     def _set_capacity_existing(self) -> Attribute:
         """Today's heat demand of the industry heat sectors, split by fuel."""

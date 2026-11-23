@@ -3,7 +3,10 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, ClassVar
 
 from zen_creator import RetrofittingTechnology
-from zen_creator.datasets.datasets.metadata import AssumptionInformation
+from zen_creator.datasets.datasets.metadata import (
+    AssumptionInformation,
+    SourceInformation,
+)
 from zen_creator.utils.attribute import Attribute
 
 from zen_europe.datasets.dataset_collections.glass_production_data import (
@@ -11,6 +14,9 @@ from zen_europe.datasets.dataset_collections.glass_production_data import (
 )
 from zen_europe.datasets.dataset_collections.technology_cost_database import (
     TechnologyCostDatabase,
+)
+from zen_europe.datasets.datasets.technology.IOGP_carbon_storage_projects import (
+    IOGPCarbonStorageProjects,
 )
 from zen_europe.datasets.datasets.technology.technology_diffusion_mannhardt import (
     TechnologyDiffusionMannhardt,
@@ -118,12 +124,33 @@ class GlassPostComb(RetrofittingTechnology):
         )
 
     def _set_capacity_addition_unbounded(self) -> Attribute:
-        """As cement_post_comb."""
-        cement = self.model.elements["cement_post_comb"].capacity_addition_unbounded
-        return self.capacity_addition_unbounded.set_data(
-            default_value=cement.default_value,
-            unit=cement.unit,
-            source=AssumptionInformation(description="As cement_post_comb."),
+        """
+        Sets the unbounded capacity addition of glass post-combustion capture,
+        as cement_post_comb.
+
+        Capacity additions up to the size of a single reference project are
+        exempt from the diffusion limit, so that a first plant can be built
+        from a zero installed base.
+        """
+        attr = self.capacity_addition_unbounded
+        if not self.settings.investment.use_unbounded_capacity_addition_carbon:
+            return attr
+        iogp_projects = IOGPCarbonStorageProjects(
+            settings=self.settings, source_path=self.source_path
+        )
+        data = iogp_projects.get_capacity_existing_data()
+        median_add = data.median()
+        return attr.set_data(
+            default_value=median_add,
+            unit="tCO2/h",
+            source=SourceInformation(
+                description=(
+                    "The unbounded capacity addition of carbon storage is based on the "
+                    "median existing and future capacity from the IOGP report, divided "
+                    "by the number of nodes in the dataset."
+                ),
+                metadata=iogp_projects.metadata,
+            ),
         )
 
     def _set_max_diffusion_rate(self) -> Attribute:

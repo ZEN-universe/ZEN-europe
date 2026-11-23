@@ -1267,15 +1267,19 @@ class DEA(Dataset[pd.DataFrame]):
         (Hydrogen to Jet Fuel), normalized to the oil reference carrier,
         assuming all output is kerosene-equivalent oil.
         https://ens.dk/en/analyses-and-statistics/technology-data-renewable-fuels
+
+        Hydrogen, power and heat are given per MWh of total input, so they are
+        divided by the oil output per input. The CO2 consumption is given per
+        tonne of FT liquids output, so it is only converted to energy.
         """
         oil_per_input = 0.65  # MWh oil / MWh input
-        # DEA tonFTtoGWh = 44 GWh / 3.6 (GJ->GWh not applicable, ton basis) / 1000
-        ton_ft_to_gwh = 44 / (Constants.GJ_PER_MWH * 1000)  # GWh/ton
+        co2_per_ton_ft = 4.3  # tCO2 / t FT liquids
+        ton_ft_to_gwh = 44 / (Constants.GJ_PER_MWH * 1000)  # GWh/t, LHV 44 GJ/t
         return [
             {"hydrogen": {"default_value": 0.995 / oil_per_input, "unit": "GWh/GWh"}},
             {
                 "carbon": {
-                    "default_value": (4.3 / ton_ft_to_gwh / 1000) / oil_per_input,
+                    "default_value": co2_per_ton_ft / ton_ft_to_gwh / 1000,
                     "unit": "ktCO2/GWh",
                 }
             },

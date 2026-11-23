@@ -12,6 +12,7 @@ from zen_creator.datasets.datasets.dataset import Dataset
 from zen_creator.datasets.datasets.metadata import MetaData
 
 from zen_europe.utils.constants import Constants
+from zen_europe.utils.utils import NODE_TO_ISO2
 
 _REGION_TYPES = {"urban": "HT1", "suburban": "HT3", "rural": "HT6"}
 _DAY_TYPES = {"w": "Werktag", "we": "Wochenende"}
@@ -117,7 +118,7 @@ class StandardLoadProfiles(Dataset[dict[str, pd.DataFrame]]):
         Returns:
             A pandas DataFrame containing the shifted standard load profiles.
         """
-        new_cols = slp.rename(columns={"EL": "GR", "UK": "GB"})
+        new_cols = slp.rename(columns=NODE_TO_ISO2)
         tz = {
             old_cc: pytz.timezone(pytz.country_timezones[new_cc][0])
             for old_cc, new_cc in zip(slp.columns, new_cols.columns, strict=True)

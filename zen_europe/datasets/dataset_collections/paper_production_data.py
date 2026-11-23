@@ -6,18 +6,12 @@ from typing import TYPE_CHECKING, Any, cast
 
 import pandas as pd
 from zen_creator import Attribute, DatasetCollection
-from zen_creator.datasets.datasets.metadata import (
-    AssumptionInformation,
-    SourceInformation,
-)
 
 from zen_europe.datasets.dataset_collections.industry_production_data import (
     IndustryProductionData,
 )
 from zen_europe.datasets.datasets.carrier.jrc_bat_paper import JRCBATPaper
 from zen_europe.datasets.datasets.carrier.rehfeldt2017 import Rehfeldt2017
-from zen_europe.utils.constants import Constants
-from zen_europe.utils.industry import model_nodes
 from zen_europe.utils.utils import instance_cache
 
 if TYPE_CHECKING:
@@ -34,7 +28,7 @@ JRC_PROCESSES = {
 
 
 class PaperProductionData(DatasetCollection):
-    """Paper production: demand, energy intensity, capacity and costs."""
+    """Paper production: demand, energy intensity, capacity and lifetime."""
 
     name = "paper_production_data"
 
@@ -60,7 +54,7 @@ class PaperProductionData(DatasetCollection):
         """Get the paper demand: today's production."""
         return self._industry.get_demand(
             element,
-            self.calculate_production(model_nodes(element)),
+            self.calculate_production(tuple(element.model.config.system.set_nodes)),
             "The production is the JRC-IDEES physical output; for CH, NO and UK, "
             "their consumption from the JRC BAT reference document is used.",
         )
@@ -90,7 +84,7 @@ class PaperProductionData(DatasetCollection):
         """Get the existing paper production capacity."""
         return self._industry.get_capacity_existing(
             element,
-            self._calculate_capacity(model_nodes(element)),
+            self._calculate_capacity(tuple(element.model.config.system.set_nodes)),
             "The existing production capacity is the JRC-IDEES installed capacity "
             "at 8760 hours per year; for CH, NO and UK it is the product demand "
             "divided by "
@@ -99,37 +93,13 @@ class PaperProductionData(DatasetCollection):
 
     def get_lifetime(self, element: Element) -> Attribute:
         """Get the lifetime from JRC-EU-TIMES."""
-        return element.lifetime.set_data(
-            default_value=float(self._costs["lifetime"]),
-            source=self._jrc_cost_source(),
-        )
-
-    def get_capex_specific_conversion(self, element: Element) -> Attribute:
-        """Get the investment cost from the literature."""
-        capex = self._industry.calculate_literature_cost(SECTOR, "capex")
-        return element.capex_specific_conversion.set_data(
-            # Euro/(t/a) -> Euro/(t/h)
-            default_value=round(capex * Constants.HOURS_PER_YEAR, 2),
-            unit="Euro/(tproduct/h)",
-            source=AssumptionInformation(
-                description=self._industry.describe_literature_cost(SECTOR, "capex")
-            ),
-        )
-
-    def get_opex_specific_fixed(self, element: Element) -> Attribute:
-        """Get the fixed O&M cost from JRC-EU-TIMES."""
-        return element.opex_specific_fixed.set_data(
-            default_value=float(self._costs["opex_fixed"]),
-            unit="Euro/(tproduct/h)",
-            source=self._jrc_cost_source(),
-        )
-
-    def get_opex_specific_variable(self, element: Element) -> Attribute:
-        """Get the variable O&M cost from JRC-EU-TIMES, without energy."""
-        return element.opex_specific_variable.set_data(
-            default_value=float(self._costs["opex_variable"]),
-            unit="Euro/tproduct",
-            source=self._jrc_cost_source(),
+        rehfeldt = cast(Rehfeldt2017, self.data["rehfeldt2017"])
+        return self._industry.get_lifetime(
+            element,
+            JRC_PROCESSES,
+            rehfeldt.get_activity_weights(SECTOR),
+            "JRC-EU-TIMES lifetime of the paper processes, weighted by the Rehfeldt "
+            "et al. (2017) activity.",
         )
 
     # ---------- data used by other collections ----------
@@ -195,22 +165,3 @@ class PaperProductionData(DatasetCollection):
             / industry.capacity_utilisation
         )
         return capacity
-
-    @cached_property
-    def _costs(self) -> dict[str, float]:
-        """JRC-EU-TIMES costs of the paper processes, weighted by the Rehfeldt et al.
-        (2017) activity."""
-        rehfeldt = cast(Rehfeldt2017, self.data["rehfeldt2017"])
-        return self._industry.calculate_jrc_costs(
-            JRC_PROCESSES, rehfeldt.get_activity_weights(SECTOR)
-        )
-
-    def _jrc_cost_source(self) -> SourceInformation:
-        return SourceInformation(
-            description=(
-                "JRC-EU-TIMES costs and lifetime of the paper processes, weighted by "
-                "the Rehfeldt et al. (2017) activity. "
-                + self._industry.describe_inflation()
-            ),
-            metadata=self.metadata,
-        )

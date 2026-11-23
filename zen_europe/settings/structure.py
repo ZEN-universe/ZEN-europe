@@ -34,6 +34,7 @@ class StructureSettings(SettingsCategory):
             "ammonia",
             "cement",
             "methanol",
+            "oil_products",
             "refining",
             "aviation",
             "shipping",

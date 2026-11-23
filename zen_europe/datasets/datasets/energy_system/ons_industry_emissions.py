@@ -6,12 +6,11 @@ import pandas as pd
 from zen_creator import Dataset
 from zen_creator.datasets.datasets.metadata import MetaData
 
-from zen_europe.datasets.datasets.energy_system.desnz_ghg_inventory import (
+from zen_europe.datasets.datasets.energy_system.eea_ghg_inventory import (
     CHEMICALS_SECTORS,
 )
+from zen_europe.utils.constants import Constants
 
-# Emissions are reported in kt, the carbon budget is accounted in Gt.
-_KT_PER_GT = 1e6
 # ZEN-europe sector of each ONS industry
 _SECTOR_ROWS = {
     "paper": "paper (SIC 17)",
@@ -69,6 +68,6 @@ class ONSIndustryEmissions(Dataset[pd.DataFrame]):
         of the chemicals sectors, so it would be counted twice.
         """
         if all(sector in sectors for sector in CHEMICALS_SECTORS):
-            return self.data.iloc[:0] / _KT_PER_GT
+            return self.data.iloc[:0] / Constants.KT_PER_GT  # kt -> Gt
         rows = [row for sector, row in _SECTOR_ROWS.items() if sector in sectors]
-        return self.data.loc[rows] / _KT_PER_GT
+        return self.data.loc[rows] / Constants.KT_PER_GT  # kt -> Gt

@@ -23,7 +23,6 @@ from zen_europe.datasets.datasets.technology.agora_industry_steel import (
     AgoraIndustrySteel,
 )
 from zen_europe.utils.constants import Constants
-from zen_europe.utils.industry import waste_heat_carrier
 
 if TYPE_CHECKING:
     from zen_creator import Dataset, Element
@@ -114,7 +113,7 @@ class IndustrialWasteHeat(DatasetCollection):
                 metadata=dea.metadata,
             ),
         )
-        if not waste_heat_carrier(element):
+        if not element.settings.operation.use_industrial_waste_heat:
             return attr
         material_economics = cast(MaterialEconomics, self.data["material_economics"])
         share = self._seenergies.get_waste_heat_share_cement()
@@ -254,7 +253,7 @@ class IndustrialWasteHeat(DatasetCollection):
     ) -> Attribute:
         """Append the waste heat to the conversion factor `attr`, if industrial waste
         heat is used."""
-        if not waste_heat_carrier(element):
+        if not element.settings.operation.use_industrial_waste_heat:
             return attr
         entry = {"default_value": round(waste_heat, 12), "unit": unit}
         return attr.set_data(

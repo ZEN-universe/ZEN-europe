@@ -25,7 +25,7 @@ class Rehfeldt2017(Dataset[pd.DataFrame]):
             author=["Rehfeldt, Matthias", "Fleiter, Tobias", "Toro, Felipe"],
             publication="Energy Efficiency",
             publication_year=2017,
-            doi="10.1007/s12053-017-9571-y",
+            doi="https://doi.org/10.1007/s12053-017-9571-y",
             url="https://doi.org/10.1007/s12053-017-9571-y",
         )
 

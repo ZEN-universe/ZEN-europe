@@ -33,6 +33,7 @@ class Wolf2017(Dataset[pd.DataFrame]):
             author=["Wolf, S."],
             publication="PhD thesis, University of Stuttgart",
             publication_year=2017,
+            url="https://elib.uni-stuttgart.de/items/1c316acb-5bd4-4cf2-bb9d-e37d0c2a5fe2",
             note="Table 4-7, process heat up to 150 °C and up to 200 °C.",
         )
 

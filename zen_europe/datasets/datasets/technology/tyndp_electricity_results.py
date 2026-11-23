@@ -10,6 +10,8 @@ if TYPE_CHECKING:
 from zen_creator.datasets.datasets.dataset import Dataset
 from zen_creator.datasets.datasets.metadata import MetaData
 
+from zen_europe.utils.utils import ISO2_TO_NODE
+
 
 class TYNDPElectricityModellingResults(Dataset[pd.DataFrame]):
     """
@@ -32,7 +34,6 @@ class TYNDPElectricityModellingResults(Dataset[pd.DataFrame]):
     # lines of the electric vehicle and the hydrogen nodes, which are not part
     # of the electricity transmission network between the nodes of the model
     EXCLUDED_LINES = "V2W|V2g|H2R1|Virtual|H2MT"
-    COUNTRY_CODES = {"GR": "EL", "GB": "UK"}
 
     def __init__(self, source_path: Path | str | None = None):
         super().__init__(source_path=source_path)
@@ -73,8 +74,8 @@ class TYNDPElectricityModellingResults(Dataset[pd.DataFrame]):
         border = lines["Node/Line"].str.split(" ").str[0]
         nodes = border.str.split("-", expand=True)
         lines = lines.assign(
-            node_from=nodes[0].str[:2].replace(self.COUNTRY_CODES),
-            node_to=nodes[1].str[:2].replace(self.COUNTRY_CODES),
+            node_from=nodes[0].str[:2].replace(ISO2_TO_NODE),
+            node_to=nodes[1].str[:2].replace(ISO2_TO_NODE),
         )
         lines = lines[lines["node_from"] != lines["node_to"]]
         return lines[["node_from", "node_to", "Value"]]

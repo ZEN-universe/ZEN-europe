@@ -20,7 +20,6 @@ class CacheSettings(SettingsCategory):
     overwrite_eea_ghg_inventory: bool = False
     overwrite_global_carbon_budget: bool = False
     overwrite_desnz_ghg_inventory: bool = False
-    overwrite_worldbank_co2_emissions: bool = False
     overwrite_worldbank_population: bool = False
     overwrite_ecb: bool = False
     overwrite_jrc_idees: bool = False
@@ -28,10 +27,10 @@ class CacheSettings(SettingsCategory):
     overwrite_pan_european_climate_database: bool = False
     overwrite_passenger_cars_cox: bool = False
     overwrite_glohydrores: bool = False
-    overwrite_jrc_hydro_power_database: bool = False
     overwrite_pecd_hydro_capacities: bool = False
     overwrite_powerplantmatching: bool = False
     overwrite_dac_costs_sievert: bool = False
+    overwrite_enspreso2_offshore: bool = False
 
 
 class CacheArtifactKind(str, Enum):
@@ -94,14 +93,17 @@ CACHE_PROVIDERS = (
             "01-energy_system/desnz_ghg_inventory/*.csv",
             "01-energy_system/eea_ghg_inventory/*.csv",
             "01-energy_system/global_carbon_budget/*.csv",
-            "01-energy_system/worldbank_co2_emissions/*.csv",
             "01-energy_system/worldbank_population/*.csv",
         ),
     ),
     CacheProvider(
         "jrc_idees",
         CacheArtifactKind.DERIVED_CACHE,
-        ("02-carrier/heat/jrc_idees/useful_thermal_energy_service.feather",),
+        (
+            "02-carrier/heat/jrc_idees/useful_thermal_energy_service.feather",
+            "02-carrier/industry/jrc_idees/industry_*.feather",
+            "02-carrier/transport/jrc_idees/passenger_car_vehicle_km.feather",
+        ),
     ),
     CacheProvider(
         "unece",
@@ -113,8 +115,7 @@ CACHE_PROVIDERS = (
         CacheArtifactKind.DOWNLOADED_SOURCE,
         (
             "03-technology/climate_data/*_raw.zip",
-            "03-technology/climate_data/onshore_wind_weights.csv",
-            "03-technology/climate_data/offshore_wind_weights.csv",
+            "03-technology/climate_data/*_wind_weights.csv",
         ),
     ),
     CacheProvider(
@@ -136,14 +137,17 @@ CACHE_PROVIDERS = (
         ),
     ),
     CacheProvider(
-        "jrc_hydro_power_database",
-        CacheArtifactKind.DOWNLOADED_SOURCE,
-        ("03-technology/capacity_existing/jrc_hydro_power_database_data.feather",),
-    ),
-    CacheProvider(
         "pecd_hydro_capacities",
         CacheArtifactKind.DOWNLOADED_SOURCE,
         ("03-technology/capacity_existing/PECD-hydro-capacities.csv",),
+    ),
+    CacheProvider(
+        "enspreso2_offshore",
+        CacheArtifactKind.DOWNLOADED_SOURCE,
+        (
+            "03-technology/potential_capacity_renewables/"
+            "enspreso2_offshore_wind_eez_data.dbf",
+        ),
     ),
     CacheProvider(
         "powerplantmatching",

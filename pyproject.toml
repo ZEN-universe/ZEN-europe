@@ -62,7 +62,10 @@ vis = [
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "-ra -q"
+addopts = "-ra -q -m 'not network'"
+markers = [
+    "network: needs internet access, deselected by default (run with -m network)",
+]
 
 [tool.black]
 line-length = 88

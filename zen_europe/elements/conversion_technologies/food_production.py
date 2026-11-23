@@ -12,7 +12,9 @@ from zen_europe.datasets.dataset_collections.food_production_data import (
 from zen_europe.datasets.dataset_collections.industrial_waste_heat import (
     IndustrialWasteHeat,
 )
-from zen_europe.utils.industry import waste_heat_carrier
+from zen_europe.datasets.dataset_collections.industry_production_data import (
+    IndustryProductionData,
+)
 
 if TYPE_CHECKING:
     from zen_creator.model import Model
@@ -43,7 +45,7 @@ class FoodProduction(ConversionTechnology):
         """Food and the waste heat of the process."""
         return Attribute(
             "output_carrier",
-            default_value=["food", *waste_heat_carrier(self)],
+            default_value=["food", *self.settings.operation.waste_heat_carriers],
             element=self,
         )
 
@@ -57,26 +59,20 @@ class FoodProduction(ConversionTechnology):
         ).get_conversion_factor_food_production(self)
 
     def _set_lifetime(self) -> Attribute:
-        """Lifetime from the literature."""
+        """Lifetime of a JRC-EU-TIMES proxy process."""
         return FoodProductionData(self.settings, self.source_path).get_lifetime(self)
 
     def _set_capex_specific_conversion(self) -> Attribute:
-        """Investment cost from the literature."""
-        return FoodProductionData(
-            self.settings, self.source_path
-        ).get_capex_specific_conversion(self)
+        """No cost: the capacity follows the fixed demand."""
+        return self._industry.get_no_cost(self.capex_specific_conversion)
 
     def _set_opex_specific_fixed(self) -> Attribute:
-        """Fixed O&M cost from the literature."""
-        return FoodProductionData(
-            self.settings, self.source_path
-        ).get_opex_specific_fixed(self)
+        """No cost: the capacity follows the fixed demand."""
+        return self._industry.get_no_cost(self.opex_specific_fixed)
 
     def _set_opex_specific_variable(self) -> Attribute:
-        """Variable O&M cost from the literature."""
-        return FoodProductionData(
-            self.settings, self.source_path
-        ).get_opex_specific_variable(self)
+        """No cost: the production follows the fixed demand."""
+        return self._industry.get_no_cost(self.opex_specific_variable)
 
     def _set_capacity_existing(self) -> Attribute:
         """Production capacity: demand per capacity utilisation."""
@@ -91,3 +87,7 @@ class FoodProduction(ConversionTechnology):
         return FoodProductionData(
             self.settings, self.source_path
         ).get_capacity_existing(self)
+
+    @property
+    def _industry(self) -> IndustryProductionData:
+        return IndustryProductionData(self.settings, self.source_path)

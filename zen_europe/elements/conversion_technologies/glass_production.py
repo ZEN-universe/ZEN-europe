@@ -9,6 +9,9 @@ from zen_creator.utils.attribute import Attribute
 from zen_europe.datasets.dataset_collections.glass_production_data import (
     GlassProductionData,
 )
+from zen_europe.datasets.dataset_collections.industry_production_data import (
+    IndustryProductionData,
+)
 
 if TYPE_CHECKING:
     from zen_creator.model import Model
@@ -52,22 +55,16 @@ class GlassProduction(ConversionTechnology):
         return GlassProductionData(self.settings, self.source_path).get_lifetime(self)
 
     def _set_capex_specific_conversion(self) -> Attribute:
-        """Investment cost from JRC-EU-TIMES."""
-        return GlassProductionData(
-            self.settings, self.source_path
-        ).get_capex_specific_conversion(self)
+        """No cost: the capacity follows the fixed demand."""
+        return self._industry.get_no_cost(self.capex_specific_conversion)
 
     def _set_opex_specific_fixed(self) -> Attribute:
-        """Fixed O&M cost from JRC-EU-TIMES."""
-        return GlassProductionData(
-            self.settings, self.source_path
-        ).get_opex_specific_fixed(self)
+        """No cost: the capacity follows the fixed demand."""
+        return self._industry.get_no_cost(self.opex_specific_fixed)
 
     def _set_opex_specific_variable(self) -> Attribute:
-        """Variable O&M cost from JRC-EU-TIMES."""
-        return GlassProductionData(
-            self.settings, self.source_path
-        ).get_opex_specific_variable(self)
+        """No cost: the production follows the fixed demand."""
+        return self._industry.get_no_cost(self.opex_specific_variable)
 
     def _set_carbon_intensity_technology(self) -> Attribute:
         """Process emissions from AIDRES."""
@@ -88,3 +85,7 @@ class GlassProduction(ConversionTechnology):
         return GlassProductionData(
             self.settings, self.source_path
         ).get_capacity_existing(self)
+
+    @property
+    def _industry(self) -> IndustryProductionData:
+        return IndustryProductionData(self.settings, self.source_path)

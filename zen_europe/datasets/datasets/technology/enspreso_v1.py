@@ -19,7 +19,6 @@ class ENSPRESOV1(Dataset[dict[str, pd.Series]]):
     COLUMN_MAPPING = {
         "wind_onshore": "wind_onshore_capacity_gw_high",
         "photovoltaics": "solar_capacity_gw_high_pv_ground",
-        "wind_offshore": "wind_offshore_capacity_gw_high_total",
     }
 
     def __init__(self, source_path: Path | str | None = None):
@@ -81,18 +80,6 @@ class ENSPRESOV1(Dataset[dict[str, pd.Series]]):
         data["photovoltaics"] = data_pv_wind_onshore[
             self.COLUMN_MAPPING["photovoltaics"]
         ]
-        # offshore
-        data_wind_offshore = pd.read_csv(
-            self.path / "ENSPRESO_Integrated_EEZ_Data_Offshore.csv", delimiter=";"
-        )
-        data_wind_offshore["nuts0_code"] = data_wind_offshore["eez_code_2016"].apply(
-            lambda code: code[2:]
-        )
-        data_wind_offshore = data_wind_offshore.groupby("nuts0_code").sum(
-            numeric_only=True
-        )
-        data_wind_offshore = data_wind_offshore
-        data["wind_offshore"] = data_wind_offshore[self.COLUMN_MAPPING["wind_offshore"]]
         return data
 
     # -------- methods ------------------------

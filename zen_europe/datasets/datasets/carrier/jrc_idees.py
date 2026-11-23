@@ -17,9 +17,13 @@ from zen_creator.datasets.datasets.metadata import MetaData
 
 from zen_europe.settings.cache import get_active_cache_settings
 from zen_europe.utils.constants import Constants
-from zen_europe.utils.industry import IDEES_EU
 
 logger = logging.getLogger(__name__)
+
+# JRC-IDEES region of the EU27 aggregate
+IDEES_EU = "EU27"
+# model nodes outside the EU27, which JRC-IDEES does not cover
+NODES_WITHOUT_IDEES = ("CH", "NO", "UK")
 
 # JRC-IDEES only covers the EU27; countries are identified by the same
 # ISO 3166-1 alpha-2 codes used as node names elsewhere in zen_europe.
@@ -64,7 +68,6 @@ _JRC_IDEES_TES_ROWS = {
     "Water heating": "water_heating",
     "Hot water": "water_heating",
 }
-_KTOE2GWH = 1 / Constants.TOE_PER_MWH  # ktoe (useful energy) -> GWh
 
 # regions of the industry workbooks (glass, ceramic, paper and food sectors): the
 # EU27 aggregate and the member states that are model nodes (Cyprus and Malta are
@@ -127,6 +130,9 @@ _JRC_IDEES_THERMAL_ROWS = {
         ],
     ),
 }
+# section of the road transport activity sheet (TrRoad_act) whose "Passenger cars"
+# row is the vehicle-km driven by passenger cars (million km)
+_JRC_IDEES_VEHICLE_KM_HEADER = "Vehicle-km driven (mio km)"
 _JRC_IDEES_THERMAL_CARRIERS = {
     "Solids",
     "Refinery gas",
@@ -193,7 +199,7 @@ class JRCIDEES(Dataset[pd.DataFrame]):
             publication="JRC",
             publication_year=2026,
             url="https://publications.jrc.ec.europa.eu/repository/handle/JRC144707",
-            doi="10.2760/6945021",
+            doi="https://doi.org/10.2760/6945021",
         )
 
     def _set_path(self) -> Path | None:
@@ -285,7 +291,7 @@ class JRCIDEES(Dataset[pd.DataFrame]):
         )
         data = data[data["category"].isin(_JRC_IDEES_TES_ROWS)]
         data["category"] = data["category"].map(_JRC_IDEES_TES_ROWS)
-        return data.set_index("category")[year_cols] * _KTOE2GWH
+        return data.set_index("category")[year_cols] * Constants.GWH_PER_KTOE
 
     # -------- industry: disk cache and download ------------------
 
@@ -365,6 +371,57 @@ class JRCIDEES(Dataset[pd.DataFrame]):
                 )
         return {sheet: self._extract_years(df) for sheet, df in sheets.items()}
 
+    # -------- transport: disk cache and download ------------------
+
+    @cached_property
+    def _passenger_car_vehicle_km(self) -> pd.DataFrame:
+        """Vehicle-km driven by passenger cars (million km) per country and year,
+        querying and caching them on first use under
+        ``source_path/02-carrier/transport/jrc_idees/``."""
+        if self.source_path is None:
+            raise ValueError("source_path must be set to cache JRC-IDEES data.")
+        cache_path = (
+            self.source_path
+            / "02-carrier"
+            / "transport"
+            / "jrc_idees"
+            / "passenger_car_vehicle_km.feather"
+        )
+        if cache_path.exists() and not get_active_cache_settings().overwrite_jrc_idees:
+            logger.info("Loading cached JRC-IDEES passenger car vehicle-km")
+            data = pd.read_feather(cache_path).set_index("node")
+            data.columns = data.columns.astype(int)
+            return data
+
+        logger.info("Downloading JRC-IDEES transport data (this may take a while)...")
+        data = pd.DataFrame(
+            {
+                country: self._download_passenger_car_vehicle_km(country)
+                for country in _JRC_IDEES_COUNTRIES
+            }
+        ).T
+        data.index.name = "node"
+        cache_path.parent.mkdir(parents=True, exist_ok=True)
+        reset = data.reset_index()
+        reset.columns = reset.columns.astype(str)
+        reset.to_feather(cache_path)
+        return data
+
+    def _download_passenger_car_vehicle_km(self, country: str) -> pd.Series:
+        """Download the transport workbook of a country and return the vehicle-km
+        driven by passenger cars per year."""
+        zip_url = f"{_JRC_IDEES_BASE_URL}JRC-IDEES-2023_{country}.zip"
+        response = requests.get(zip_url)
+        response.raise_for_status()
+
+        with zipfile.ZipFile(BytesIO(response.content)) as archive:
+            with archive.open(f"JRC-IDEES-2023_Transport_{country}.xlsx") as file:
+                sheet = pd.read_excel(file, sheet_name="TrRoad_act", header=None)
+        sheet = self._extract_years(sheet)
+        labels = list(sheet.index)
+        row = labels.index("Passenger cars", labels.index(_JRC_IDEES_VEHICLE_KM_HEADER))
+        return sheet.iloc[row].astype(float)
+
     @staticmethod
     def _extract_years(sheet: pd.DataFrame) -> pd.DataFrame:
         """Return the first block of year columns, with the row labels as index."""
@@ -431,6 +488,10 @@ class JRCIDEES(Dataset[pd.DataFrame]):
         data = data.loc[common_countries, element.settings.time.time_series_year]
         return data
 
+    def get_passenger_car_vehicle_km(self, year: int) -> pd.Series:
+        """Vehicle-km driven by passenger cars (million km) per EU27 country."""
+        return self._passenger_car_vehicle_km[year]
+
     def get_industry_thermal_final_energy(self, sector: str, year: int) -> pd.DataFrame:
         """
         Get the thermal final energy consumption of an industry sector.
@@ -490,8 +551,8 @@ class JRCIDEES(Dataset[pd.DataFrame]):
         """Mean EU27 capacity utilisation (physical output / installed capacity) of
         the industry sectors `sectors`."""
         utilisation = [
-            self.get_industry_physical_output(sector, year)["EU27"]
-            / self.get_industry_installed_capacity(sector, year)["EU27"]
+            self.get_industry_physical_output(sector, year)[IDEES_EU]
+            / self.get_industry_installed_capacity(sector, year)[IDEES_EU]
             for sector in sectors
         ]
         return float(sum(utilisation) / len(utilisation))

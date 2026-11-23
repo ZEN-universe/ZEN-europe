@@ -16,7 +16,6 @@ from zen_europe.datasets.dataset_collections.industry_heat_supply import (
 from zen_europe.datasets.dataset_collections.industry_production_data import (
     IndustryProductionData,
 )
-from zen_europe.utils.industry import waste_heat_carrier
 
 if TYPE_CHECKING:
     from zen_creator.model import Model
@@ -49,7 +48,10 @@ class NaturalGasToCeramicFuel(RetrofittingTechnology):
         """Ceramic fuel and the waste heat of the kiln."""
         return Attribute(
             "output_carrier",
-            default_value=["ceramic_fuel", *waste_heat_carrier(self)],
+            default_value=[
+                "ceramic_fuel",
+                *self.settings.operation.waste_heat_carriers,
+            ],
             element=self,
         )
 

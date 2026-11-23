@@ -9,6 +9,9 @@ from zen_creator.utils.attribute import Attribute
 from zen_europe.datasets.dataset_collections.ceramic_production_data import (
     CeramicProductionData,
 )
+from zen_europe.datasets.dataset_collections.industry_production_data import (
+    IndustryProductionData,
+)
 
 if TYPE_CHECKING:
     from zen_creator.model import Model
@@ -48,26 +51,20 @@ class CeramicProduction(ConversionTechnology):
         ).get_conversion_factor(self)
 
     def _set_lifetime(self) -> Attribute:
-        """Lifetime of the cement plant proxy."""
+        """Lifetime of a JRC-EU-TIMES proxy process."""
         return CeramicProductionData(self.settings, self.source_path).get_lifetime(self)
 
     def _set_capex_specific_conversion(self) -> Attribute:
-        """Investment cost of the cement plant proxy."""
-        return CeramicProductionData(
-            self.settings, self.source_path
-        ).get_capex_specific_conversion(self)
+        """No cost: the capacity follows the fixed demand."""
+        return self._industry.get_no_cost(self.capex_specific_conversion)
 
     def _set_opex_specific_fixed(self) -> Attribute:
-        """Fixed O&M cost of the cement plant proxy."""
-        return CeramicProductionData(
-            self.settings, self.source_path
-        ).get_opex_specific_fixed(self)
+        """No cost: the capacity follows the fixed demand."""
+        return self._industry.get_no_cost(self.opex_specific_fixed)
 
     def _set_opex_specific_variable(self) -> Attribute:
-        """Variable O&M cost of the cement plant proxy."""
-        return CeramicProductionData(
-            self.settings, self.source_path
-        ).get_opex_specific_variable(self)
+        """No cost: the production follows the fixed demand."""
+        return self._industry.get_no_cost(self.opex_specific_variable)
 
     def _set_carbon_intensity_technology(self) -> Attribute:
         """Process emissions from the ceramic BREF."""
@@ -88,3 +85,7 @@ class CeramicProduction(ConversionTechnology):
         return CeramicProductionData(
             self.settings, self.source_path
         ).get_capacity_existing(self)
+
+    @property
+    def _industry(self) -> IndustryProductionData:
+        return IndustryProductionData(self.settings, self.source_path)

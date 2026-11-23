@@ -174,7 +174,7 @@ class Potencia(Dataset[pd.DataFrame]):
             author=["European Commission Joint Research Centre"],
             publication="European Commission, JRC POTEnCIA model",
             publication_year=2018,
-            url="https://joint-research-centre.ec.europa.eu/what-we-do/scientific-tools-and-databases/potencia-policy-oriented-tool-energy-and-climate-change-impact-assessment/potencia-scenarios_en",
+            url="https://data.jrc.ec.europa.eu/dataset/3182c195-a1fc-46cf-8e7d-44063d9483d8",
         )
 
     def _set_path(self) -> Path | None:

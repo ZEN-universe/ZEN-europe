@@ -2,8 +2,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, ClassVar
 
-import numpy as np
-from zen_creator.datasets.datasets.metadata import AssumptionInformation
 from zen_creator.elements import Carrier
 from zen_creator.utils.attribute import Attribute
 

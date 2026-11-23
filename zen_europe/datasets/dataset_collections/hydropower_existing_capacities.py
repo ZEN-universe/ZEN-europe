@@ -11,6 +11,9 @@ from zen_creator import Attribute, DatasetCollection
 from zen_creator.utils.attribute import SourceInformation
 from zen_creator.utils.settings import Settings
 
+from zen_europe.datasets.dataset_collections.hydro_existing_capacity_plant_level import (  # noqa: E501
+    HydroExistingCapacityPlantLevel,
+)
 from zen_europe.datasets.datasets.technology.pan_european_climate_database import (
     PanEuropeanClimateDatabase,
 )
@@ -99,6 +102,24 @@ class HydropowerExistingCapacities(DatasetCollection):
         capacities = cast(PECDHydroCapacities, self.data["pecd_hydro_capacities"])
         return capacities.get_capacity_existing(element, power=True)
 
+    def calculate_capacity_existing(
+        self, element: Technology, power: bool = True
+    ) -> pd.Series:
+        """Calculate today's hydro fleet from the source the existing capacity is
+        taken from, also when existing capacities are not used. The capacity limit,
+        maximum load and inflow derive from it.
+
+        Args:
+            element: Hydropower technology requesting its fleet.
+            power: If True, the power capacity (GW); if False, the energy capacity
+                (GWh).
+        """
+        if self.settings.data_source.use_plant_level_hydro_capacity:
+            plant_level = HydroExistingCapacityPlantLevel(source_path=self.source_path)
+            return plant_level.calculate_capacity_existing(element, power)
+        capacities = cast(PECDHydroCapacities, self.data["pecd_hydro_capacities"])
+        return capacities.calculate_capacity_existing(element, power)
+
     def get_max_load_ror_hydro(self, element: Technology) -> Attribute:
         """Get ROR maximum load from PECD generation and finalized capacity."""
         assert element.name == "run-of-river_hydro", (
@@ -114,8 +135,7 @@ class HydropowerExistingCapacities(DatasetCollection):
         )
         generation = pecd.get_generation_run_of_river_hydro(element)
         generation = generation.drop(columns=reclassified_nodes, errors="ignore")
-        capacity_data = cast(pd.Series, element.capacity_existing.df)
-        capacity = capacity_data.groupby(level="node").sum()
+        capacity = self.calculate_capacity_existing(element).groupby(level="node").sum()
         nodes_with_generation = generation.columns[generation.fillna(0).gt(0).any()]
         nodes_without_capacity = nodes_with_generation.difference(capacity.index)
         if not nodes_without_capacity.empty:
@@ -248,7 +268,7 @@ class HydropowerExistingCapacities(DatasetCollection):
                 fill_value=0,
             )
 
-        capacity = cast(pd.Series, element.capacity_existing.df)
+        capacity = self.calculate_capacity_existing(element)
         capacity_nodes = capacity.index.get_level_values("node").unique()
         common_nodes = data.columns.intersection(capacity_nodes)
         missing_inflow_nodes = capacity_nodes.difference(data.columns)

@@ -15,7 +15,6 @@ from zen_europe.datasets.datasets.technology.steel_technologies_woertler import 
 from zen_europe.datasets.datasets.technology.technology_diffusion_mannhardt import (
     TechnologyDiffusionMannhardt,
 )
-from zen_europe.utils.industry import waste_heat_carrier
 
 if TYPE_CHECKING:
     from zen_creator.model import Model
@@ -57,7 +56,10 @@ class BF_BOF(ConversionTechnology):
         """
         return Attribute(
             name="output_carrier",
-            default_value=["primary_steel", *waste_heat_carrier(self)],
+            default_value=[
+                "primary_steel",
+                *self.settings.operation.waste_heat_carriers,
+            ],
             element=self,
         )
 

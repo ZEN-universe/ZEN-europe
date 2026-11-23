@@ -1,33 +1,17 @@
-import functools
 import logging
-from collections.abc import Callable
-from typing import Any, TypeVar, Union, cast, overload
+from typing import Any, Union, cast, overload
 
 import numpy as np
 import pandas as pd
-from zen_creator import Technology
+
+# instance_cache memoizes a method per instance and arguments, keeping the datasets
+# read for the cached value in sources.md
+from zen_creator import Technology, instance_cache  # noqa: F401
 
 MIN_CAPACITY_ADDITION = 1e-5
-
-F = TypeVar("F", bound=Callable[..., Any])
-
-
-def instance_cache(method: F) -> F:
-    """Memoize a method per instance, keyed by its arguments."""
-
-    @functools.wraps(method)
-    def wrapper(self: Any, *args: Any, **kwargs: Any) -> Any:
-        try:
-            cache = self._instance_cache
-        except AttributeError:
-            cache = {}
-            self._instance_cache = cache
-        key = (method.__name__, args, tuple(sorted(kwargs.items())))
-        if key not in cache:
-            cache[key] = method(self, *args, **kwargs)
-        return cache[key]
-
-    return cast(F, wrapper)
+# ISO 3166-1 alpha-2 codes that differ from the NUTS0 codes of the model nodes
+ISO2_TO_NODE = {"GR": "EL", "GB": "UK"}
+NODE_TO_ISO2 = {node: iso2 for iso2, node in ISO2_TO_NODE.items()}
 
 
 # maps the country names used in the raw source file to NUTS0 node codes,

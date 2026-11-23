@@ -6,10 +6,7 @@ from typing import TYPE_CHECKING, Any, cast
 
 import pandas as pd
 from zen_creator import Attribute, DatasetCollection
-from zen_creator.datasets.datasets.metadata import (
-    AssumptionInformation,
-    SourceInformation,
-)
+from zen_creator.datasets.datasets.metadata import SourceInformation
 
 from zen_europe.datasets.dataset_collections.industry_production_data import (
     IndustryProductionData,
@@ -18,12 +15,8 @@ from zen_europe.datasets.datasets.carrier.ipcc_emission_factors import (
     IPCCEmissionFactors,
 )
 from zen_europe.datasets.datasets.carrier.rehfeldt2017 import Rehfeldt2017
-from zen_europe.datasets.datasets.technology.cement_production_gardarsdottir import (
-    CementProductionGardarsdottir,
-)
 from zen_europe.datasets.datasets.technology.cerame_unie2021 import CerameUnie2021
 from zen_europe.utils.constants import Constants
-from zen_europe.utils.industry import model_nodes, sector_fuel
 from zen_europe.utils.utils import instance_cache
 
 if TYPE_CHECKING:
@@ -31,14 +24,15 @@ if TYPE_CHECKING:
     from zen_creator.utils.settings import Settings
 
 SECTOR = "ceramic"
-# fuels without CO2 emissions in the model
-CARBON_NEUTRAL_FUELS = ("biomass",)
+# JRC-EU-TIMES process whose lifetime is used: gas-fired process heat of non-metallic
+# minerals, as JRC-EU-TIMES has no ceramic process
+JRC_PROCESS = "INMPRCGAS01"
 # natural gas, today's fuel of all ceramic kilns, can cover the whole ceramic fuel
 NATURAL_GAS_MAX_SHARE = 1.0
 
 
 class CeramicProductionData(DatasetCollection):
-    """Ceramic production: demand, energy intensity, capacity, costs, process CO2
+    """Ceramic production: demand, energy intensity, capacity, lifetime, process CO2
     and the fuel of the ceramic kilns."""
 
     name = "ceramic_production_data"
@@ -56,9 +50,6 @@ class CeramicProductionData(DatasetCollection):
                 self.settings, self.source_path
             ),
             "rehfeldt2017": Rehfeldt2017(self.source_path),
-            "cement_production_gardarsdottir": CementProductionGardarsdottir(
-                self.source_path
-            ),
             "ipcc_emission_factors": IPCCEmissionFactors(self.source_path),
             "cerame_unie2021": CerameUnie2021(self.source_path),
         }
@@ -69,7 +60,7 @@ class CeramicProductionData(DatasetCollection):
         """Get the ceramic demand: today's production."""
         return self._industry.get_demand(
             element,
-            self.calculate_production(model_nodes(element)),
+            self.calculate_production(tuple(element.model.config.system.set_nodes)),
             "The production is the JRC-IDEES thermal energy consumption divided by "
             "the Rehfeldt et al. (2017) fuel intensity; CH, NO and UK use a proxy "
             "node (CH as AT, NO as FI, UK as DE scaled by the World Bank "
@@ -102,27 +93,21 @@ class CeramicProductionData(DatasetCollection):
         industry = self._industry
         return industry.get_capacity_existing(
             element,
-            self.calculate_production(model_nodes(element))
+            self.calculate_production(tuple(element.model.config.system.set_nodes))
             / industry.capacity_utilisation,
             "The existing production capacity is the production divided by "
             f"{industry.describe_capacity_utilisation()}.",
         )
 
     def get_lifetime(self, element: Element) -> Attribute:
-        """Get the lifetime of the cement plant proxy."""
-        return self._get_cement_plant_proxy(element, "get_lifetime")
-
-    def get_capex_specific_conversion(self, element: Element) -> Attribute:
-        """Get the investment cost of the cement plant proxy."""
-        return self._get_cement_plant_proxy(element, "get_capex_specific")
-
-    def get_opex_specific_fixed(self, element: Element) -> Attribute:
-        """Get the fixed O&M cost of the cement plant proxy."""
-        return self._get_cement_plant_proxy(element, "get_opex_specific_fixed")
-
-    def get_opex_specific_variable(self, element: Element) -> Attribute:
-        """Get the variable O&M cost of the cement plant proxy."""
-        return self._get_cement_plant_proxy(element, "get_opex_specific_variable")
+        """Get the lifetime of the JRC-EU-TIMES proxy process."""
+        return self._industry.get_lifetime(
+            element,
+            {SECTOR: JRC_PROCESS},
+            pd.Series({SECTOR: 1.0}),
+            "JRC-EU-TIMES has no ceramic process; the lifetime of its gas-fired "
+            f"process heat of non-metallic minerals ({JRC_PROCESS}) is used.",
+        )
 
     def get_carbon_intensity_technology(self, element: Element) -> Attribute:
         """Get the process CO2 of ceramic production."""
@@ -172,7 +157,7 @@ class CeramicProductionData(DatasetCollection):
         return self._industry.get_retrofit_flow_coupling_factor_fuel(
             element,
             NATURAL_GAS_MAX_SHARE,
-            self.calculate_conversion_factors()[sector_fuel(SECTOR)],
+            self.calculate_conversion_factors()[f"{SECTOR}_fuel"],
             "natural gas is today's fuel of all ceramic kilns",
         )
 
@@ -185,7 +170,7 @@ class CeramicProductionData(DatasetCollection):
         return self._industry.get_retrofit_flow_coupling_factor_fuel(
             element,
             self._switchable_share,
-            self.calculate_conversion_factors()[sector_fuel(SECTOR)],
+            self.calculate_conversion_factors()[f"{SECTOR}_fuel"],
             "the ceramic BREF (JRC, Final Draft, April 2026, Sections 4.2.1-4.2.3) "
             "limits electrified kilns to below 1600 °C; the > 1000 °C fuel of "
             "technical ceramics in Rehfeldt et al. (2017) is treated as not "
@@ -264,26 +249,8 @@ class CeramicProductionData(DatasetCollection):
         return sum(
             fuel_share * ipcc.get_emission_factor(carrier) / Constants.GJ_PER_MWH
             for carrier, fuel_share in self.calculate_fuel_shares().items()
-            if carrier not in CARBON_NEUTRAL_FUELS
         )
 
     def _calculate_fuel_inputs(self) -> pd.Series:
         """All fuel is ceramic fuel."""
         return self._industry.calculate_fuel_inputs_kiln(SECTOR)
-
-    def _get_cement_plant_proxy(self, element: Element, method: str) -> Attribute:
-        """Cost or lifetime of the Gardarsdottir et al. (2019) cement plant."""
-        gardarsdottir = cast(
-            CementProductionGardarsdottir, self.data["cement_production_gardarsdottir"]
-        )
-        return getattr(gardarsdottir, method)(element).set_data(
-            source=AssumptionInformation(
-                description=(
-                    "No cost data for ceramic production exist; the cement clinker "
-                    "plant of Gardarsdottir et al. (2019), Comparison of Technologies "
-                    "for CO2 Capture from Cement Production - Part 2: Cost Analysis, "
-                    "Energies 12, 542, doi:10.3390/en12030542, is used as a proxy for "
-                    "a kiln-fired mineral product."
-                )
-            ),
-        )

@@ -9,6 +9,7 @@ from zen_creator import Dataset
 from zen_creator.datasets.datasets.metadata import MetaData
 
 from zen_europe.settings.cache import get_active_cache_settings
+from zen_europe.utils.constants import Constants
 
 # The inventory is downloaded once, reduced to a single pollutant and then read
 # back from this directory, so that building a model does not depend on the EEA
@@ -24,9 +25,6 @@ _COLUMNS = [
     "Year",
     "emissions",
 ]
-
-# Emissions are reported in Gg, the carbon budget is accounted in Gt.
-_GG_PER_GT = 1e6
 
 # UNFCCC sector codes of the sectors that ZEN-europe models. The codes are
 # stable across inventory versions, the sector names are not: up to v27 they
@@ -52,6 +50,8 @@ SECTOR_CODES = {
 }
 # the chemical industry categories cover methanol and ammonia together
 CHEMICALS_CODES = ["1.A.2.c", "2.B"]
+# the sectors of the chemical industry categories, also used by the DESNZ and ONS
+# inventories
 CHEMICALS_SECTORS = ["methanol", "ammonia"]
 
 # international aviation and navigation, which are reported as memo items and
@@ -232,7 +232,7 @@ class EEAGreenhouseGasInventory(Dataset[pd.DataFrame]):
         """
         codes = self.get_sector_codes(sectors)
         emissions = self._select(codes, nodes)
-        return emissions.loc[:, start_year:] / _GG_PER_GT
+        return emissions.loc[:, start_year:] / Constants.KT_PER_GT  # Gg -> Gt
 
     def get_emissions_total(
         self,
@@ -253,56 +253,7 @@ class EEAGreenhouseGasInventory(Dataset[pd.DataFrame]):
         if include_international_transport:
             codes += INTERNATIONAL_TRANSPORT_CODES
         emissions = self._select(codes, nodes).sum()
-        return emissions.loc[start_year:] / _GG_PER_GT
-
-    def get_emissions(
-        self,
-        sectors: list[str],
-        nodes: list[str],
-        use_only_public_electricity_and_heat: bool = True,
-        include_international_transport: bool = True,
-        start_year: int = UNFCCC_START_YEAR,
-    ) -> tuple[pd.DataFrame, pd.Series]:
-        """Sector emissions and total emissions of the nodes, both in Gt.
-
-        Args:
-            sectors (list[str]): Modeled sectors, as in the model settings.
-            nodes (list[str]): NUTS0 node names, those without an inventory are
-                skipped.
-            include_international_transport (bool): Whether to add international
-                aviation and navigation to the total.
-            start_year (int): First year of the time series.
-        """
-        emissions_sectors = self.get_emissions_sectors(sectors, nodes, start_year)
-        emissions_total = self.get_emissions_total(
-            nodes, include_international_transport, start_year
-        )
-        return emissions_sectors, emissions_total
-
-    def get_sector_share(
-        self,
-        sectors: list[str],
-        nodes: list[str],
-        include_international_transport: bool = True,
-        start_year: int = UNFCCC_START_YEAR,
-    ) -> pd.Series:
-        """Share of the modeled sectors in the total emissions, by year.
-
-        Args:
-            sectors (list[str]): Modeled sectors, as in the model settings.
-            nodes (list[str]): NUTS0 node names, those without an inventory are
-                skipped.
-            include_international_transport (bool): Whether to add international
-                aviation and navigation to the total.
-            start_year (int): First year of the time series.
-        """
-        emissions_sectors, emissions_total = self.get_emissions(
-            sectors,
-            nodes,
-            include_international_transport=include_international_transport,
-            start_year=start_year,
-        )
-        return emissions_sectors.sum() / emissions_total
+        return emissions.loc[start_year:] / Constants.KT_PER_GT  # Gg -> Gt
 
     # ------ Helpers ------
 
@@ -328,12 +279,3 @@ class EEAGreenhouseGasInventory(Dataset[pd.DataFrame]):
             [codes, common_nodes], names=self.data.index.names
         )
         return self.data.reindex(index)
-
-
-class EEAGreenhouseGasInventoryAllGHG(EEAGreenhouseGasInventory):
-    """All greenhouse gas emissions in CO2 equivalents, as reported to the UNFCCC."""
-
-    name = "eea_ghg_inventory_all_ghg"
-
-    POLLUTANT = "All greenhouse gases - (CO2 equivalent)"
-    UNIT = "Gg CO2 equivalent"

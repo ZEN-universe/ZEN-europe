@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, ClassVar
 
 from zen_creator import ConversionTechnology
+from zen_creator.datasets.datasets.metadata import AssumptionInformation
 from zen_creator.utils.attribute import Attribute
 
 from zen_europe.datasets.dataset_collections.industry_heat_supply import (
@@ -92,6 +93,14 @@ class HeatPumpIndustry100150Water(ConversionTechnology):
 
     def _set_capacity_existing(self) -> Attribute:
         """No industrial heat pumps today."""
+        if not self.settings.investment.use_existing_capacities:
+            return self.capacity_existing.set_data(
+                default_value=0,
+                df=None,
+                source=AssumptionInformation(
+                    description="We do not consider existing capacities."
+                ),
+            )
         return IndustryHeatSupply(
             self.settings, self.source_path
         ).get_capacity_existing_heat_pump(self)

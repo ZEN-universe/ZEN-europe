@@ -55,7 +55,7 @@ split in `CerameUnie2021` (`cerame_unie2021.py`), the reference boiler efficienc
 capacity cut-off, capacity limit margin, cascade lifetime and heat pump diffusion
 parameters in `industry_heat_supply.py`. The year of the
 production, energy and heat statistics is `DATA_YEAR` (2023) in
-`zen_europe/utils/industry.py`.
+`industry_production_data.py`.
 
 ### Scenarios (`data/models.yaml`, generated with `zen-europe --all`)
 
@@ -116,27 +116,26 @@ efficiency would be applied twice. The direct fuel input > 200 °C stays final e
 rest renormalized. Other fuels (LPG, distributed steam and others) are not mapped and are
 dropped before the cut-off (food: about 16 % of thermal energy).
 
-**Costs**: JRC-EU-TIMES values (EUR2006), the ceramic proxy (EUR2014) and the food costs
-are inflated to `cost.price_year` with the ECB HICP (`ECBInflation`), as all other
-costs, and converted from EUR/(t/yr) to EUR/(t/h) (× 8760, rated capacity; as for all other
-technologies). Variable O&M excludes energy. **Process CO2** covers
-non-combustion emissions only.
+**Costs**: none (capex, fixed and variable O&M are 0, `get_no_cost`). Each product has
+a single production technology and a fixed, flat demand, without trade or demand
+shedding, so the production and capacity follow the demand and the costs would only add
+a constant to the objective. Fuel switching and capture are separate retrofits with
+their own costs, so the costs of the production technologies do not affect them either.
+This no longer holds once a product gets a competing route, trade or demand shedding.
+**Lifetime** from JRC-EU-TIMES (`get_lifetime`), which only sets the vintages of the
+existing capacity. **Process CO2** covers non-combustion emissions only.
 
-| sector | cost source | capex | fixed O&M | var. O&M | lifetime | process CO2 (t/t) |
-|---|---|---|---|---|---|---|
-| glass | JRC `IGHHOLLOW01`, `IGFFLATGL01` | 2.73 M EUR/(t/h) | 208 k EUR/(t/h)/yr | 74 EUR/t | 28 yr | 0.121 |
-| ceramic | Gardarsdóttir et al. (2019) clinker plant (`CementProductionGardarsdottir`) | 1.83 M EUR/(t/h) | 136 k EUR/(t/h)/yr | 7.5 EUR/t | 25 yr | 0.120 |
-| paper | JRC `IPPHIGQUA01`, `IPPLOWQUA01`, `IPPPUPCHE01`; capex override from literature | 700 EUR/(t/yr) | JRC | JRC | JRC | 0 |
-| food | literature | 300 EUR/(t/yr) | 15 EUR/(t/yr)/yr | 0 | 20 yr | 0 |
-
-The literature costs of paper and food are in
-`data/raw_data/03-technology/industry/industry_production_costs.csv`
-(`IndustryProductionCosts`), together with their sources.
+| sector | lifetime source | lifetime | process CO2 (t/t) |
+|---|---|---|---|
+| glass | JRC `IGHHOLLOW01`, `IGFFLATGL01`, weighted by route | 28 yr | 0.121 |
+| ceramic | JRC `INMPRCGAS01` (gas process heat, non-metallic minerals; no ceramic process) | 30 yr | 0.120 |
+| paper | JRC `IPPHIGQUA01`, `IPPLOWQUA01`, `IPPPUPCHE01`, weighted by activity | 25 yr | 0 |
+| food | JRC `IOIPRCGAS01` (gas process heat, other industries; no food process) | 30 yr | 0 |
 
 ### Glass
 
 - Routes container/flat/fibre, weighted 60/30/10 % (AIDRES EU mix); the weights are also
-  applied to Rehfeldt temperature distributions, JRC costs and kiln fuel factors.
+  applied to Rehfeldt temperature distributions, JRC lifetimes and kiln fuel factors.
 - Fibre uses `IGFFLATGL01` (same continuous-melt furnace; no JRC fibre process).
 - Process CO2 = direct emission of the AIDRES electricity routes (raw-material
   decomposition), weighted by production share: 0.6 × 0.073 + 0.3 × 0.182 + 0.1 × 0.227
@@ -148,11 +147,9 @@ The literature costs of paper and food are in
   (kt bricks eq.), which also includes lime, gypsum and mineral wool. `ceramic` therefore
   stands for this whole subsector: its thermal energy is roughly 1.5× that of the ceramic
   industry alone, and the fuel mix contains petcoke (other liquids) and biomass and waste
-  typical of lime kilns. Energy intensity, costs, switchable share and process CO2 are based
+  typical of lime kilns. Energy intensity, switchable share and process CO2 are based
   on ceramics data; lime process CO2 (about 0.75 t/t) is not represented.
 - Rehfeldt sub-processes: tiles 5.46, technical 12.11, houseware 24.24 GJ/t.
-- No ceramic cost data exist; the costs and lifetime of the cement clinker plant
-  (`CementProductionGardarsdottir`, as `cement_production`) are used as a kiln-fired mineral proxy.
 - Ceramic kilns are fired with natural gas today; the JRC-IDEES biomass, oil and coal of
   the subsector are not modeled.
 - Process CO2 from the emission split of the European ceramic industry in 2020
@@ -164,11 +161,6 @@ The literature costs of paper and food are in
 
 - Sub-processes paper, recovered fibres, chemical pulp (95.2 % of activity; weights
   56.1/28.9/15.0 %). Mechanical pulp excluded.
-- Capex override: JRC (~2,283 EUR/(t/yr)) describes an integrated greenfield mill.
-  Only the capex is overridden; O&M and lifetime stay JRC (integrated mill). Paper has no
-  competing production route, so this only shifts the costs linearly.
-  700 EUR/(t/yr) is a lower bound from brownfield conversions: Stora Enso Oulu 2026
-  (~1,333), Langerbrugge 2022 (~571), Kotkamills BM2 2016 (~425–450 EUR/(t/yr)).
 - Lime kiln calcination of kraft pulping is not included.
 - Black liquor and bark are not modeled separately: paper's biomass boilers use the shared
   `biomass` carrier, so this internal biomass competes for the limited biomass potential,
@@ -179,9 +171,6 @@ The literature costs of paper and food are in
 
 - Rehfeldt sub-processes dairy, meat, brewing, bakery, sugar (bakery and sugar carry
   the > 200 °C demand).
-- No consistent food cost data exist. Costs are rounded from three mid-sized JRC processes
-  (hollow glass, quicklime, copper finishing), as food plants are mostly low-temperature
-  processing lines.
 
 ## Kiln fuel switching
 
@@ -442,7 +431,6 @@ budget is slightly generous.
 - DEA. Danish Energy Agency. *Technology Data for Industrial Process Heat*; *Technology Data for Carbon Capture, Transport and Storage*.
 - Eurostat. *Complete energy balances* (nrg_bal_c). doi:10.2908/NRG_BAL_C.
 - FAOSTAT. *Crops and livestock products.* <https://www.fao.org/faostat/en/#data/QCL>
-- Gardarsdóttir, S. O. et al. (2019). Comparison of technologies for CO2 capture from cement production—Part 2: Cost analysis. *Energies* 12, 542.
 - JRC BAT Paper (2015). *Best Available Techniques reference document for the production of pulp, paper and board.* doi:10.2791/370629.
 - JRC-BAT-CER-2026. *Best Available Techniques reference document for the ceramic manufacturing industry*, final draft, April 2026.
 - JRC-EU-TIMES (2019.11). Industry technologies, `JRC_EU_TIMES_model_input.xls`.

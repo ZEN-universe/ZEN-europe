@@ -17,7 +17,7 @@ class ShippingSector(Sector):
     """Shipping fuel demand, split by fuel technology."""
 
     name = "shipping"
-    required_sectors = ["electricity", "hydrogen"]
+    required_sectors = ["electricity", "hydrogen", "oil_products"]
 
     def __init__(self) -> None:
         super().__init__()

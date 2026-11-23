@@ -6,7 +6,7 @@ import pandas as pd
 from zen_creator.datasets.datasets.dataset import Dataset
 from zen_creator.datasets.datasets.metadata import MetaData
 
-from zen_europe.utils.industry import NODES_WITHOUT_IDEES
+from zen_europe.datasets.datasets.carrier.jrc_idees import NODES_WITHOUT_IDEES
 from zen_europe.utils.utils import convert_country_names
 
 
@@ -28,7 +28,7 @@ class JRCBATPaper(Dataset[pd.DataFrame]):
             author=["European Commission, Joint Research Centre"],
             publication="Publications Office of the European Union",
             publication_year=2015,
-            doi="10.2791/370629",
+            doi="https://doi.org/10.2791/370629",
             note="Tables 1.1-1.2, paper consumption 2008.",
         )
 

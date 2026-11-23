@@ -17,7 +17,6 @@ from zen_europe.datasets.datasets.carrier.aidres import Aidres
 from zen_europe.datasets.datasets.technology.technology_diffusion_mannhardt import (
     TechnologyDiffusionMannhardt,
 )
-from zen_europe.utils.industry import waste_heat_carrier
 
 if TYPE_CHECKING:
     from zen_creator.model import Model
@@ -52,7 +51,7 @@ class HydrogenToGlassFuel(RetrofittingTechnology):
         """Glass fuel and the waste heat of the furnace."""
         return Attribute(
             "output_carrier",
-            default_value=["glass_fuel", *waste_heat_carrier(self)],
+            default_value=["glass_fuel", *self.settings.operation.waste_heat_carriers],
             element=self,
         )
 

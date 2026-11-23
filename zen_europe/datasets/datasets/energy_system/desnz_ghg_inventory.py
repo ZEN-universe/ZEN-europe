@@ -10,15 +10,16 @@ import requests
 from zen_creator import Dataset
 from zen_creator.datasets.datasets.metadata import MetaData
 
+from zen_europe.datasets.datasets.energy_system.eea_ghg_inventory import (
+    CHEMICALS_SECTORS,
+)
 from zen_europe.settings.cache import get_active_cache_settings
+from zen_europe.utils.constants import Constants
 
 # The workbook is downloaded once, reduced to a single pollutant and then read
 # back from this directory, so that building a model does not depend on the
 # DESNZ download being reachable. Delete the cached file to rebuild it.
 _CACHE_DIRECTORY = ("01-energy_system", "desnz_ghg_inventory")
-
-# Emissions are reported in Mt, the carbon budget is accounted in Gt.
-_MT_PER_GT = 1e3
 
 # The UK reports along its own territorial emission statistics (TES) hierarchy,
 # not along the UNFCCC categories that the EEA inventory uses.
@@ -62,7 +63,6 @@ CHEMICALS_CATEGORIES = [
     ("Industry", "Industrial processes", "Other - chemical industry"),
     ("Industry", "Industrial fuel combustion", "Other industrial combustion"),
 ]
-CHEMICALS_SECTORS = ["methanol", "ammonia"]
 
 # International bunkers are a memo item of the inventory rather than part of the
 # territorial total, and are stored under a sector of their own.
@@ -275,7 +275,7 @@ class DESNZGreenhouseGasInventory(Dataset[pd.DataFrame]):
         """
         categories = self.get_sector_categories(sectors)
         emissions = self._select(categories)
-        return emissions.loc[:, start_year:] / _MT_PER_GT
+        return emissions.loc[:, start_year:] / Constants.MT_PER_GT  # Mt -> Gt
 
     def get_emissions_total(
         self,
@@ -297,36 +297,7 @@ class DESNZGreenhouseGasInventory(Dataset[pd.DataFrame]):
         if international:
             bunkers = self._select(international)
             emissions = emissions + bunkers.sum()
-        return emissions.loc[start_year:] / _MT_PER_GT
-
-    def get_emissions(
-        self,
-        sectors: list[str],
-        start_year: int = DESNZ_START_YEAR,
-    ) -> tuple[pd.DataFrame, pd.Series]:
-        """Sector emissions and total emissions of the UK, both in Gt.
-
-        Args:
-            sectors (list[str]): Modeled sectors, as in the model settings.
-            start_year (int): First year of the time series.
-        """
-        emissions_sectors = self.get_emissions_sectors(sectors, start_year)
-        emissions_total = self.get_emissions_total(sectors, start_year)
-        return emissions_sectors, emissions_total
-
-    def get_sector_share(
-        self,
-        sectors: list[str],
-        start_year: int = DESNZ_START_YEAR,
-    ) -> pd.Series:
-        """Share of the modeled sectors in the UK emissions, by year.
-
-        Args:
-            sectors (list[str]): Modeled sectors, as in the model settings.
-            start_year (int): First year of the time series.
-        """
-        emissions_sectors, emissions_total = self.get_emissions(sectors, start_year)
-        return emissions_sectors.sum() / emissions_total
+        return emissions.loc[start_year:] / Constants.MT_PER_GT  # Mt -> Gt
 
     # ------ Helpers ------
 
@@ -336,12 +307,3 @@ class DESNZGreenhouseGasInventory(Dataset[pd.DataFrame]):
         if missing:
             raise ValueError(f"The workbook does not report the categories {missing}.")
         return self.data.loc[categories]
-
-
-class DESNZGreenhouseGasInventoryAllGHG(DESNZGreenhouseGasInventory):
-    """All UK greenhouse gas emissions in CO2 equivalents."""
-
-    name = "desnz_ghg_inventory_all_ghg"
-
-    SHEET = "1.2"
-    GAS = "Total"

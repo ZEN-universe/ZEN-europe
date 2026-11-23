@@ -9,7 +9,6 @@ from zen_europe.datasets.datasets.carrier.material_economics import MaterialEcon
 from zen_europe.datasets.datasets.technology.cement_production_gardarsdottir import (
     CementProductionGardarsdottir,
 )
-from zen_europe.utils.industry import waste_heat_carrier
 
 if TYPE_CHECKING:
     from zen_creator.model import Model
@@ -54,7 +53,7 @@ class CementProduction(ConversionTechnology):
         """
         return Attribute(
             name="output_carrier",
-            default_value=["clinker", *waste_heat_carrier(self)],
+            default_value=["clinker", *self.settings.operation.waste_heat_carriers],
             element=self,
         )
 

@@ -3,6 +3,8 @@ from zen_creator import Sector
 from zen_europe.elements.carriers.carbon import Carbon
 from zen_europe.elements.conversion_technologies.carbon_storage import CarbonStorage
 from zen_europe.elements.conversion_technologies.DAC import DAC
+from zen_europe.elements.conversion_technologies.fischer_tropsch import FischerTropsch
+from zen_europe.elements.conversion_technologies.methanation import Methanation
 from zen_europe.elements.conversion_technologies.methanol_from_hydrogen import (
     MethanolFromHydrogen,
 )
@@ -49,4 +51,6 @@ class CarbonSector(Sector):
             NG_DRI_CCS,
             MethanolFromHydrogen,
             Carbon,
+            Methanation,
+            FischerTropsch,
         ]

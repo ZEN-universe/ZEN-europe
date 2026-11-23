@@ -2,7 +2,6 @@ from zen_creator import Sector
 
 from zen_europe.elements.carriers.crude_oil import CrudeOil
 from zen_europe.elements.carriers.naphtha import Naphtha
-from zen_europe.elements.conversion_technologies.diesel_ICE_ship import DieselICEShip
 from zen_europe.elements.conversion_technologies.oil_to_diesel_conversion import (
     OilToDieselConversion,
 )
@@ -27,7 +26,7 @@ class RefiningSector(Sector):
     """Crude oil refining into gasoline, diesel, naphtha and kerosene."""
 
     name = "refining"
-    required_sectors = ["hydrogen"]
+    required_sectors = ["hydrogen", "oil_products"]
 
     def __init__(self) -> None:
         super().__init__()
@@ -40,7 +39,6 @@ class RefiningSector(Sector):
             Refining,
             OlefinFromNaphtha,
             OilToKeroseneConversion,
-            DieselICEShip,
             CrudeOil,
             Naphtha,
         ]

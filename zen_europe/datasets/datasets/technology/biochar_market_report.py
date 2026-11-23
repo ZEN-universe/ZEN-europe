@@ -129,7 +129,7 @@ class BiocharMarketReport(Dataset[pd.DataFrame]):
         """
         attr = element.capacity_existing
         addition = calculate_capacity_addition_from_cumulative(self.data, element)
-        data = addition * Constants.BIOCHAR_GWH_PER_TON / 8760  # GW
+        data = addition * Constants.BIOCHAR_GWH_PER_TON / Constants.HOURS_PER_YEAR  # GW
         dea_dataset = DEA(source_path=self.source_path)
         cf = dea_dataset.get_conversion_factor_pyrolysis()
         biochar_per_oil = next(item for item in cf if "hard_coal" in item)["hard_coal"][

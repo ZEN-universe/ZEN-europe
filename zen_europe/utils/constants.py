@@ -21,7 +21,11 @@ class Constants:
     HOURS_PER_WEEK: float = 168
 
     GJ_PER_MWH: float = 3.6
-    """1 MWh = 3.6 GJ, from the definition 1 Wh = 3600 J."""
+    """1 MWh = 3.6 GJ, from the definition 1 Wh = 3600 J. Also MJ per kWh and PJ per
+    TWh."""
+
+    GJ_PER_GWH: float = 1000 * GJ_PER_MWH
+    """1 GWh = 3600 GJ. Also kJ per kWh."""
 
     KELVIN_AT_ZERO_CELSIUS: float = 273.15
     """Temperature in K = temperature in °C + 273.15."""
@@ -31,6 +35,18 @@ class Constants:
 
     GJ_PER_KTOE: float = 1000 * GJ_PER_MWH / TOE_PER_MWH
     """1 ktoe = 1000 toe x 41.868 GJ/toe."""
+
+    GWH_PER_KTOE: float = 1 / TOE_PER_MWH
+    """1 ktoe = 11.63 GWh."""
+
+    KM_PER_MILE: float = 1.609344
+    """International mile, 1 mile = 1609.344 m."""
+
+    MT_PER_GT: float = 1e3
+    """Megatonnes per gigatonne."""
+
+    KT_PER_GT: float = 1e6
+    """Kilotonnes (= Gg) per gigatonne."""
 
     BARREL_PER_TON: float = 7.46
     """Conversion factor from tons of crude oil to barrels."""
@@ -53,13 +69,13 @@ class Constants:
     METHANOL_KWH_PER_KG: float = 5.54
     """ lhv, https://www.engineeringtoolbox.com/fuels-higher-calorific-values-d_169.html"""
 
-    AMMONIA_GWH_PER_TON: float = 18.9 / 3600
+    AMMONIA_GWH_PER_TON: float = 18.9 / GJ_PER_GWH
     """ https://ens.dk/en/analyses-and-statistics/technology-data-renewable-fuels"""
 
-    BIOCHAR_GWH_PER_TON: float = 25 / 3600
+    BIOCHAR_GWH_PER_TON: float = 25 / GJ_PER_GWH
     """ https://ens.dk/en/analyses-and-statistics/technology-data-renewable-fuels"""
 
-    DIESEL_KWH_PER_LITER: float = 36 / 3.6
+    DIESEL_KWH_PER_LITER: float = 36 / GJ_PER_MWH
     """lhv, from MJ/l to KWH/l, https://www.engineeringtoolbox.com/fuels-higher-calorific-values-d_169.html"""
 
     DENSITY_OIL: float = 800

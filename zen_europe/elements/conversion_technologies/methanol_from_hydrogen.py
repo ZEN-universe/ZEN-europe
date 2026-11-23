@@ -38,7 +38,7 @@ class MethanolFromHydrogen(ConversionTechnology):
     def _set_input_carrier(self) -> Attribute:
         """
         Sets the input carrier of methanol from hydrogen to hydrogen,
-        electricity and carbon. Steam is added as an input, with waste heat
+        electricity and carbon. Steam (150-200°C) is added as an input, with waste heat
         as a by-product. 
         """
         return Attribute(

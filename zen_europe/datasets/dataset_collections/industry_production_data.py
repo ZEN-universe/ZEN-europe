@@ -6,31 +6,22 @@ from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 import pandas as pd
 from zen_creator import Attribute, DatasetCollection
-from zen_creator.datasets.datasets.metadata import SourceInformation
+from zen_creator.datasets.datasets.metadata import (
+    AssumptionInformation,
+    SourceInformation,
+)
 
-from zen_europe.datasets.datasets.carrier.jrc_idees import JRCIDEES
+from zen_europe.datasets.datasets.carrier.jrc_idees import IDEES_EU, JRCIDEES
 from zen_europe.datasets.datasets.carrier.rehfeldt2017 import Rehfeldt2017
 from zen_europe.datasets.datasets.carrier.wolf2017 import Wolf2017
 from zen_europe.datasets.datasets.energy_system.worldbank_population import (
     WorldBankPopulation,
 )
 from zen_europe.datasets.datasets.financial.dea import DEA
-from zen_europe.datasets.datasets.financial.ECB import ECBInflation
-from zen_europe.datasets.datasets.technology.industry_production_costs import (
-    IndustryProductionCosts,
-)
 from zen_europe.datasets.datasets.technology.jrc_eu_times_industry import (
-    BASE_YEAR,
     JRCEUTIMESIndustry,
 )
 from zen_europe.utils.constants import Constants
-from zen_europe.utils.industry import (
-    DATA_YEAR,
-    IDEES_EU,
-    PROXY_NODES,
-    heat_carrier,
-    sector_fuel,
-)
 from zen_europe.utils.utils import (
     calculate_capacity_addition_from_cumulative,
     format_capacity_existing,
@@ -40,6 +31,10 @@ if TYPE_CHECKING:
     from zen_creator import Dataset, Element
     from zen_creator.utils.settings import Settings
 
+# year of the production, energy and heat statistics of the industry heat sectors
+DATA_YEAR = 2023
+# proxy node of the nodes without JRC-IDEES data: CH as AT, NO as FI, UK as DE
+PROXY_NODES = {"CH": "AT", "NO": "FI", "UK": "DE"}
 # a production series or frame, see `to_t_per_hour`
 ProductionT = TypeVar("ProductionT", pd.Series, pd.DataFrame)
 # fuels below this share of a sector's JRC-IDEES thermal fuel mix (> 200 °C) are
@@ -53,7 +48,7 @@ CAPACITY_DATA_SECTORS = ("glass", "paper")
 class IndustryProductionData(DatasetCollection):
     """Data shared by the production data of the industry sectors (glass, ceramic,
     paper, food): energy intensity and heat bands, fuel mix, capacity utilisation,
-    proxy nodes, costs and the attributes of the production technologies."""
+    proxy nodes, lifetime and the attributes of the production technologies."""
 
     name = "industry_production_data"
 
@@ -70,10 +65,8 @@ class IndustryProductionData(DatasetCollection):
             "wolf2017": Wolf2017(self.source_path),
             "jrc_idees": JRCIDEES(self.source_path),
             "dea": DEA(self.source_path),
-            "ecb": ECBInflation(self.source_path),
             "worldbank_population": WorldBankPopulation(self.source_path),
             "jrc_eu_times_industry": JRCEUTIMESIndustry(self.source_path),
-            "industry_production_costs": IndustryProductionCosts(self.source_path),
         }
 
     # ---------- attributes of the products and production technologies ----------
@@ -119,7 +112,7 @@ class IndustryProductionData(DatasetCollection):
             ],
             source=SourceInformation(
                 description=(
-                    f"{description} Heat below 200 °C is split into temperature bands "
+                    f"{description} heat below 200 °C is split into temperature bands "
                     "with the Rehfeldt et al. (2017) temperature distribution and, for "
                     "100-200 °C, with Wolf (2017), and converted from final energy to "
                     "useful heat with a reference boiler efficiency of "
@@ -156,13 +149,6 @@ class IndustryProductionData(DatasetCollection):
             f"a capacity utilisation of {self.capacity_utilisation:.3f}, the mean "
             "ratio of EU27 physical output and installed capacity of glass and paper "
             f"in JRC-IDEES-{DATA_YEAR}"
-        )
-
-    def describe_inflation(self) -> str:
-        """Description of the price year of the costs."""
-        return (
-            f"Costs in {self.settings.time.price_year} Euro using ECB HICP "
-            "inflation, see docs, 'Production technologies'."
         )
 
     # ---------- post-combustion capture ----------
@@ -340,7 +326,7 @@ class IndustryProductionData(DatasetCollection):
         the fuel above 200 °C of the energy intensity `energy` split by the fuel
         shares `fuel_inputs`, the electricity and the heat bands with demand."""
         heat = self.calculate_heat_conversion_factors(sector, energy)
-        heat = heat[heat > 0].rename(heat_carrier)
+        heat = heat[heat > 0].add_prefix("heat_industry_")
         electricity = pd.Series({"electricity": energy["electricity"]})
         return pd.concat([energy["fuel"] * fuel_inputs, electricity, heat]).round(12)
 
@@ -368,7 +354,7 @@ class IndustryProductionData(DatasetCollection):
     def calculate_fuel_inputs_kiln(sector: str) -> pd.Series:
         """Fuel shares of a kiln- or furnace-fired sector: all its fuel is the
         sector's kiln or furnace fuel, supplied by the fuel retrofits."""
-        return pd.Series({sector_fuel(sector): 1.0})
+        return pd.Series({f"{sector}_fuel": 1.0})
 
     # ---------- production and capacity ----------
 
@@ -422,50 +408,44 @@ class IndustryProductionData(DatasetCollection):
             data[node] = data[proxy] * self._proxy_factor(node, proxy)
         return data
 
-    # ---------- costs ----------
+    # ---------- lifetime and costs ----------
 
-    def calculate_jrc_costs(
-        self, processes: dict[str, str], weights: pd.Series
-    ) -> dict[str, float]:
-        """Weighted JRC-EU-TIMES costs (Euro/(t/h), Euro/t) and lifetime of the
-        JRC-EU-TIMES `processes` of a sector's sub-processes."""
+    def get_lifetime(
+        self,
+        element: Element,
+        processes: dict[str, str],
+        weights: pd.Series,
+        description: str,
+    ) -> Attribute:
+        """Get the lifetime of a production technology: the JRC-EU-TIMES lifetime of
+        the `processes` of a sector's sub-processes, weighted by `weights`."""
         times = cast(JRCEUTIMESIndustry, self.data["jrc_eu_times_industry"])
-        ecb = cast(ECBInflation, self.data["ecb"])
-        inflation = ecb.get_inflation_rate(BASE_YEAR, self.settings.time.price_year)
-        parameters = pd.DataFrame(
+        lifetimes = pd.Series(
             {
-                sub_process: times.get_process_parameters(process)
+                sub_process: times.get_process_parameters(process)["LIFE"]
                 for sub_process, process in processes.items()
             }
         )
-        weighted = parameters.dot(weights[parameters.columns])
-        hours = Constants.HOURS_PER_YEAR
-        return {
-            # Euro/(t/a) -> Euro/(t/h)
-            "capex": weighted["INVCOST"] * inflation * hours,
-            "opex_fixed": weighted["FIXOM"] * inflation * hours,
-            "opex_variable": weighted["VAROM"] * inflation,
-            "lifetime": round(weighted["LIFE"]),
-        }
-
-    def calculate_literature_cost(self, sector: str, parameter: str) -> float:
-        """Literature cost, inflated from its price year if it has one."""
-        literature = cast(
-            IndustryProductionCosts, self.data["industry_production_costs"]
+        return element.lifetime.set_data(
+            default_value=float(round(lifetimes.dot(weights[lifetimes.index]))),
+            source=SourceInformation(description=description, metadata=self.metadata),
         )
-        value = literature.get_value(sector, parameter)
-        price_year = literature.get_price_year(sector, parameter)
-        if price_year is None:
-            return value
-        ecb = cast(ECBInflation, self.data["ecb"])
-        return value * ecb.get_inflation_rate(price_year, self.settings.time.price_year)
 
-    def describe_literature_cost(self, sector: str, parameter: str) -> str:
-        """Reasoning and source of a literature cost."""
-        literature = cast(
-            IndustryProductionCosts, self.data["industry_production_costs"]
+    def get_no_cost(self, attribute: Attribute) -> Attribute:
+        """Set a cost of a production technology to 0: its capacity follows the
+        fixed product demand and no other route produces the product, so its cost
+        would only add a constant to the objective."""
+        return attribute.set_data(
+            default_value=0.0,
+            source=AssumptionInformation(
+                description=(
+                    "Not modeled: the production capacity follows the fixed product "
+                    "demand and no other technology produces the product, so the "
+                    "cost would only add a constant to the objective and change no "
+                    "decision. See docs, 'Production technologies'."
+                )
+            ),
         )
-        return literature.get_description(sector, parameter)
 
     # ---------- helpers ----------
 

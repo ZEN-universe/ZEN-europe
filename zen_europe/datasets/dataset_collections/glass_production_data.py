@@ -12,7 +12,6 @@ from zen_europe.datasets.dataset_collections.industry_production_data import (
     IndustryProductionData,
 )
 from zen_europe.datasets.datasets.carrier.aidres import Aidres
-from zen_europe.utils.industry import model_nodes, sector_fuel
 from zen_europe.utils.utils import instance_cache
 
 if TYPE_CHECKING:
@@ -29,8 +28,8 @@ JRC_PROCESSES = {
 
 
 class GlassProductionData(DatasetCollection):
-    """Glass production: demand, energy intensity, capacity, costs, process CO2 and
-    the fuel of the glass furnaces."""
+    """Glass production: demand, energy intensity, capacity, lifetime, process CO2
+    and the fuel of the glass furnaces."""
 
     name = "glass_production_data"
 
@@ -55,7 +54,7 @@ class GlassProductionData(DatasetCollection):
         """Get the glass demand: today's production."""
         return self._industry.get_demand(
             element,
-            self.calculate_production(model_nodes(element)),
+            self.calculate_production(tuple(element.model.config.system.set_nodes)),
             "The production is the JRC-IDEES physical output; CH, NO and UK use a "
             "proxy node (CH as AT, NO as FI, UK as DE scaled by the World Bank "
             "population).",
@@ -85,40 +84,20 @@ class GlassProductionData(DatasetCollection):
         """Get the existing glass production capacity."""
         return self._industry.get_capacity_existing(
             element,
-            self._calculate_capacity(model_nodes(element)),
+            self._calculate_capacity(tuple(element.model.config.system.set_nodes)),
             "The existing production capacity is the JRC-IDEES installed capacity "
             "at 8760 hours per year; CH, NO and UK use a proxy node.",
         )
 
     def get_lifetime(self, element: Element) -> Attribute:
         """Get the lifetime from JRC-EU-TIMES."""
-        return element.lifetime.set_data(
-            default_value=float(self._costs["lifetime"]),
-            source=self._cost_source(),
-        )
-
-    def get_capex_specific_conversion(self, element: Element) -> Attribute:
-        """Get the investment cost from JRC-EU-TIMES."""
-        return element.capex_specific_conversion.set_data(
-            default_value=float(self._costs["capex"]),
-            unit="Euro/(tproduct/h)",
-            source=self._cost_source(),
-        )
-
-    def get_opex_specific_fixed(self, element: Element) -> Attribute:
-        """Get the fixed O&M cost from JRC-EU-TIMES."""
-        return element.opex_specific_fixed.set_data(
-            default_value=float(self._costs["opex_fixed"]),
-            unit="Euro/(tproduct/h)",
-            source=self._cost_source(),
-        )
-
-    def get_opex_specific_variable(self, element: Element) -> Attribute:
-        """Get the variable O&M cost from JRC-EU-TIMES, without energy."""
-        return element.opex_specific_variable.set_data(
-            default_value=float(self._costs["opex_variable"]),
-            unit="Euro/tproduct",
-            source=self._cost_source(),
+        aidres = cast(Aidres, self.data["aidres"])
+        return self._industry.get_lifetime(
+            element,
+            JRC_PROCESSES,
+            aidres.get_production_shares_glass(),
+            "JRC-EU-TIMES lifetime of the glass processes, weighted by the AIDRES "
+            "(2023) EU production shares of the glass routes.",
         )
 
     def get_carbon_intensity_technology(self, element: Element) -> Attribute:
@@ -164,7 +143,7 @@ class GlassProductionData(DatasetCollection):
         return self._industry.get_retrofit_flow_coupling_factor_fuel(
             element,
             aidres.get_max_fuel_share_glass(element.name),
-            self.calculate_conversion_factors()[sector_fuel(SECTOR)],
+            self.calculate_conversion_factors()[f"{SECTOR}_fuel"],
             "AIDRES (2023): the glass routes run fully on natural gas, hydrogen or "
             "electricity",
         )
@@ -236,22 +215,3 @@ class GlassProductionData(DatasetCollection):
         industry = self._industry
         capacity = industry.get_industry_installed_capacity(SECTOR, nodes)
         return industry.to_t_per_hour(industry.fill_proxy_nodes(capacity))
-
-    @cached_property
-    def _costs(self) -> dict[str, float]:
-        """JRC-EU-TIMES costs of the glass processes, weighted by the AIDRES EU
-        production shares of the glass routes."""
-        aidres = cast(Aidres, self.data["aidres"])
-        return self._industry.calculate_jrc_costs(
-            JRC_PROCESSES, aidres.get_production_shares_glass()
-        )
-
-    def _cost_source(self) -> SourceInformation:
-        return SourceInformation(
-            description=(
-                "JRC-EU-TIMES costs and lifetime of the glass processes, weighted by "
-                "the AIDRES (2023) EU production shares of the glass routes. "
-                + self._industry.describe_inflation()
-            ),
-            metadata=self.metadata,
-        )
