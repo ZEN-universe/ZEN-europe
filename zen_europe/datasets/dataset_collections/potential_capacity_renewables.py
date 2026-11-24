@@ -13,10 +13,8 @@ if TYPE_CHECKING:
 from zen_creator import Attribute, DatasetCollection
 from zen_creator.utils.attribute import SourceInformation
 
-from zen_europe.datasets.datasets.technology.enspreso2_offshore import (
-    ENSPRESO2Offshore,
-)
-from zen_europe.datasets.datasets.technology.enspreso_v1 import ENSPRESOV1
+from zen_europe.datasets.datasets.technology.enspreso1 import ENSPRESO1
+from zen_europe.datasets.datasets.technology.enspreso2 import ENSPRESO2
 from zen_europe.datasets.datasets.technology.euro_calliope import EuroCalliope
 
 
@@ -35,8 +33,8 @@ class PotentialCapacityRenewables(DatasetCollection):
             raise ValueError("source_path must be set to load the dataset collection.")
 
         return {
-            "enspreso_v1": ENSPRESOV1(self.source_path),
-            "enspreso2_offshore": ENSPRESO2Offshore(self.source_path),
+            "enspreso1": ENSPRESO1(self.source_path),
+            "enspreso2": ENSPRESO2(self.source_path),
             "euro_calliope": EuroCalliope(self.source_path),
         }
 
@@ -44,20 +42,35 @@ class PotentialCapacityRenewables(DatasetCollection):
         """
         Get the potential capacity for renewable technologies.
 
-        Offshore wind uses ENSPRESO 2, which covers all model nodes with a coast.
-        Photovoltaics and onshore wind use ENSPRESO v1, with EuroCalliope as a
-        fallback for the nodes ENSPRESO v1 does not cover (CH, NO).
+        Wind uses ENSPRESO 2, with ENSPRESO 1 (medium) for the UK onshore, which
+        ENSPRESO 2 does not cover. Photovoltaics uses ENSPRESO 1, with EuroCalliope
+        as a fallback for the nodes ENSPRESO 1 does not cover (CH, NO).
         """
         if element.name == "wind_offshore":
-            enspreso2 = cast(ENSPRESO2Offshore, self.data["enspreso2_offshore"])
+            enspreso2 = cast(ENSPRESO2, self.data["enspreso2"])
             data = enspreso2.get_capacity_limit(element)
             description = (
                 "Potential capacity of offshore wind is the fixed-bottom potential "
                 "of the ENSPRESO 2 reference scenario (sites with a capacity factor "
                 "of at least 30%)."
             )
+        elif element.name == "wind_onshore":
+            enspreso2 = cast(ENSPRESO2, self.data["enspreso2"])
+            enspreso1 = cast(ENSPRESO1, self.data["enspreso1"])
+            data = enspreso2.get_capacity_limit(element)
+            missing_nodes = pd.Index(element.model.config.system.set_nodes).difference(
+                data.index
+            )
+            fallback = enspreso1.get_capacity_limit(element)
+            data = pd.concat([data, fallback.reindex(missing_nodes)])
+            description = (
+                "Potential capacity of onshore wind is the ENSPRESO 2 high scenario "
+                "(500 m setback from settlements, sites with a capacity factor of at "
+                "least 20%). ENSPRESO 2 does not cover the UK, for which the medium "
+                "scenario of ENSPRESO 1 is used."
+            )
         else:
-            enspreso_dataset = cast(ENSPRESOV1, self.data["enspreso_v1"])
+            enspreso_dataset = cast(ENSPRESO1, self.data["enspreso1"])
             euro_calliope_dataset = cast(EuroCalliope, self.data["euro_calliope"])
             data = enspreso_dataset.get_capacity_limit(element)
             missing_nodes = pd.Index(element.model.config.system.set_nodes).difference(
@@ -67,7 +80,7 @@ class PotentialCapacityRenewables(DatasetCollection):
                 data.loc[node] = euro_calliope_dataset.get_capacity_limit(element, node)
             description = (
                 "Potential capacity data for renewable technologies is derived "
-                "from the high scenario of the ENSPRESO v1 dataset. For missing "
+                "from the high scenario of the ENSPRESO 1 dataset. For missing "
                 "nodes (CH, NO), the EuroCalliope dataset is used as a fallback."
             )
         data = data.sort_index()

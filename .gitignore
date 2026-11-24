@@ -29,6 +29,7 @@ test.py
 /data/raw_data/03-technology/climate_data/*_raw.zip
 /data/raw_data/03-technology/climate_data/*_wind_weights.csv
 /data/raw_data/03-technology/potential_capacity_renewables/enspreso2_offshore_wind_eez_data.dbf
+/data/raw_data/03-technology/potential_capacity_renewables/enspreso2_onshore_wind_nuts.gpkg
 /data/raw_data/03-technology/climate_data/pecd_data_*.feather
 /data/raw_data/03-technology/cost/dea/technology_data_for_el_and_dh.xlsx
 /data/raw_data/03-technology/cost/dea/technology_data_heating_installations.xlsx

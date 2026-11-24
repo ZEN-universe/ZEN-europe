@@ -24,7 +24,7 @@ class ENSPRESO2Offshore(Dataset[pd.Series]):
     table (.dbf) is downloaded. We use the fixed-bottom capacity at sites with a
     capacity factor of at least 30% in the reference scenario (`FX_RF_MWCF`, MW).
     Floating potentials (`FL_*`) and the high scenario (`*_HG_*`) are not used.
-    Unlike ENSPRESO v1, the EEZ data covers neighbouring countries such as Norway.
+    Unlike ENSPRESO 1, the EEZ data covers neighbouring countries such as Norway.
     """
 
     name = "enspreso2_offshore"
@@ -58,7 +58,7 @@ class ENSPRESO2Offshore(Dataset[pd.Series]):
 
     def _set_data(self) -> pd.Series:
         file_path = self.path / self.FILE_NAME
-        if get_active_cache_settings().overwrite_enspreso2_offshore or not (
+        if get_active_cache_settings().overwrite_enspreso2 or not (
             file_path.exists()
         ):
             logging.info(f"Downloading {self.name} from {self.URL}...")

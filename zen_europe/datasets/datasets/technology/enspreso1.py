@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import logging
 from pathlib import Path
 
 import pandas as pd
@@ -8,16 +7,16 @@ from zen_creator.datasets.datasets.dataset import Dataset
 from zen_creator.datasets.datasets.metadata import MetaData
 
 
-class ENSPRESOV1(Dataset[dict[str, pd.Series]]):
+class ENSPRESO1(Dataset[dict[str, pd.Series]]):
     """
-    ENSPRESO v1 dataset class for potential capacity.
+    ENSPRESO 1 dataset class for potential capacity.
 
     """
 
-    name = "enspreso_v1"
+    name = "enspreso1"
 
     COLUMN_MAPPING = {
-        "wind_onshore": "wind_onshore_capacity_gw_high",
+        "wind_onshore": "wind_onshore_capacity_gw_medium",
         "photovoltaics": "solar_capacity_gw_high_pv_ground",
     }
 
@@ -96,11 +95,6 @@ class ENSPRESOV1(Dataset[dict[str, pd.Series]]):
         if element.name not in self.COLUMN_MAPPING:
             raise ValueError(
                 f"Potential capacity data for {element.name} is not available in the "
-                "ENSPRESO v1 dataset."
-            )
-        if element.name == "wind_onshore":
-            logging.info(
-                "ENSPRESO v2 is released for onshore wind. Check and maybe update the "
-                "dataset."
+                "ENSPRESO 1 dataset."
             )
         return self.data[element.name]
