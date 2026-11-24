@@ -33,9 +33,19 @@ class CeramicProduction(ConversionTechnology):
         return Attribute("reference_carrier", default_value=["ceramic"], element=self)
 
     def _set_input_carrier(self) -> Attribute:
-        """Fuels, ceramic fuel, heat bands and electricity."""
-        return CeramicProductionData(self.settings, self.source_path).get_input_carrier(
-            self
+        """Ceramic fuel, electricity and the heat bands below 200 °C. The kilns are
+        fired with natural gas today, supplied as ceramic fuel; its fuel switching is
+        modeled by the ceramic fuel retrofits."""
+        return Attribute(
+            "input_carrier",
+            default_value=[
+                "ceramic_fuel",
+                "electricity",
+                "heat_industry_0_100",
+                "heat_industry_100_150",
+                "heat_industry_150_200",
+            ],
+            element=self,
         )
 
     def _set_output_carrier(self) -> Attribute:

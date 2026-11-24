@@ -67,15 +67,6 @@ class GlassProductionData(DatasetCollection):
 
     # ---------- production technology ----------
 
-    def get_input_carrier(self, element: ConversionTechnology) -> Attribute:
-        """Get the input carriers of glass production."""
-        return self._industry.get_input_carrier(
-            element,
-            self.calculate_conversion_factors(),
-            "Glass is fired with natural gas, the AIDRES (2023) reference route, "
-            "supplied as glass fuel.",
-        )
-
     def get_conversion_factor(self, element: ConversionTechnology) -> Attribute:
         """Get the energy demand per tonne of glass."""
         return self._industry.get_conversion_factor(

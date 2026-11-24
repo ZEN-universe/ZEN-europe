@@ -43,7 +43,8 @@ PROXY_NODES = {"CH": "AT", "NO": "FI", "UK": "DE"}
 # a production series or frame, see `to_t_per_hour`
 ProductionT = TypeVar("ProductionT", pd.Series, pd.DataFrame)
 # fuels below this share of a sector's JRC-IDEES thermal fuel mix (> 200 °C) are
-# dropped, so the production technologies only take the main fuels
+# dropped, so the production technologies only take the main fuels; the fuels left
+# must be the input carriers declared in the production technologies
 FUEL_SHARE_CUTOFF = 0.1
 # sectors whose JRC-IDEES capacity utilisation sets the existing production capacity
 # where no capacity data exist (ceramic, food, paper at CH, NO and UK)
@@ -94,19 +95,6 @@ class IndustryProductionData(DatasetCollection):
             ),
         )
 
-    def get_input_carrier(
-        self,
-        element: ConversionTechnology,
-        conversion_factors: pd.Series,
-        description: str,
-    ) -> Attribute:
-        """Get the input carriers of a production technology: the carriers of its
-        `conversion_factors`."""
-        return element.input_carrier.set_data(
-            default_value=list(conversion_factors.index),
-            source=SourceInformation(description=description, metadata=self.metadata),
-        )
-
     def get_conversion_factor(
         self,
         element: ConversionTechnology,
@@ -114,7 +102,16 @@ class IndustryProductionData(DatasetCollection):
         description: str,
     ) -> Attribute:
         """Get the conversion factor of a production technology: the energy demand
-        `conversion_factors` (GW per t/h) per input carrier."""
+        `conversion_factors` (GW per t/h) per input carrier.
+
+        The input carriers are declared in the technology, so the model structure is
+        known without reading data; they must be the carriers of the data."""
+        declared = set(cast(list[str], element.input_carrier.default_value))
+        if declared != set(conversion_factors.index):
+            raise ValueError(
+                f"The input carriers of {element.name} {sorted(declared)} differ from "
+                f"the carriers of its energy demand {sorted(conversion_factors.index)}."
+            )
         unit = "GW/(tproduct/h)"
         return element.conversion_factor.set_data(
             default_value=[

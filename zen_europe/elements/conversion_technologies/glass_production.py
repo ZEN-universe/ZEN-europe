@@ -33,9 +33,18 @@ class GlassProduction(ConversionTechnology):
         return Attribute("reference_carrier", default_value=["glass"], element=self)
 
     def _set_input_carrier(self) -> Attribute:
-        """Glass fuel, heat bands and electricity."""
-        return GlassProductionData(self.settings, self.source_path).get_input_carrier(
-            self
+        """Glass fuel, electricity and the heat bands below 200 °C. Glass is fired
+        with natural gas, the AIDRES (2023) reference route, supplied as glass fuel."""
+        return Attribute(
+            "input_carrier",
+            default_value=[
+                "glass_fuel",
+                "electricity",
+                "heat_industry_0_100",
+                "heat_industry_100_150",
+                "heat_industry_150_200",
+            ],
+            element=self,
         )
 
     def _set_output_carrier(self) -> Attribute:

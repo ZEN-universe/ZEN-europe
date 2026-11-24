@@ -61,15 +61,6 @@ class PaperProductionData(DatasetCollection):
 
     # ---------- production technology ----------
 
-    def get_input_carrier(self, element: ConversionTechnology) -> Attribute:
-        """Get the input carriers of paper production."""
-        return self._industry.get_input_carrier(
-            element,
-            self.calculate_conversion_factors(),
-            "The fuels are the JRC-IDEES thermal energy carriers of paper above the "
-            "fuel share cut-off.",
-        )
-
     def get_conversion_factor(self, element: ConversionTechnology) -> Attribute:
         """Get the energy demand per tonne of paper."""
         return self._industry.get_conversion_factor(

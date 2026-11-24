@@ -36,9 +36,19 @@ class PaperProduction(ConversionTechnology):
         return Attribute("reference_carrier", default_value=["paper"], element=self)
 
     def _set_input_carrier(self) -> Attribute:
-        """Fuels, heat bands and electricity."""
-        return PaperProductionData(self.settings, self.source_path).get_input_carrier(
-            self
+        """Biomass and natural gas, the JRC-IDEES fuels of paper above the fuel share
+        cut-off, electricity and the heat bands below 200 °C."""
+        return Attribute(
+            "input_carrier",
+            default_value=[
+                "biomass",
+                "natural_gas",
+                "electricity",
+                "heat_industry_0_100",
+                "heat_industry_100_150",
+                "heat_industry_150_200",
+            ],
+            element=self,
         )
 
     def _set_output_carrier(self) -> Attribute:

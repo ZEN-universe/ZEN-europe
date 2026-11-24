@@ -74,15 +74,6 @@ class CeramicProductionData(DatasetCollection):
 
     # ---------- production technology ----------
 
-    def get_input_carrier(self, element: ConversionTechnology) -> Attribute:
-        """Get the input carriers of ceramic production."""
-        return self._industry.get_input_carrier(
-            element,
-            self.calculate_conversion_factors(),
-            "The ceramic kilns are fired with natural gas today, supplied as ceramic "
-            "fuel; its fuel switching is modeled by the ceramic fuel retrofits.",
-        )
-
     def get_conversion_factor(self, element: ConversionTechnology) -> Attribute:
         """Get the energy demand per tonne of ceramic."""
         return self._industry.get_conversion_factor(
