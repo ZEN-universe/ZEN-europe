@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import logging
 from pathlib import Path
 
 import pandas as pd
@@ -8,18 +7,17 @@ from zen_creator.datasets.datasets.dataset import Dataset
 from zen_creator.datasets.datasets.metadata import MetaData
 
 
-class ENSPRESOV1(Dataset[dict[str, pd.Series]]):
+class ENSPRESO1(Dataset[dict[str, pd.Series]]):
     """
-    ENSPRESO v1 dataset class for potential capacity.
+    ENSPRESO 1 dataset class for potential capacity.
 
     """
 
-    name = "enspreso_v1"
+    name = "enspreso1"
 
     COLUMN_MAPPING = {
-        "wind_onshore": "wind_onshore_capacity_gw_high",
+        "wind_onshore": "wind_onshore_capacity_gw_medium",
         "photovoltaics": "solar_capacity_gw_high_pv_ground",
-        "wind_offshore": "wind_offshore_capacity_gw_high_total",
     }
 
     def __init__(self, source_path: Path | str | None = None):
@@ -81,18 +79,6 @@ class ENSPRESOV1(Dataset[dict[str, pd.Series]]):
         data["photovoltaics"] = data_pv_wind_onshore[
             self.COLUMN_MAPPING["photovoltaics"]
         ]
-        # offshore
-        data_wind_offshore = pd.read_csv(
-            self.path / "ENSPRESO_Integrated_EEZ_Data_Offshore.csv", delimiter=";"
-        )
-        data_wind_offshore["nuts0_code"] = data_wind_offshore["eez_code_2016"].apply(
-            lambda code: code[2:]
-        )
-        data_wind_offshore = data_wind_offshore.groupby("nuts0_code").sum(
-            numeric_only=True
-        )
-        data_wind_offshore = data_wind_offshore
-        data["wind_offshore"] = data_wind_offshore[self.COLUMN_MAPPING["wind_offshore"]]
         return data
 
     # -------- methods ------------------------
@@ -109,11 +95,6 @@ class ENSPRESOV1(Dataset[dict[str, pd.Series]]):
         if element.name not in self.COLUMN_MAPPING:
             raise ValueError(
                 f"Potential capacity data for {element.name} is not available in the "
-                "ENSPRESO v1 dataset."
-            )
-        if element.name == "wind_onshore":
-            logging.info(
-                "ENSPRESO v2 is released for onshore wind. Check and maybe update the "
-                "dataset."
+                "ENSPRESO 1 dataset."
             )
         return self.data[element.name]

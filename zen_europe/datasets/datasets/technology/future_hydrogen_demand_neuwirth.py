@@ -30,7 +30,7 @@ class FutureHydrogenDemandNeuwirth(Dataset[pd.Series]):
                 "The future potential hydrogen demand in energy-intensive industries - "
                 "a site-specific approach applied to Germany"
             ),
-            author=["Marius Neuwirth", "Tobias Fleitner", "Pia Manz", "RenÃ© Hofmann"],
+            author=["Marius Neuwirth", "Tobias Fleiter", "Pia Manz", "René Hofmann"],
             publication="Energy Conversion and Management",
             publication_year=2021,
             url="https://www.sciencedirect.com/science/article/pii/S0196890421012280",

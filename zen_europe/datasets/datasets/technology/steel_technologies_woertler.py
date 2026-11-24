@@ -38,7 +38,7 @@ class SteelTechnologiesWoertler(Dataset[pd.Series]):
                 "Nicole Voigt",
                 "Torben Schmidt",
                 "Peter Dahlmann",
-                "Hans Bodo LÃ¼ngen",
+                "Hans Bodo Lüngen",
                 "Jean-Theo Ghenda",
             ],
             publication="Boston Consulting Group",

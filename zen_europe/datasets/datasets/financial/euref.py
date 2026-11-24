@@ -12,6 +12,7 @@ from zen_creator.datasets.datasets.metadata import MetaData
 
 from zen_europe.datasets.datasets.financial._cost_schema import (
     INDEX_NAMES,
+    SCENARIOS,
     VALUE_COLUMNS,
 )
 
@@ -69,7 +70,6 @@ _TECHS: dict[tuple[str, str | None], str] = {
     ("run-of-river_hydro", None): "Run of river",
     ("reservoir_hydro", None): "Lakes",
 }
-_SCENARIOS = ("min", "ref", "max")
 # column-block order in the source sheet: (our variable name, dict-column-index)
 _COST_VARIABLE_SEGMENTS = {0: "capex", 1: "fopex", 2: "vopex"}
 _TECH_VARIABLE_SEGMENTS = {3: "efficiency", 5: "lifetime"}
@@ -196,7 +196,7 @@ class EUREF(Dataset[pd.DataFrame]):
 
         out_rows: list[tuple[Any, ...]] = []
         for technology in {t for t, _ in _TECHS}:
-            for scenario in _SCENARIOS:
+            for scenario in SCENARIOS:
                 euref_tech = _lookup_euref_technology(technology, scenario)
                 if euref_tech is None:
                     continue

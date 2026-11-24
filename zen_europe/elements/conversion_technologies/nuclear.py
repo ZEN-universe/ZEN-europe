@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING
 
 import pandas as pd
 
@@ -197,7 +197,9 @@ class Nuclear(ConversionTechnology):
                 ),
             )
         elif self.settings.investment.cap_nuclear_capacity_to_past_investments:
-            cap_ex = cast(pd.Series, self.capacity_existing.df)
+            # today's fleet, also when existing capacities are not used
+            powerplantmatching = PowerPlantMatching(source_path=self.source_path)
+            cap_ex = powerplantmatching.calculate_capacity_existing(self)
             cap_lim = cap_ex.groupby("node").sum()
             cap_lim.name = "capacity_limit"
             cap_lim = cap_lim.reindex(self.model.config.system.set_nodes, fill_value=0)
@@ -208,9 +210,7 @@ class Nuclear(ConversionTechnology):
                         "The capacity limit is set to the sum of the"
                         "historical capacity additions across all years."
                     ),
-                    metadata=cast(
-                        SourceInformation, self.capacity_existing.sources[-1]
-                    ).metadata,
+                    metadata=powerplantmatching.metadata,
                 ),
                 unit="GW",
             )
@@ -225,7 +225,7 @@ class Nuclear(ConversionTechnology):
         """
         potencia_db = Potencia(source_path=self.source_path)
         attr = potencia_db.get_max_load(self)
-        if self.settings.max_load.use_seasonal_nuclear_max_load:
+        if self.settings.operation.use_seasonal_nuclear_max_load:
             nuclear_max_load = NuclearMaxLoad(
                 settings=self.settings,
                 set_nodes=self.model.config.system.set_nodes,
@@ -233,7 +233,7 @@ class Nuclear(ConversionTechnology):
             )
             nodal_ml_df, total_ml_df = nuclear_max_load.get_max_load(self)
             data: pd.DataFrame | pd.Series
-            if self.settings.max_load.use_nodal_nuclear_max_load:
+            if self.settings.operation.use_nodal_nuclear_max_load:
                 data = nodal_ml_df
             else:
                 data = total_ml_df

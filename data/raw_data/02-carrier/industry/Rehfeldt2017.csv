@@ -1,0 +1,15 @@
+sector,sub_process,fuels_GJ_t,elec_GJ_t,activity_Mt,temp_lt100,temp_100_200,temp_200_500,temp_500_1000,temp_gt1000,source,note
+glass,container,5.78,1.41,22.45,0.02,0.19,0.19,0.30,0.30,BREF Glass 2013 / Büchel 1999 via Rehfeldt 2017 Table 1,
+glass,flat,10.92,3.32,14.36,0.02,0.21,0.43,0.12,0.22,BREF Glass 2013 / Büchel 1999 via Rehfeldt 2017 Table 1,
+glass,fibre,4.92,1.81,2.70,0.02,0.19,0.19,0.30,0.30,BREF Glass 2013 / Büchel 1999 via Rehfeldt 2017 Table 1,Row identified as fibre glass (activity ~10% of EU total; AIDRES §7)
+ceramic,tiles,5.46,0.88,4.66,0.07,0.11,0.07,0.18,0.57,BREF Ceramic 2007 / Büchel 1999 / Fleiter 2013 via Rehfeldt 2017 Table 1,"Tiles, plates, refractories - largest sub-sector"
+ceramic,technical,12.11,3.23,0.68,0.30,0.15,0.15,0.25,0.15,BREF Ceramic 2007 / Büchel 1999 / Fleiter 2013 via Rehfeldt 2017 Table 1,Technical and other ceramics
+ceramic,houseware,24.24,4.82,0.57,0.30,0.00,0.00,0.05,0.65,BREF Ceramic 2007 / Büchel 1999 / Fleiter 2013 via Rehfeldt 2017 Table 1,Houseware and sanitaryware
+paper,paper,5.50,1.91,100.46,0.05,0.88,0.05,0.02,0.00,Fleiter et al. 2012/2013; van Deventer 1997 via Rehfeldt 2017 Table 1,
+paper,recovered_fibres,0.54,0.945,51.81,0.00,1.00,0.00,0.00,0.00,Fleiter et al. 2012/2013; Laurijssen et al. 2012 via Rehfeldt 2017 Table 1,
+paper,chemical_pulp,12.65,2.30,26.91,0.00,1.00,0.00,0.00,0.00,Fleiter et al. 2012/2013; Bakhtiari et al. 2010 via Rehfeldt 2017 Table 1,Chemical (kraft) pulp uses black liquor as a fuel source (biomass). The 12.65 GJ/t figure includes this recovered fuel; the fuel carrier carbon intensity should reflect this mixed feedstock when set up.
+food,dairy,1.57,0.53,69.64,0.90,0.10,0.00,0.00,0.00,Fleiter et al. 2013; Lauterbach et al. 2012 via Rehfeldt 2017 Table 1,
+food,meat_processing,2.04,1.55,58.48,0.40,0.60,0.00,0.00,0.00,Fleiter et al. 2013; Lauterbach et al. 2012 via Rehfeldt 2017 Table 1,
+food,brewing,0.97,0.39,39.36,0.55,0.45,0.00,0.00,0.00,Fleiter et al. 2013; Lauterbach et al. 2012 via Rehfeldt 2017 Table 1,
+food,bread_bakery,2.40,1.45,24.65,0.20,0.33,0.47,0.00,0.00,Fleiter et al. 2013; Lauterbach et al. 2012 via Rehfeldt 2017 Table 1,
+food,sugar,4.50,0.71,17.69,0.10,0.60,0.00,0.30,0.00,Fleiter et al. 2013; Lauterbach et al. 2012 via Rehfeldt 2017 Table 1,

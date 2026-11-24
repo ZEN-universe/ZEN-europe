@@ -153,8 +153,9 @@ all fields with their type and default value:
    * - ``data_source``
      - Choice between alternative data sources, for example the power line
        candidates or plant-level hydro capacities.
-   * - ``max_load``
-     - Seasonal and nodal availability of nuclear plants.
+   * - ``operation``
+     - Seasonal and nodal availability of nuclear plants, and the recoverable waste
+       heat of the industrial processes.
    * - ``scenario``
      - Scenarios that are added to the dataset (see Tutorial 6).
    * - ``cache``

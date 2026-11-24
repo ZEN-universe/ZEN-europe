@@ -10,6 +10,7 @@ from zen_creator.datasets.datasets.dataset import Dataset
 from zen_creator.datasets.datasets.metadata import MetaData
 
 from zen_europe.utils.constants import Constants
+from zen_europe.utils.utils import NODE_TO_ISO2
 
 
 class TruckStandardLoadProfiles(Dataset[pd.Series]):
@@ -46,7 +47,7 @@ class TruckStandardLoadProfiles(Dataset[pd.Series]):
             publication="Nature Energy",
             publication_year=2021,
             url="https://www.nature.com/articles/s41560-021-00855-0",
-            doi="10.1038/s41560-021-00855-0",
+            doi="https://doi.org/10.1038/s41560-021-00855-0",
             note="Supplementary Figure 8, 100 EVs, Constant min. power",
         )
 
@@ -83,7 +84,7 @@ class TruckStandardLoadProfiles(Dataset[pd.Series]):
         Returns:
             A pandas DataFrame containing the shifted standard load profiles.
         """
-        new_cols = slp.rename(columns={"EL": "GR", "UK": "GB"})
+        new_cols = slp.rename(columns=NODE_TO_ISO2)
         tz = {
             old_cc: pytz.timezone(pytz.country_timezones[new_cc][0])
             for old_cc, new_cc in zip(slp.columns, new_cols.columns, strict=True)

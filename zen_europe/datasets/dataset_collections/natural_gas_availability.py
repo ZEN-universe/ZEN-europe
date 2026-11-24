@@ -19,7 +19,6 @@ from zen_europe.datasets.datasets.carrier.entsog import (
     ENTSOGTransmissionCapacityMap,
 )
 from zen_europe.datasets.datasets.carrier.eurostat import Eurostat
-from zen_europe.datasets.datasets.carrier.import_increase_gas import ImportIncreaseGas
 from zen_europe.datasets.datasets.technology.scigrid import SciGridIGGIELGNC1
 from zen_europe.utils.constants import Constants
 from zen_europe.utils.utils import interpolate_missing_years, link_natural_gas_countries
@@ -44,7 +43,6 @@ class NaturalGasAvailability(DatasetCollection):
             "scigrid": SciGridIGGIELGNC1(self.source_path),
             "entsogTCM": ENTSOGTransmissionCapacityMap(self.source_path),
             "entsog": ENTSOG(self.source_path),
-            "import_increase_gas": ImportIncreaseGas(self.source_path),
             "eurostat": Eurostat(source_path=self.source_path, settings=self.settings),
         }
 

@@ -83,7 +83,12 @@ class ClinkerData(DatasetCollection):
         for country in missing_countries:
             data.loc[country] = bgs_dataset.get_manual_cement_demand(country)
 
-        data = data.sort_index() / 8.76 * aidres_dataset.get_CEM2_clinker_ratio()
+        data = (
+            data.sort_index()
+            * 1000
+            / Constants.HOURS_PER_YEAR
+            * aidres_dataset.get_CEM2_clinker_ratio()
+        )
 
         data.index.name = "node"
         return data
@@ -111,7 +116,7 @@ class ClinkerData(DatasetCollection):
             unit="tproduct/h",
         )
 
-    def get_conversion_factor_cement_kiln(
+    def get_conversion_factor_cement_production(
         self, element: ConversionTechnology
     ) -> Attribute:
         """
@@ -138,7 +143,7 @@ class ClinkerData(DatasetCollection):
                 }
             },
             {
-                "fuel_for_cement": {
+                "cement_fuel": {
                     "default_value": (
                         fuel_consumption_kiln / (Constants.GJ_PER_MWH * 1000)
                     ),
@@ -218,7 +223,8 @@ class ClinkerData(DatasetCollection):
         ), f"Existing capacity share for {element.name} not found."
         clinker_element = element.model.carriers["clinker"]
         clinker_demand = self._calculate_clinker_demand(clinker_element)
-        clinker2fuel = me_dataset.get_fuel_consumption_cement_kiln() / 3600  # GWh/t
+        fuel = me_dataset.get_fuel_consumption_cement_kiln()  # GJ/t
+        clinker2fuel = fuel / Constants.GJ_PER_GWH  # GWh/t
         clinker_demand = clinker_demand.rename(
             {"demand": element.settings.time.reference_year - 1}, axis=1
         )

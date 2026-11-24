@@ -36,6 +36,7 @@ class MethanolSector(Sector):
         "hydrogen",
         "refining",
         "gas",
+        "industrial_heat",
     ]
 
     def __init__(self) -> None:

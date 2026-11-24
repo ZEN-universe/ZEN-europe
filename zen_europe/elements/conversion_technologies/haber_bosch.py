@@ -48,7 +48,11 @@ class HaberBosch(ConversionTechnology):
         """
         Set the output carrier of the Haber-Bosch process to ammonia.
         """
-        return Attribute(name="output_carrier", default_value=["ammonia"], element=self)
+        return Attribute(
+            name="output_carrier",
+            default_value=["ammonia", "heat_industry_150_200"],
+            element=self,
+        )
 
     # ---------- Required methods that are called during object build ----------
 

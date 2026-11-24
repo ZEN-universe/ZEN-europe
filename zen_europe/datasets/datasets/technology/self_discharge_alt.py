@@ -21,7 +21,7 @@ class SelfDischargeAlt(Dataset[pd.DataFrame]):
     def _set_metadata(self) -> MetaData:
         return MetaData(
             name=self.name,
-            title=("Quantifying the self-discharge of solid-state batteries"),
+            title=("Quantifying the self-discharge rate of solid-state batteries"),
             author=[
                 "Christoph Alt",
                 "Jürgen Janek",

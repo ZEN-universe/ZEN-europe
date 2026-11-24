@@ -1,33 +1,31 @@
-import functools
 import logging
-from collections.abc import Callable
-from typing import Any, TypeVar, Union, cast, overload
+from typing import Any, Union, cast, overload
 
 import numpy as np
 import pandas as pd
-from zen_creator import Technology
+
+# instance_cache memoizes a method per instance and arguments, keeping the datasets
+# read for the cached value in sources.md
+from zen_creator import Attribute, Technology, instance_cache  # noqa: F401
 
 MIN_CAPACITY_ADDITION = 1e-5
+# ISO 3166-1 alpha-2 codes that differ from the NUTS0 codes of the model nodes
+ISO2_TO_NODE = {"GR": "EL", "GB": "UK"}
+NODE_TO_ISO2 = {node: iso2 for iso2, node in ISO2_TO_NODE.items()}
 
-F = TypeVar("F", bound=Callable[..., Any])
+
+def conversion_entries(attr: Attribute) -> list[dict[str, Any]]:
+    """The entries of a conversion factor attribute: one dict per input carrier."""
+    return cast(list[dict[str, Any]], attr.default_value)
 
 
-def instance_cache(method: F) -> F:
-    """Memoize a method per instance, keyed by its arguments."""
+def class_attribute(element: Technology, name: str) -> Any:
+    """Read a class attribute that only the concrete element class defines.
 
-    @functools.wraps(method)
-    def wrapper(self: Any, *args: Any, **kwargs: Any) -> Any:
-        try:
-            cache = self._instance_cache
-        except AttributeError:
-            cache = {}
-            self._instance_cache = cache
-        key = (method.__name__, args, tuple(sorted(kwargs.items())))
-        if key not in cache:
-            cache[key] = method(self, *args, **kwargs)
-        return cache[key]
-
-    return cast(F, wrapper)
+    Elements such as the industrial boilers or heat pumps define attributes like
+    ``sector`` or ``temp_level`` that their ``zen_creator`` base class does not know.
+    """
+    return getattr(element, name)
 
 
 # maps the country names used in the raw source file to NUTS0 node codes,
@@ -57,6 +55,7 @@ def convert_country_names(series: pd.Series) -> pd.Series:
         "Latvia": "LV",
         "The Netherlands": "NL",
         "Netherlands": "NL",
+        "Netherlands (Kingdom of the)": "NL",
         "Norway": "NO",
         "Poland": "PL",
         "Portugal": "PT",
@@ -66,6 +65,7 @@ def convert_country_names(series: pd.Series) -> pd.Series:
         "Slovakia": "SK",
         "Slovak Republic": "SK",
         "United Kingdom": "UK",
+        "United Kingdom of Great Britain and Northern Ireland": "UK",
         "Great Britain": "UK",
         "UK": "UK",
     }

@@ -43,18 +43,18 @@ class HydroExistingCapacityPlantLevel(DatasetCollection):
             "glohydrores": GloHydroRes(self.source_path),
         }
 
-    def get_capacity_existing(
+    def calculate_capacity_existing(
         self, element: Technology, power: bool = True
-    ) -> Attribute:
+    ) -> pd.Series:
         """
-        Get the existing capacity for hydro technologies based on plant-level
-        data from the PowerPlantMatching and GloHydroRes datasets.
+        Calculate today's hydro fleet from plant-level data without writing it to
+        the element, so that attributes derived from the fleet are independent of
+        whether existing capacities are used.
 
-        This function retrieves the existing capacity data for the specified element.
         Args:
-            element (Element): The element for which to retrieve the existing capacity.
-            power (bool): If True, returns the power capacity; if False, returns the
-            energy capacity.
+            element (Element): The element for which to calculate the capacity.
+            power (bool): If True, the power capacity; energy capacity is not
+                implemented for plant-level data.
         """
         if not power:
             raise NotImplementedError(
@@ -63,7 +63,7 @@ class HydroExistingCapacityPlantLevel(DatasetCollection):
             )
         ppm_dataset = cast(PowerPlantMatching, self.data["powerplantmatching"])
         glohydrores_dataset = cast(GloHydroRes, self.data["glohydrores"])
-        data_ppm = ppm_dataset.get_capacity_existing(element).df
+        data_ppm = ppm_dataset.calculate_capacity_existing(element)
         data_glohydrores = glohydrores_dataset.get_capacity_existing(element)
         data_combined = pd.concat([data_ppm, data_glohydrores], axis=1).max(axis=1)
         data_combined.index = data_combined.index.set_names(
@@ -71,7 +71,21 @@ class HydroExistingCapacityPlantLevel(DatasetCollection):
         )
         data_combined = data_combined.sort_index()
         data_combined.name = "capacity_existing"
+        return data_combined
 
+    def get_capacity_existing(
+        self, element: Technology, power: bool = True
+    ) -> Attribute:
+        """
+        Get the existing capacity for hydro technologies based on plant-level
+        data from the PowerPlantMatching and GloHydroRes datasets.
+
+        Args:
+            element (Element): The element for which to retrieve the existing capacity.
+            power (bool): If True, returns the power capacity; if False, returns the
+            energy capacity.
+        """
+        data_combined = self.calculate_capacity_existing(element, power)
         source = SourceInformation(
             description=(
                 "The existing capacity data is derived from the "

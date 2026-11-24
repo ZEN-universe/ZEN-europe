@@ -11,6 +11,8 @@ from zen_creator.datasets.datasets.dataset import Dataset
 from zen_creator.datasets.datasets.metadata import MetaData
 from zen_creator.utils.settings import Settings
 
+from zen_europe.utils.utils import ISO2_TO_NODE
+
 logger = logging.getLogger(__name__)
 
 
@@ -97,10 +99,8 @@ class When2Heat(Dataset[dict[str, pd.DataFrame]]):
         ).sort_index(axis=1)
         data_profile = data_profile.swaplevel(1, 2, axis=1).sort_index(axis=1)
         # rename GB->UK and GR->EL on first level
-        data_profile = data_profile.rename(
-            columns={"GB": "UK", "GR": "EL"}, level="node"
-        )
-        data_COP = data_COP.rename(columns={"GB": "UK", "GR": "EL"}, level="node")
+        data_profile = data_profile.rename(columns=ISO2_TO_NODE, level="node")
+        data_COP = data_COP.rename(columns=ISO2_TO_NODE, level="node")
 
         return {"profile": data_profile, "COP": data_COP}
 

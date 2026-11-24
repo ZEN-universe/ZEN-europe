@@ -119,9 +119,11 @@ class IOGPCarbonStorageProjects(Dataset[pd.DataFrame]):
         )
         return data
 
-    def get_capacity_existing(self, element: ConversionTechnology) -> Attribute:
+    def calculate_capacity_existing(self) -> pd.Series:
         """
-        Returns the existing carbon storage capacity from the IOGP report.
+        Returns today's carbon storage capacity from the IOGP report without
+        writing it to the element, so that attributes derived from it are
+        independent of whether existing capacities are used.
         """
         data = self.get_capacity_existing_data()
         if not self.settings.investment.set_future_CCS_investments:
@@ -129,7 +131,13 @@ class IOGPCarbonStorageProjects(Dataset[pd.DataFrame]):
             data = data[
                 data.index.get_level_values("year_construction") <= reference_year - 1
             ]
-        data = format_capacity_existing(data)
+        return format_capacity_existing(data)
+
+    def get_capacity_existing(self, element: ConversionTechnology) -> Attribute:
+        """
+        Returns the existing carbon storage capacity from the IOGP report.
+        """
+        data = self.calculate_capacity_existing()
         attr = element.capacity_existing
         return attr.set_data(
             default_value=0,

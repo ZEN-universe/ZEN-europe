@@ -8,6 +8,7 @@ from zen_europe.datasets.dataset_collections.ccs_conversion_factor import (
 from zen_europe.datasets.dataset_collections.technology_cost_database import (
     TechnologyCostDatabase,
 )
+from zen_europe.datasets.datasets.financial.dea import DEA
 from zen_europe.datasets.datasets.technology.IOGP_carbon_storage_projects import (
     IOGPCarbonStorageProjects,
 )
@@ -49,17 +50,25 @@ class BiomassPlantCCS(RetrofittingTechnology):
 
     def _set_input_carrier(self) -> Attribute:
         """
-        Sets the input carrier of biomass plant CCS to electricity.
+        Set the input carrier of biomass plant CCS to industry heat (100-150°C)
+        and electricity.
         """
         return Attribute(
-            name="input_carrier", default_value=["electricity"], element=self
+            name="input_carrier",
+            default_value=["heat_industry_100_150", "electricity"],
+            element=self,
         )
 
     def _set_output_carrier(self) -> Attribute:
         """
-        Set the output carrier of biomass plant CCS to carbon.
+        Set the output carrier of biomass plant CCS to carbon and recoverable
+        waste heat.
         """
-        return Attribute(name="output_carrier", default_value=["carbon"], element=self)
+        return Attribute(
+            name="output_carrier",
+            default_value=["carbon", "recoverable_waste_heat"],
+            element=self,
+        )
 
     def _set_retrofit_reference_carrier(self) -> Attribute:
         """
@@ -163,15 +172,28 @@ class BiomassPlantCCS(RetrofittingTechnology):
         """
         Return the conversion factor of biomass plant CCS.
 
+        Values from the DEA technology catalogue for carbon capture,
+        transport and storage (Post-combustion carbon capture retrofit -
+        100 MW(th) WtE or biomass CHP plant, used as a proxy entry),
+        assuming all heat demand is supplied from industry heat (100-150°C).
+        https://ens.dk/en/analyses-and-statistics/technology-data-carbon-capture-transport-and-storage
         """
-        ccs_cf_db = CCSConversionFactor(
-            settings=self.settings, source_path=self.source_path
+        attr = self.conversion_factor
+        dea_dataset = DEA(source_path=self.source_path)
+        cf = dea_dataset.get_conversion_factor_biomass_CCS()
+        source = SourceInformation(
+            description=(
+                "The conversion factor of biomass plant CCS is a manually derived "
+                "value based on the DEA technology catalogue for carbon "
+                "capture, transport and storage (Post-combustion carbon "
+                "capture retrofit - 100 MW(th) WtE or biomass CHP plant, "
+                "used as a proxy entry, assuming all heat demand is "
+                "supplied from industry heat (100-150°C)."
+            ),
+            metadata=dea_dataset.metadata,
         )
-        base_tech = cast(
-            ConversionTechnology, self.model.elements[self.base_technology_name]
-        )
-        cf = ccs_cf_db.get_conversion_factor_CCS(element=self, base_tech=base_tech)
-        return cf
+        attr.set_data(default_value=cf, source=source)
+        return attr
 
     def _set_retrofit_flow_coupling_factor(self) -> Attribute:
         """

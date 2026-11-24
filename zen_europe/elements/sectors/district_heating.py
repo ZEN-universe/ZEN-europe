@@ -19,10 +19,14 @@ from zen_europe.elements.conversion_technologies.natural_gas_boiler_DH import (
 )
 from zen_europe.elements.conversion_technologies.oil_boiler_DH import OilBoilerDH
 from zen_europe.elements.conversion_technologies.waste_boiler_DH import WasteBoilerDH
+from zen_europe.elements.conversion_technologies.waste_heat_integration_DH import (
+    WasteHeatIntegrationDH,
+)
 
 
 class DistrictHeatingSector(Sector):
-    """District heating generation and grid."""
+    """District heating generation and grid, and the integration of recoverable
+    waste heat."""
 
     name = "district_heating"
     required_sectors = ["heat", "electricity", "gas"]
@@ -37,6 +41,7 @@ class DistrictHeatingSector(Sector):
             BiomassBoilerDH,
             HardCoalBoilerDH,
             ElectrodeBoilerDH,
+            WasteHeatIntegrationDH,
             DistrictHeatingGrid,
             DistrictHeat,
         ]

@@ -13,6 +13,7 @@ from zen_creator.elements import Element, StorageTechnology, Technology
 from zen_creator.utils.attribute import Attribute
 
 from zen_europe.utils.constants import Constants
+from zen_europe.utils.utils import ISO2_TO_NODE
 
 
 class SciGridIGGIELGNC1(Dataset[dict[str, pd.DataFrame]]):
@@ -76,13 +77,11 @@ class SciGridIGGIELGNC1(Dataset[dict[str, pd.DataFrame]]):
         border_points = border_points_raw["param"].apply(
             lambda item: pd.Series(ast.literal_eval(str(item)))
         )
-        border_points = border_points.replace({"GR": "EL", "GB": "UK"})
+        border_points = border_points.replace(ISO2_TO_NODE)
         storages = storages_raw["param"].apply(
             lambda item: pd.Series(ast.literal_eval(str(item)))
         )
-        storages["nuts_id_0"] = storages_raw["country_code"].replace(
-            {"GR": "EL", "GB": "UK"}
-        )
+        storages["nuts_id_0"] = storages_raw["country_code"].replace(ISO2_TO_NODE)
         return {"border_points": border_points, "storages": storages}
 
     def get_capacity_existing_pipeline(self, element: Technology) -> Attribute:

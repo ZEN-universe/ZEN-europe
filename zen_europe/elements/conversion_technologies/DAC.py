@@ -48,7 +48,9 @@ class DAC(ConversionTechnology):
         Sets the input carrier of DAC to electricity and heat.
         """
         return Attribute(
-            name="input_carrier", default_value=["electricity", "heat"], element=self
+            name="input_carrier",
+            default_value=["electricity", "heat_industry_0_100"],
+            element=self,
         )
 
     def _set_output_carrier(self) -> Attribute:

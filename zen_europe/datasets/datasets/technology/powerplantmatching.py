@@ -153,15 +153,17 @@ class PowerPlantMatching(Dataset[pd.DataFrame]):
         return data
 
     # -------- methods ------------------------
-    def get_capacity_existing(self, element: Technology) -> Attribute:
+    def calculate_capacity_existing(self, element: Technology) -> pd.Series:
         """
-        Get the existing capacity for a technology.
+        Calculate today's fleet of a technology without writing it to the element,
+        so that attributes derived from the fleet are independent of whether
+        existing capacities are used.
 
         Args:
-            element: The element for which to get the existing capacity.
+            element: The element for which to calculate the existing capacity.
 
         Returns:
-            Attribute: The existing capacity attribute of the element.
+            pd.Series: The capacity (GW) per node and year of construction.
         """
         data_raw = self.data.copy()
         data_raw = data_raw[
@@ -177,7 +179,19 @@ class PowerPlantMatching(Dataset[pd.DataFrame]):
         data = data.loc[element.name]
         reference_year = element.settings.time.reference_year
         data = data[data.index.get_level_values("year") < reference_year]
-        data = format_capacity_existing(data)
+        return format_capacity_existing(data)
+
+    def get_capacity_existing(self, element: Technology) -> Attribute:
+        """
+        Get the existing capacity for a technology.
+
+        Args:
+            element: The element for which to get the existing capacity.
+
+        Returns:
+            Attribute: The existing capacity attribute of the element.
+        """
+        data = self.calculate_capacity_existing(element)
         source = SourceInformation(
             description=(
                 "The existing capacity data is derived from the PowerPlantMatching "

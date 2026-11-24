@@ -34,12 +34,18 @@ class StructureSettings(SettingsCategory):
             "ammonia",
             "cement",
             "methanol",
+            "oil_products",
             "refining",
             "aviation",
             "shipping",
             "steel",
             "passenger_transport",
             "truck_transport",
+            "industrial_heat",
+            "glass",
+            "ceramic",
+            "paper",
+            "food",
         ]
     )
     set_conversion_technologies: list[str] = Field(default_factory=list)

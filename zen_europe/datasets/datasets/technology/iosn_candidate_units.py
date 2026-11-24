@@ -10,6 +10,8 @@ if TYPE_CHECKING:
 from zen_creator.datasets.datasets.dataset import Dataset
 from zen_creator.datasets.datasets.metadata import MetaData
 
+from zen_europe.utils.utils import ISO2_TO_NODE
+
 
 class IoSNCandidateUnits(Dataset[pd.DataFrame]):
     """
@@ -29,7 +31,6 @@ class IoSNCandidateUnits(Dataset[pd.DataFrame]):
     FILE = "IoSN_candidate_units_increase.xlsx"
     SHEET = "Append1"
     CAPACITY_COLUMN = "Direct capacity increase (in MW)"
-    COUNTRY_CODES = {"GR": "EL", "GB": "UK"}
 
     def __init__(self, source_path: Path | str | None = None):
         super().__init__(source_path=source_path)
@@ -41,6 +42,10 @@ class IoSNCandidateUnits(Dataset[pd.DataFrame]):
             author=["ENTSO-E"],
             publication="ENTSO-E",
             publication_year=2023,
+            url=(
+                "https://eepublicdownloads.blob.core.windows.net/"
+                "public-cdn-container/tyndp-documents/TYNDP2022/public/IoSN-IG.pdf"
+            ),
             note=(
                 "Appendix 2 of the final version of May 2023, investment "
                 "candidates (capacity increases) and cost assumptions, "
@@ -63,8 +68,8 @@ class IoSNCandidateUnits(Dataset[pd.DataFrame]):
         candidates.columns = candidates.columns.str.replace("\n", " ")
         nodes = candidates["Border"].str.split("-", expand=True)
         candidates = candidates.assign(
-            node_from=nodes[0].str[:2].replace(self.COUNTRY_CODES),
-            node_to=nodes[1].str[:2].replace(self.COUNTRY_CODES),
+            node_from=nodes[0].str[:2].replace(ISO2_TO_NODE),
+            node_to=nodes[1].str[:2].replace(ISO2_TO_NODE),
         )
         candidates = candidates[candidates["node_from"] != candidates["node_to"]]
         return candidates[["node_from", "node_to", self.CAPACITY_COLUMN]]

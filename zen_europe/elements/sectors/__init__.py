@@ -2,12 +2,18 @@ from .ammonia import AmmoniaSector
 from .aviation import AviationSector
 from .carbon import CarbonSector
 from .cement import CementSector
+from .ceramic import CeramicSector
 from .district_heating import DistrictHeatingSector
 from .electricity import ElectricitySector
+from .food import FoodSector
 from .gas import GasSector
+from .glass import GlassSector
 from .heat import HeatSector
 from .hydrogen import HydrogenSector
+from .industrial_heat import IndustrialHeatSector
 from .methanol import MethanolSector
+from .oil_products import OilProductsSector
+from .paper import PaperSector
 from .passenger_transport import PassengerTransportSector
 from .refining import RefiningSector
 from .shipping import ShippingSector
@@ -25,9 +31,15 @@ __all__ = [
     "HeatSector",
     "HydrogenSector",
     "MethanolSector",
+    "OilProductsSector",
     "PassengerTransportSector",
     "RefiningSector",
     "ShippingSector",
     "SteelSector",
     "TruckTransportSector",
+    "IndustrialHeatSector",
+    "GlassSector",
+    "CeramicSector",
+    "PaperSector",
+    "FoodSector",
 ]

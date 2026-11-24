@@ -19,6 +19,9 @@ from zen_europe.datasets.datasets.energy_system.global_carbon_budget import (
     GlobalCarbonBudget,
 )
 from zen_europe.datasets.datasets.energy_system.ipcc_ar6 import IPCCAR6
+from zen_europe.datasets.datasets.energy_system.ons_industry_emissions import (
+    ONSIndustryEmissions,
+)
 from zen_europe.datasets.datasets.energy_system.worldbank_population import (
     WorldBankPopulation,
 )
@@ -70,6 +73,9 @@ class CarbonConstraints(DatasetCollection):
                 source_path=self.source_path
             ),
             "global_carbon_budget": GlobalCarbonBudget(source_path=self.source_path),
+            "ons_industry_emissions": ONSIndustryEmissions(
+                source_path=self.source_path
+            ),
         }
 
     def calculate_carbon_budget(self, energy_system: EnergySystem) -> Attribute:
@@ -119,7 +125,8 @@ class CarbonConstraints(DatasetCollection):
     def calculate_sector_emissions(self, energy_system: EnergySystem) -> pd.Series:
         """
         Calculate the CO2 emissions of the modeled sectors, in Gt by year,
-        summed over the EEA GHG inventory and the DESNZ GHG inventory (UK).
+        summed over the EEA GHG inventory, the DESNZ GHG inventory (UK) and the
+        ONS industry emissions (UK).
         """
         eea_ghg_inventory = cast(
             EEAGreenhouseGasInventory, self.data["eea_ghg_inventory"]
@@ -127,13 +134,21 @@ class CarbonConstraints(DatasetCollection):
         desnz_ghg_inventory = cast(
             DESNZGreenhouseGasInventory, self.data["desnz_ghg_inventory"]
         )
+        ons_industry_emissions = cast(
+            ONSIndustryEmissions, self.data["ons_industry_emissions"]
+        )
         set_nodes = energy_system.config.system.set_nodes
         sectors = list(energy_system.model.sectors)
         emissions_sectors_EU = eea_ghg_inventory.get_emissions_sectors(
             sectors, set_nodes
         )
         emissions_sectors_UK = desnz_ghg_inventory.get_emissions_sectors(sectors)
-        return emissions_sectors_EU.sum() + emissions_sectors_UK.sum()
+        emissions_industry_UK = ons_industry_emissions.get_emissions_sectors(sectors)
+        return (
+            emissions_sectors_EU.sum()
+            + emissions_sectors_UK.sum()
+            + emissions_industry_UK.sum()
+        )
 
     def calculate_total_emissions(self, energy_system: EnergySystem) -> pd.Series:
         """

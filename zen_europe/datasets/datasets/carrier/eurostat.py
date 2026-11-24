@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import hashlib
 import json
@@ -110,6 +110,19 @@ _HEAT_DH_NRG_BAL = {
     "GHP": "Gross heat production",
 }
 
+# final consumption of the paper industry, which sets the waste share of the
+# JRC-IDEES "Biomass and waste" carrier in paper boilers
+_PAPER_NRG_BAL = {
+    "FC_IND_PPP_E": "Final consumption - industry sector - paper, pulp and printing",
+}
+_PAPER_BIOMASS_WASTE_SIEC = {
+    "R5110-5150_W6000RI": "biomass",  # Primary solid biofuels
+    "R5300": "biomass",  # Biogases
+    "W6100": "waste",  # Industrial waste (non-renewable)
+    "W6210": "waste",  # Renewable municipal waste
+    "W6220": "waste",  # Non-renewable municipal waste
+}
+
 _COAL_SIEC = {"C0220": "lignite", "C0129": "hard_coal"}
 _COAL_NRG_BAL = {
     # "TI_EHG_E": "Transformation Input",
@@ -121,12 +134,6 @@ _COAL_NRG_BAL = {
 
 _NATURAL_GAS_SIEC = {"G3000": "natural_gas"}
 _NATURAL_GAS_NRG_BAL = {"PPRD": "Production"}
-
-_BIOMASS_SIEC = {"R5110-5150_W6000RI": "biomass", "R5300": "biogas"}
-_BIOMASS_NRG_BAL = {
-    "IMP": "Imports",
-    "PPRD": "Production",
-}
 
 _OIL_SIEC = {"O4000XBIO": "oil", "S2000": "oil shale"}
 _OIL_NRG_BAL = {
@@ -395,12 +402,6 @@ class Eurostat(Dataset[pd.DataFrame]):
         return self._query_efficiencies()
 
     @instance_cache
-    def get_electricity_generation(self) -> pd.Series:
-        """Gross electricity generation per country, at the latest
-        available Eurostat year."""
-        return self._query_electricity_generation()
-
-    @instance_cache
     def get_total_heat_household(self) -> pd.DataFrame:
         """Heat consumption per node."""
         return self._query_total_heat_household()
@@ -414,6 +415,12 @@ class Eurostat(Dataset[pd.DataFrame]):
     def get_heat_dh_technology(self) -> pd.DataFrame:
         """District heat consumption per technology/node."""
         return self._query_heat_dh_technology()
+
+    @instance_cache
+    def get_paper_waste_share(self, year: int) -> pd.Series:
+        """Waste share of the paper industry's biomass and waste consumption per
+        node, at the latest available year up to `year`."""
+        return self._query_paper_waste_share(year)
 
     @instance_cache
     def get_coal_availability(self) -> pd.DataFrame:
@@ -490,26 +497,6 @@ class Eurostat(Dataset[pd.DataFrame]):
         )
         return efficiencies.loc["output"] / efficiencies.loc["input"]
 
-    def _query_electricity_generation(self) -> pd.Series:
-        """Extract the gross electricity generation from Eurostat."""
-        siec = {"TOTAL": "Total"}
-        nrg_bal = {"GEP": "Gross electricity production"}
-        generation = self._query_siec_data(
-            nrg_bal=nrg_bal,
-            siec=siec,
-            start_period=self.eurostat_time_series_year,
-        )
-        generation = cast(
-            pd.DataFrame,
-            generation.drop(["freq", "unit", "nrg_bal", "siec"], axis=1)
-            .set_index("geo\\TIME_PERIOD")
-            .squeeze(),
-        )
-        generation = generation.astype(float)
-        generation.columns = generation.columns.astype(int)
-        generation = generation[self.eurostat_time_series_year]
-        return generation.sort_index()
-
     def _query_total_heat_household(self) -> pd.DataFrame:
         """Load total Eurostat household-electricity heat data for NO + UK."""
         heat_data = self._query_siec_data(
@@ -564,6 +551,22 @@ class Eurostat(Dataset[pd.DataFrame]):
         heat_data = heat_data.swaplevel(0, 1).sort_index()
         return heat_data / Constants.GJ_PER_MWH  # convert from TJ to GWh
 
+    def _query_paper_waste_share(self, year: int) -> pd.Series:
+        """Load the final consumption of biomass and waste in the paper industry
+        and return waste / (biomass + waste); NaN where neither is consumed."""
+        data = self._query_siec_data(
+            nrg_bal=_PAPER_NRG_BAL,
+            siec=_PAPER_BIOMASS_WASTE_SIEC,
+            start_period=_EUROSTAT_START_YEAR,
+        )
+        data = self._convert_availability(data, {}, cutoff_year=year)
+        data = data.droplevel("nrg_bal").astype(float).fillna(0.0)
+        data = data.T.groupby(pd.Series(_PAPER_BIOMASS_WASTE_SIEC)).sum().T
+        total = data.sum(axis=1)
+        share = data.get("waste", 0.0) / total.where(total > 0)
+        share.index.name = "node"
+        return share.rename("waste_share")
+
     def _query_coal_availability(self) -> pd.DataFrame:
         """Calculate coal availability, scaled from imports and production
         by the ratio of total consumption to total availability."""
@@ -588,29 +591,6 @@ class Eurostat(Dataset[pd.DataFrame]):
         data = self._convert_availability(data, _NATURAL_GAS_SIEC)
         production = data.groupby(level=1).sum(numeric_only=True)
         return production.sort_index()
-
-    def _query_biomass_availability(self) -> pd.Series:
-        """Calculate biomass availability from transformation input and
-        final consumption (households and commercial)."""
-        data = self._query_siec_data(
-            nrg_bal=_BIOMASS_NRG_BAL,
-            siec=_BIOMASS_SIEC,
-            start_period=self.eurostat_year,
-        )
-        data = self._convert_availability(data, _BIOMASS_SIEC)
-        transformation_input = cast(pd.DataFrame, data.loc["TI_EHG_E"]).sum(axis=1)
-        final_consumption_households = cast(pd.DataFrame, data.loc["FC_OTH_HH_E"]).sum(
-            axis=1
-        )
-        final_consumption_commercial = cast(pd.DataFrame, data.loc["FC_OTH_CP_E"]).sum(
-            axis=1
-        )
-        availability = (
-            transformation_input
-            + final_consumption_commercial
-            + final_consumption_households
-        )
-        return availability.sort_index()
 
     def _query_oil_availability(self) -> pd.Series:
         """Calculate oil availability from transformation input and final
@@ -752,52 +732,6 @@ class Eurostat(Dataset[pd.DataFrame]):
         )
         assert common_bal, f"None of the nrg_bal {nrg_bal} are in Eurostat database"
         filter_pars["nrg_bal"] = common_bal
-
-        return cast(
-            pd.DataFrame,
-            self._cached_query(
-                self._query_cache_key(dataset, filter_pars),
-                lambda: self._query_in_parallel(
-                    filter_pars,
-                    common_geo,
-                    dataset,
-                    required_geo=common_geo if geo is not None else None,
-                ),
-            ),
-        )
-
-    def _query_non_siec_data(
-        self,
-        dataset: str,
-        unit: str,
-        start_period: int,
-        geo: list[str] | None = None,
-        params: dict[str, list[str]] | None = None,
-    ) -> pd.DataFrame:
-        """Query a Eurostat dataset that has no siec dimension.
-
-        Cached to disk since Eurostat queries are slow; the cache key is
-        derived from the actual request parameters.
-
-        TODO: understand if still required even without the eurostat vehicle dataset
-        """
-        filter_pars: dict[str, Any] = {"start_period": start_period, "unit": unit}
-
-        eurostat_countries = self._get_par_values(dataset, "geo")
-        common_geo = sorted(
-            set(geo or eurostat_countries).intersection(eurostat_countries)
-        )
-        assert common_geo, f"None of the locations {geo} are in Eurostat database"
-        filter_pars["geo"] = common_geo
-
-        for param, values in (params or {}).items():
-            common_param = sorted(
-                set(self._get_par_values(dataset, param)).intersection(values)
-            )
-            assert (
-                common_param
-            ), f"None of the param {param} ({values}) are in Eurostat database"
-            filter_pars[param] = common_param
 
         return cast(
             pd.DataFrame,
@@ -1041,28 +975,3 @@ class Eurostat(Dataset[pd.DataFrame]):
                 f"Eurostat dataset '{dataset}' has no data for explicitly requested "
                 f"locations: {', '.join(missing_geo)}."
             )
-
-    @instance_cache
-    def get_vehicle_occupancy(self) -> float:
-        """Get the average vehicle occupancy.
-
-        From https://ec.europa.eu/eurostat/statistics-explained/index.php?title=Passenger_mobility_statistics#Passenger_car_occupancy
-
-        Read from the plot
-        """
-        values = [
-            1.873239419845443,
-            1.7370892042322186,
-            1.3826287732314277,
-            1.3427226344836363,
-            1.2793424070891761,
-            1.2605630108062045,
-            1.2535210976262958,
-            1.2347414506120507,
-            1.2230043436058982,
-            1.2183095258765642,
-            1.220657248155323,
-            1.199530505690503,
-            1.1619714623932864,
-        ]
-        return sum(values) / len(values)

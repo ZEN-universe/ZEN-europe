@@ -50,7 +50,9 @@ class FischerTropsch(ConversionTechnology):
         district heat.
         """
         return Attribute(
-            name="output_carrier", default_value=["oil", "district_heat"], element=self
+            name="output_carrier",
+            default_value=["oil", "heat_industry_100_150"],
+            element=self,
         )
 
     # ---------- Required methods that are called during object build ----------
@@ -72,7 +74,7 @@ class FischerTropsch(ConversionTechnology):
         Values from the DEA technology catalogue for renewable fuels
         (Hydrogen to Jet Fuel), normalized to the oil reference carrier,
         assuming all output is kerosene-equivalent oil.
-        https://ens.dk/en/our-services/projections-and-models/technology-data/technology-data-renewable-fuels
+        https://ens.dk/en/analyses-and-statistics/technology-data-renewable-fuels
         """
         attr = self.conversion_factor
 

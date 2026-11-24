@@ -37,6 +37,7 @@ class EMMESEnergyStorage(Dataset[pd.DataFrame]):
             author=["LCP Delta", "Energy Storage Europe Association"],
             publication="Energy Storage Europe Association",
             publication_year=2025,
+            url="https://energystorageeurope.eu/publication/emmes-9-5-november-2025/",
             note=(
                 "The capacity values are read off the stacked bar chart"
                 " 'Cumulative power capacity' (Figure 1) of the report."

@@ -46,7 +46,9 @@ class Gasification(ConversionTechnology):
         Set the output carrier of gasification to natural gas and heat.
         """
         return Attribute(
-            name="output_carrier", default_value=["natural_gas", "heat"], element=self
+            name="output_carrier",
+            default_value=["natural_gas", "heat_industry_0_100"],
+            element=self,
         )
 
     # ---------- Required methods that are called during object build ----------

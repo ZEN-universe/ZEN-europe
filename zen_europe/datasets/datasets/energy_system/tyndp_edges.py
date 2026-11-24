@@ -18,11 +18,18 @@ class TYNDP_2020_edges(Dataset[Dict[str, pd.DataFrame]]):
     def _set_metadata(self) -> MetaData:
         return MetaData(
             name=self.name,
-            title="TYNDP 2020 transmission edges",
-            author=["Jane Doe"],
-            publication="ENTSO-E",
-            publication_year=2026,
-            url="https://example.com/dataset.csv",
+            title="TYNDP 2020 Scenario Datafile",
+            author=["ENTSOG", "ENTSO-E"],
+            publication="ENTSOG/ENTSO-E",
+            publication_year=2020,
+            url=(
+                "https://2020.entsos-tyndp-scenarios.eu/wp-content/uploads/2020/06/"
+                "TYNDP-2020-Scenario-Datafile.xlsx.zip"
+            ),
+            note=(
+                "Sheets 'Nodes - Dict' and 'Line - Dict', saved as Nodes_Dict.csv "
+                "and Lines_Dict.csv."
+            ),
         )
 
     def _set_path(self) -> Path:

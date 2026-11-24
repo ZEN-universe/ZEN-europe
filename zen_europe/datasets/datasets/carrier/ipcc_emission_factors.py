@@ -109,6 +109,17 @@ class IPCCEmissionFactors(Dataset[pd.Series]):
             unit="ton/MWh",
         )
 
+    def get_emission_factor(self, carrier: str) -> float:
+        """
+        Get the emission factor of the carrier `carrier` in tons/MWh.
+        """
+        if carrier not in self.data.index:
+            raise ValueError(
+                f"Emission factor of {carrier} is not available in the IPCC emission "
+                "factors dataset."
+            )
+        return float(self.data.loc[carrier])
+
     def get_unit(self) -> str:
         """
         Get the unit of the IPCC emission factors dataset.
