@@ -58,7 +58,7 @@ class Neumann2022TransmissionLosses(Dataset[pd.Series]):
             name="transport_loss_factor_linear",
             element=element,
             default_value=value,
-            unit = "1/km",
+            unit="1/km",
             sources=[
                 SourceInformation(
                     description=(

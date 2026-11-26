@@ -12,11 +12,11 @@ from zen_europe.datasets.dataset_collections.transport_technologies_costs import
     TransportTechnologiesCosts,
 )
 from zen_europe.datasets.datasets.carrier.entsoe import ENTSOE
+from zen_europe.datasets.datasets.carrier.neumann_2022_transmission_losses import (
+    Neumann2022TransmissionLosses,
+)
 from zen_europe.datasets.datasets.technology.dea_energy_transport import (
     DEAEnergyTransport,
-)
-from zen_europe.datasets.datasets.carrier.neumann_2022_transmission_losses import(
-    Neumann2022TransmissionLosses
 )
 from zen_europe.datasets.datasets.technology.technology_diffusion_mannhardt import (
     TechnologyDiffusionMannhardt,
