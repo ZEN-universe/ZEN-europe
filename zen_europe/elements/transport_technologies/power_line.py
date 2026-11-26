@@ -12,6 +12,9 @@ from zen_europe.datasets.dataset_collections.transport_technologies_costs import
     TransportTechnologiesCosts,
 )
 from zen_europe.datasets.datasets.carrier.entsoe import ENTSOE
+from zen_europe.datasets.datasets.carrier.neumann_2022_transmission_losses import (
+    Neumann2022TransmissionLosses,
+)
 from zen_europe.datasets.datasets.technology.dea_energy_transport import (
     DEAEnergyTransport,
 )
@@ -75,8 +78,8 @@ class PowerLine(TransportTechnology):
         """
         Sets the linear transport loss factor of power line.
         """
-        energy_transport = DEAEnergyTransport(source_path=self.source_path)
-        return energy_transport.get_transport_loss_factor_linear(self)
+        neumann2022 = Neumann2022TransmissionLosses(self.source_path)
+        return neumann2022.get_transport_loss_factor_linear(self)
 
     def _set_capex_per_distance_transport(self) -> Attribute:
         """
