@@ -3,6 +3,11 @@
 This file gets automatically updated in ZEN-europe's continuous integration 
 procedures. Do not edit the file manually.
 
+## [v2.1.0] - 2026-11-26 
+
+### Data Changes 📊
+- reduce power line losses to more accurately reflect values in the literature. The previous losses amounted to 50% per 1000 km, which unrealistically taxed trade between countries. [[🔀 PR #66](https://github.com/ZEN-universe/ZEN-europe/pull/66) @csfunke]
+
 ## [v2.0.1] - 2026-11-26 
 
 ### Bug Fixes 🐛
