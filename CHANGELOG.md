@@ -3,6 +3,11 @@
 This file gets automatically updated in ZEN-europe's continuous integration 
 procedures. Do not edit the file manually.
 
+## [v2.0.1] - 2026-11-26 
+
+### Bug Fixes 🐛
+- fix vulnerability in electrolysis cost implementation. The previous implementation, although correct, could have lead to bugs when both a default value and a data csv file are specified. [[🔀 PR #72](https://github.com/ZEN-universe/ZEN-europe/pull/72) @csfunke]
+
 ## [v2.0.0] - 2026-11-24 
 
 ### New Features ✨
