@@ -121,14 +121,19 @@ class Electrolysis(ConversionTechnology):
         tech_db = TechnologyCostDatabase(
             settings=self.settings, source_path=self.source_path
         )
+
         cf = self._electricity_conversion_factor()
         attr = tech_db.get_capex_specific_conversion(self)
-        if attr.df is not None:
-            data = cast(pd.Series, attr.df) * cf
-            attr.set_data(df=data, source=attr.sources[-1])
-        else:
-            value = cast(float, attr.default_value) * cf
-            attr.set_data(default_value=value, source=attr.sources[-1])
+
+        default_value = cast(float, attr.default_value) * cf
+        data = cast(pd.Series, attr.df) * cf if attr.df is not None else None
+
+        attr.set_data(
+            default_value=default_value,
+            df=data,
+            source=attr.sources[-1],
+        )
+
         return attr
 
     def _set_opex_specific_fixed(self) -> Attribute:
