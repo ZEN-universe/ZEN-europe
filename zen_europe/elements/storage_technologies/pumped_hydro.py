@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, cast
-
-import pandas as pd
+from typing import TYPE_CHECKING
 
 from zen_europe.datasets.dataset_collections.hydro_existing_capacity_plant_level import (  # noqa: E501
     HydroExistingCapacityPlantLevel,
@@ -172,7 +170,7 @@ class PumpedHydro(StorageTechnology):
                 attr = hydro_capacities.get_capacity_existing_energy(self)
             return attr
         else:
-            attr = self.capacity_existing
+            attr = self.capacity_existing_energy
             attr.set_data(
                 default_value=0,
                 df=None,
@@ -184,14 +182,17 @@ class PumpedHydro(StorageTechnology):
 
     def _set_capacity_limit(self) -> Attribute:
         """
-        Sets the capacity limit for pumped hydro.
+        Sets the capacity limit for pumped hydro to today's fleet, also when
+        existing capacities are not used.
 
         Returns:
             Attribute: An Attribute object containing the capacity limit data.
         """
         attr = self.capacity_limit
-        data = cast(pd.Series, self.capacity_existing.df)
-        unit = self.capacity_existing.unit
+        hydro_capacities = HydropowerExistingCapacities(
+            settings=self.settings, source_path=self.source_path
+        )
+        data = hydro_capacities.calculate_capacity_existing(self)
         capacity_limit = data.groupby(level=0).sum()
         capacity_limit.name = "capacity_limit"
         capacity_limit = capacity_limit.reindex(
@@ -205,24 +206,25 @@ class PumpedHydro(StorageTechnology):
                     "The capacity limit is set to the sum of the"
                     "historical capacity additions across all years."
                 ),
-                metadata=cast(
-                    SourceInformation, self.capacity_existing.sources[-1]
-                ).metadata,
+                metadata=hydro_capacities.metadata,
             ),
-            unit=unit,
+            unit="GW",
         )
         return attr
 
     def _set_capacity_limit_energy(self) -> Attribute:
         """
-        Sets the energy capacity limit for pumped hydro.
+        Sets the energy capacity limit for pumped hydro to today's fleet, also when
+        existing capacities are not used.
 
         Returns:
             Attribute: An Attribute object containing the capacity limit data.
         """
         attr = self.capacity_limit_energy
-        data = cast(pd.Series, self.capacity_existing_energy.df)
-        unit = self.capacity_existing_energy.unit
+        hydro_capacities = HydropowerExistingCapacities(
+            settings=self.settings, source_path=self.source_path
+        )
+        data = hydro_capacities.calculate_capacity_existing(self, power=False)
         capacity_limit = data.groupby(level=0).sum()
         capacity_limit.name = "capacity_limit_energy"
         capacity_limit = capacity_limit.reindex(
@@ -236,11 +238,9 @@ class PumpedHydro(StorageTechnology):
                     "The energy capacity limit is set to the sum of the"
                     "historical capacity additions across all years."
                 ),
-                metadata=cast(
-                    SourceInformation, self.capacity_existing_energy.sources[-1]
-                ).metadata,
+                metadata=hydro_capacities.metadata,
             ),
-            unit=unit,
+            unit="GWh",
         )
         return attr
 

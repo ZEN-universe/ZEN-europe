@@ -1,0 +1,102 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, ClassVar
+
+from zen_creator import AssumptionInformation, Attribute, RetrofittingTechnology
+
+from zen_europe.datasets.dataset_collections.ceramic_production_data import (
+    CeramicProductionData,
+)
+from zen_europe.datasets.dataset_collections.industrial_waste_heat import (
+    IndustrialWasteHeat,
+)
+from zen_europe.datasets.dataset_collections.industry_heat_supply import (
+    IndustryHeatSupply,
+)
+from zen_europe.datasets.dataset_collections.industry_production_data import (
+    IndustryProductionData,
+)
+
+if TYPE_CHECKING:
+    from zen_creator.model import Model
+
+
+class NaturalGasToCeramicFuel(RetrofittingTechnology):
+    """Natural gas firing of the ceramic kilns, today's fuel."""
+
+    name: str = "natural_gas_to_ceramic_fuel"
+    base_technology_name: str = "ceramic_production"
+    sector: ClassVar[str] = "ceramic"
+    fuel: ClassVar[str] = "natural_gas"
+
+    def __init__(self, model: Model, power_unit: str = "MW"):
+        super().__init__(model=model, power_unit=power_unit)
+
+    # ---------- Required methods that are called during object construction ----------
+
+    def _set_reference_carrier(self) -> Attribute:
+        """Ceramic fuel."""
+        return Attribute(
+            "reference_carrier", default_value=["ceramic_fuel"], element=self
+        )
+
+    def _set_input_carrier(self) -> Attribute:
+        """Natural gas."""
+        return Attribute("input_carrier", default_value=["natural_gas"], element=self)
+
+    def _set_output_carrier(self) -> Attribute:
+        """Ceramic fuel and the waste heat of the kiln."""
+        return Attribute(
+            "output_carrier",
+            default_value=[
+                "ceramic_fuel",
+                *self.settings.operation.waste_heat_carriers,
+            ],
+            element=self,
+        )
+
+    def _set_retrofit_reference_carrier(self) -> Attribute:
+        """Ceramic fuel."""
+        return Attribute(
+            "retrofit_reference_carrier", default_value=["ceramic_fuel"], element=self
+        )
+
+    # ---------- Required methods that are called during object build ----------
+
+    def _set_lifetime(self) -> Attribute:
+        """As ceramic_production."""
+        return IndustryProductionData(
+            self.settings, self.source_path
+        ).get_lifetime_fuel_retrofit(self)
+
+    def _set_conversion_factor(self) -> Attribute:
+        """Reference route, plus the waste heat from sEEnergies (glass as proxy)."""
+        return IndustrialWasteHeat(
+            self.settings, self.source_path
+        ).get_conversion_factor_kiln_fuel(self)
+
+    def _set_retrofit_flow_coupling_factor(self) -> Attribute:
+        """The whole ceramic fuel demand."""
+        return CeramicProductionData(
+            self.settings, self.source_path
+        ).get_retrofit_flow_coupling_factor_natural_gas(self)
+
+    def _set_capacity_existing(self) -> Attribute:
+        """Today's ceramic fuel demand."""
+        if not self.settings.investment.use_existing_capacities:
+            return self.capacity_existing.set_data(
+                default_value=0,
+                df=None,
+                source=AssumptionInformation(
+                    description="We do not consider existing capacities."
+                ),
+            )
+        return IndustryHeatSupply(
+            self.settings, self.source_path
+        ).get_capacity_existing_kiln_fuel(self)
+
+    def _set_capacity_limit(self) -> Attribute:
+        """Ceramic fuel demand times the capacity limit margin."""
+        return IndustryHeatSupply(
+            self.settings, self.source_path
+        ).get_capacity_limit_kiln_fuel(self)

@@ -1,0 +1,59 @@
+name: Check URLs
+
+# Weekly reachability check of the URLs the datasets cite or download from.
+# Not part of the PR tests: an external server being down should not block PRs.
+# Failures are collected in one open issue titled "Dead dataset URLs".
+on:
+  schedule:
+    - cron: '0 5 * * 1'  # Mondays 05:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  check_urls:
+    if: ${{ github.repository == 'ZEN-universe/ZEN-europe' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: pip
+
+      - name: Install package
+        run: pip install -e .[dev]
+
+      # I/O bound, so more workers than cores
+      - name: Check URLs
+        id: check
+        run: pytest tests/network -m network -n 16 -rfs --tb=no --junitxml=report.xml
+
+      - name: Report dead URLs in an issue
+        if: ${{ failure() && steps.check.outcome == 'failure' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          title="Dead dataset URLs"
+          {
+            echo "The [weekly URL check]($RUN_URL) found unreachable URLs:"
+            echo
+            python -c "
+          import xml.etree.ElementTree as ET
+          for failure in ET.parse('report.xml').iter('failure'):
+              print('-', failure.get('message').removeprefix('Failed: '))
+          "
+            echo
+            echo "Run \`pytest tests/network -m network -n 8\` locally to recheck."
+          } > body.md
+          issue=$(gh issue list --state open --search "in:title \"$title\"" \
+            --json number --jq '.[0].number')
+          if [ -n "$issue" ]; then
+            gh issue comment "$issue" --body-file body.md
+          else
+            gh issue create --title "$title" --body-file body.md
+          fi

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any, Dict
+from typing import TYPE_CHECKING, Any, Dict, cast
 
 import pandas as pd
 
@@ -67,11 +67,7 @@ class NuclearMaxLoad(DatasetCollection):
         and for the total system.
 
         """
-        entsoe_db = ENTSOE(
-            settings=self.settings,
-            set_nodes=self.set_nodes,
-            source_path=self.source_path,
-        )
+        entsoe_db = cast(ENTSOE, self.data["entsoe"])
 
         ref_year = element.settings.time.reference_year
         last_entsoe_year = entsoe_db.last_entsoe_year

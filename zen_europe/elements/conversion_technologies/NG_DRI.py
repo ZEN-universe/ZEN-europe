@@ -2,6 +2,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from zen_europe.datasets.dataset_collections.industrial_waste_heat import (
+    IndustrialWasteHeat,
+)
 from zen_europe.datasets.datasets.technology.agora_industry_steel import (
     AgoraIndustrySteel,
 )
@@ -50,10 +53,16 @@ class NG_DRI(ConversionTechnology):
 
     def _set_output_carrier(self) -> Attribute:
         """
-        Set the output carrier of NG-DRI to primary steel.
+        Set the output carrier of NG-DRI to primary steel and the waste heat of the
+        process.
         """
         return Attribute(
-            name="output_carrier", default_value=["primary_steel"], element=self
+            name="output_carrier",
+            default_value=[
+                "primary_steel",
+                *self.settings.operation.waste_heat_carriers,
+            ],
+            element=self,
         )
 
     # ---------- Required methods that are called during object build ----------
@@ -68,11 +77,11 @@ class NG_DRI(ConversionTechnology):
 
     def _set_conversion_factor(self) -> Attribute:
         """
-        Return the conversion factor of NG-DRI.
+        Return the conversion factor of NG-DRI, including the waste heat.
 
         """
-        agora_dataset = AgoraIndustrySteel(source_path=self.source_path)
-        return agora_dataset.get_conversion_factor(self)
+        waste_heat_dataset = IndustrialWasteHeat(self.settings, self.source_path)
+        return waste_heat_dataset.get_conversion_factor_steel(self)
 
     def _set_opex_specific_variable(self) -> Attribute:
         """

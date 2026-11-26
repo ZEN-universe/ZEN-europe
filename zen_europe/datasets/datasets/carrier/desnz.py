@@ -12,8 +12,6 @@ from zen_creator.datasets.datasets.metadata import MetaData
 
 from zen_europe.utils.constants import Constants
 
-_KTOE2GWH = 1 / Constants.TOE_PER_MWH  # ktoe (useful energy) -> GWh
-
 
 class DESNZ(Dataset[pd.DataFrame]):
     """
@@ -48,7 +46,7 @@ class DESNZ(Dataset[pd.DataFrame]):
             sheet_name="Table U2",
             skiprows=2,
         )
-        data = data.set_index(["Sector", "End use", "Year"]) * _KTOE2GWH
+        data = data.set_index(["Sector", "End use", "Year"]) * Constants.GWH_PER_KTOE
         return data.sort_index()
 
     # -------- methods ------------------------

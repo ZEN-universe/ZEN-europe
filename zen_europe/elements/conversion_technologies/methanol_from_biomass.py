@@ -48,7 +48,7 @@ class MethanolFromBiomass(ConversionTechnology):
         """
         return Attribute(
             name="output_carrier",
-            default_value=["methanol", "district_heat"],
+            default_value=["methanol", "heat_industry_100_150"],
             element=self,
         )
 

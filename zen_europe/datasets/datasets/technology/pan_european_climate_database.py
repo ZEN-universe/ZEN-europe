@@ -19,6 +19,7 @@ from zen_creator.datasets.datasets.dataset import Dataset
 from zen_creator.datasets.datasets.metadata import MetaData, SourceInformation
 
 from zen_europe.utils.constants import Constants
+from zen_europe.utils.utils import ISO2_TO_NODE
 
 
 class PanEuropeanClimateDatabase(Dataset[dict[str, pd.DataFrame]]):
@@ -32,9 +33,11 @@ class PanEuropeanClimateDatabase(Dataset[dict[str, pd.DataFrame]]):
     Wind technologies use PECD's "Existing technologies" turbine class (technology
     codes 20 offshore / 30 onshore) at the "Resource Grade B" installation-site
     assumption (current-plant-equivalent siting, as opposed to Grade A's idealized
-    top-10%-of-locations siting); solar PV uses the utility-scale fixed-tilt panel
-    technology (62); hydropower indicators have no technology/energy_scenario
-    dimension in PECD.
+    top-10%-of-locations siting). Offshore nodes without existing wind farms use the
+    future-turbine profile (code 21), scaled down to existing-technology full load
+    hours (see `_get_max_load_wind_offshore`). Solar PV uses the utility-scale
+    fixed-tilt panel technology (62); hydropower indicators have no
+    technology/energy_scenario dimension in PECD.
 
     Solar PV is downloaded directly at NUTS0 resolution. Wind and hydropower are
     *not* available at NUTS0 -- PECD only reports them at its own regional zones
@@ -93,9 +96,17 @@ class PanEuropeanClimateDatabase(Dataset[dict[str, pd.DataFrame]]):
             "energy_scenario": "resource_grade_b",
             "spatial_resolution": "peon",
         },
-        "wind_offshore": {
+        "wind_offshore_existing": {
             "variable": "wind_power_offshore_capacity_factor",
-            "technology": "21",  # offshore wind, existing technologies
+            "technology": "20",  # offshore wind, existing technologies
+            "energy_scenario": "resource_grade_b",
+            "spatial_resolution": "peof",
+        },
+        # only used to fill the nodes without existing offshore wind farms, see
+        # `_get_max_load_wind_offshore`
+        "wind_offshore_future": {
+            "variable": "wind_power_offshore_capacity_factor",
+            "technology": "21",  # offshore wind, SP316 HH155
             "energy_scenario": "resource_grade_b",
             "spatial_resolution": "peof",
         },
@@ -126,25 +137,26 @@ class PanEuropeanClimateDatabase(Dataset[dict[str, pd.DataFrame]]):
     }
 
     # wind technology -> (cache filename, source URL) for ECMWF/ENTSO-E's own
-    # pre-calculated PECD-region -> NUTS0 installed-capacity weight tables (the
-    # "Existing_run.csv" variant, matching technology codes 20/30 = "Existing
-    # technologies"; there's also a "Future_tech_runs.csv" variant in the same repo
-    # for future-fleet technology codes, not used here).
+    # pre-calculated PECD-region -> NUTS0 installed-capacity weight tables. The
+    # "Existing_run.csv" variants match technology codes 20/30 = "Existing
+    # technologies" and only weight regions with installed capacity in 2020; the
+    # "Future_tech_runs.csv" variant matches the future offshore technology code 21.
+    _WEIGHTS_URL = (
+        "https://raw.githubusercontent.com/ecmwf-training/dss-notebooks/main/"
+        "datasets/sis-energy-pecd/aggregation-pecd-regions-into-nut0/weights/PECD4.2/"
+    )
     _WIND_WEIGHT_SOURCES: dict[str, tuple[str, str]] = {
         "wind_onshore": (
             "onshore_wind_weights.csv",
-            "https://raw.githubusercontent.com/ecmwf-training/dss-notebooks/main/"
-            "datasets/sis-energy-pecd/aggregation-pecd-regions-into-nut0/weights/"
-            "PECD4.2/Onshore_Existing_run.csv",
+            _WEIGHTS_URL + "Onshore_Existing_run.csv",
         ),
-        "wind_offshore": (
-            "offshore_wind_weights.csv",
-            "https://raw.githubusercontent.com/ecmwf-training/dss-notebooks/main/"
-            "datasets/sis-energy-pecd/aggregation-pecd-regions-into-nut0/weights/"
-            # "PECD4.2/Offshore_Existing_run.csv",
-            # the "Existing" run has no data for countries without capacity in 2020
-            # (e.g., IT)
-            "PECD4.2/Offshore_Future_tech_runs.csv",
+        "wind_offshore_existing": (
+            "offshore_existing_wind_weights.csv",
+            _WEIGHTS_URL + "Offshore_Existing_run.csv",
+        ),
+        "wind_offshore_future": (
+            "offshore_future_wind_weights.csv",
+            _WEIGHTS_URL + "Offshore_Future_tech_runs.csv",
         ),
     }
 
@@ -283,7 +295,7 @@ class PanEuropeanClimateDatabase(Dataset[dict[str, pd.DataFrame]]):
         ECMWF/ENTSO-E's own aggregation notebook (see class docstring)."""
         weights = self._get_wind_weights(technology)
         weights = weights[weights["Weight_in_aggregation"] > 0]
-        if technology == "wind_offshore":
+        if technology.startswith("wind_offshore"):
             weights = weights.assign(NUTS0=weights["NUTS0"].str.removesuffix("_OFF"))
 
         region_to_country = weights.set_index("PECD_CODE")["NUTS0"]
@@ -313,20 +325,13 @@ class PanEuropeanClimateDatabase(Dataset[dict[str, pd.DataFrame]]):
             self._download_file(url, weight_path)
         return pd.read_csv(weight_path)
 
-    # SZON bidding-zone codes follow ENTSO-E's own ISO-alpha2 country prefix (e.g.
-    # "GR00" for Greece), which doesn't always match the NUTS0/model node code used
-    # everywhere else in this package (e.g. `convert_country_names` maps Greece to
-    # "EL", the Eurostat NUTS0 convention)
-    _HYDRO_COUNTRY_CODE_FIXUPS: dict[str, str] = {"GR": "EL"}
-
     @classmethod
     def _aggregate_hydro_to_nuts0(cls, data: pd.DataFrame) -> pd.DataFrame:
         """Sum SZON bidding-zone columns sharing the same leading 2-letter country
         prefix into NUTS0-country columns (see class docstring for why summing,
-        not weighting, is correct here)."""
-        country = data.columns.str[:2].map(
-            lambda code: cls._HYDRO_COUNTRY_CODE_FIXUPS.get(code, code)
-        )
+        not weighting, is correct here). The SZON prefixes are ISO 3166-1 alpha-2
+        codes (e.g. "GR00" for Greece), mapped to the node codes."""
+        country = data.columns.str[:2].map(lambda code: ISO2_TO_NODE.get(code, code))
         return data.T.groupby(country).sum().T
 
     @staticmethod
@@ -369,11 +374,10 @@ class PanEuropeanClimateDatabase(Dataset[dict[str, pd.DataFrame]]):
         Returns:
             pd.Series: A pandas Series containing the maximum load data.
         """
-        assert element.name in self.data, (
-            f"Maximum load data for {element.name} is not available in the "
-            "PanEuropeanClimateDatabase dataset."
-        )
-        data = self.data[element.name]
+        if element.name == "wind_offshore":
+            data = self._get_max_load_wind_offshore()
+        else:
+            data = self.data[element.name]
         model_nodes = pd.Index(element.model.config.system.set_nodes)
         common_nodes = data.columns.intersection(model_nodes)
         missing_nodes = model_nodes.difference(common_nodes)
@@ -395,16 +399,40 @@ class PanEuropeanClimateDatabase(Dataset[dict[str, pd.DataFrame]]):
         data = data[common_nodes]
         data = data.reset_index(drop=True)
         data.index.name = "time"
-        source = SourceInformation(
-            description=(
-                f"The max load data for {element.name} is derived from the"
-                "Pan-European Climate Database (PECD 4.2) dataset."
-            ),
-            metadata=self.metadata,
+        description = (
+            f"The max load data for {element.name} is derived from the "
+            "Pan-European Climate Database (PECD 4.2) dataset."
         )
+        if element.name == "wind_offshore":
+            description += (
+                " Nodes without existing offshore wind farms have no 'Existing "
+                "technologies' profile; they use the future-turbine (SP316 HH155) "
+                "profile, scaled by the median ratio of existing to future full load "
+                "hours across the nodes with both profiles."
+            )
+        source = SourceInformation(description=description, metadata=self.metadata)
         return element.max_load.set_data(
             source=source, df=data, unit="1", default_value=0
         )
+
+    def _get_max_load_wind_offshore(self) -> pd.DataFrame:
+        """Existing-technology offshore profiles, gap-filled with scaled future ones.
+
+        PECD's "Existing technologies" offshore profiles are zero in regions without
+        installed capacity in 2020 (e.g., the Baltic states, Poland, Italy, Greece).
+        For these nodes, the future-turbine profile is scaled by the median ratio
+        of existing to future full load hours of the nodes with both profiles.
+        """
+        existing = self.data["wind_offshore_existing"]
+        future = self.data["wind_offshore_future"]
+        common = existing.columns.intersection(future.columns)
+        ratio = (existing[common].sum() / future[common].sum()).median()
+        missing = future.columns.difference(existing.columns)
+        logging.info(
+            f"Offshore wind profiles for {list(missing)} are future-turbine profiles "
+            f"scaled by the median existing/future full load hour ratio {ratio:.3f}."
+        )
+        return pd.concat([existing, future[missing] * ratio], axis=1)
 
     def get_generation_run_of_river_hydro(self, element: Element) -> pd.DataFrame:
         """

@@ -2,11 +2,40 @@
 
 from __future__ import annotations
 
+import importlib
+import inspect
 from pathlib import Path
 
 from zen_creator import Dataset
 
 import zen_europe.datasets.datasets as datasets_module
+
+
+def _all_dataset_classes() -> list[type[Dataset]]:
+    """Return every Dataset defined in zen_europe.datasets.datasets, found by
+    file since not every subfolder is a regular package."""
+    root = Path(datasets_module.__file__).parent
+    classes: list[type[Dataset]] = []
+    for path in sorted(root.rglob("[!_]*.py")):
+        parts = path.relative_to(root).with_suffix("").parts
+        module = importlib.import_module(".".join((datasets_module.__name__, *parts)))
+        classes += [
+            cls
+            for _, cls in inspect.getmembers(module, inspect.isclass)
+            if issubclass(cls, Dataset)
+            and cls.__module__ == module.__name__
+            and not inspect.isabstract(cls)
+        ]
+    return classes
+
+
+def test_all_datasets_cite_a_url_or_doi() -> None:
+    """Building the metadata of every dataset, without loading its data,
+    raises if a source has neither url nor doi."""
+    dataset_classes = _all_dataset_classes()
+    assert dataset_classes
+    for dataset_cls in dataset_classes:
+        dataset_cls._set_metadata(dataset_cls.__new__(dataset_cls))
 
 
 def _dataset_classes() -> list[type[Dataset]]:

@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, cast
-
-import pandas as pd
+from typing import TYPE_CHECKING, Any
 
 from zen_europe.datasets.datasets.technology.CO2_storage_costs_ZEP import (
     CO2StorageCostsZEP,
@@ -187,7 +185,11 @@ class CarbonStorage(ConversionTechnology):
             )
             return OG_extraction_db.get_capacity_limit_carbon_storage(self)
         attr = self.capacity_limit
-        data = cast(pd.Series, self.capacity_existing.df).groupby("node").sum()
+        # today's projects, also when existing capacities are not used
+        iogp_projects = IOGPCarbonStorageProjects(
+            settings=self.settings, source_path=self.source_path
+        )
+        data = iogp_projects.calculate_capacity_existing().groupby("node").sum()
         data.name = "capacity_limit"
         attr.set_data(
             default_value=0,
@@ -199,9 +201,7 @@ class CarbonStorage(ConversionTechnology):
                     "existing capacity from the IOGP report, which includes "
                     "all planned and under construction projects. "
                 ),
-                metadata=cast(
-                    SourceInformation, self.capacity_existing.sources[-1]
-                ).metadata,
+                metadata=iogp_projects.metadata,
             ),
         )
         return attr

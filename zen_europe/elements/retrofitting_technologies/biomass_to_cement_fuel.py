@@ -19,10 +19,10 @@ from zen_creator import AssumptionInformation, Attribute, RetrofittingTechnology
 
 class BiomassToCementFuel(RetrofittingTechnology):
     """Class containing all data and assumptions for biomass-fired
-    cement-kiln fuel supply (biomass to fuel for cement)."""
+    cement-kiln fuel supply (biomass to cement fuel)."""
 
     name: str = "biomass_to_cement_fuel"
-    base_technology_name: str = "cement_kiln"
+    base_technology_name: str = "cement_production"
 
     def __init__(self, model: Model, power_unit: str = "MW"):
         super().__init__(model=model, power_unit=power_unit)
@@ -35,7 +35,7 @@ class BiomassToCementFuel(RetrofittingTechnology):
         cement.
         """
         return Attribute(
-            name="reference_carrier", default_value=["fuel_for_cement"], element=self
+            name="reference_carrier", default_value=["cement_fuel"], element=self
         )
 
     def _set_input_carrier(self) -> Attribute:
@@ -46,10 +46,10 @@ class BiomassToCementFuel(RetrofittingTechnology):
 
     def _set_output_carrier(self) -> Attribute:
         """
-        Set the output carrier of biomass to cement fuel to fuel for cement.
+        Set the output carrier of biomass to cement fuel to cement fuel.
         """
         return Attribute(
-            name="output_carrier", default_value=["fuel_for_cement"], element=self
+            name="output_carrier", default_value=["cement_fuel"], element=self
         )
 
     def _set_retrofit_reference_carrier(self) -> Attribute:
@@ -59,7 +59,7 @@ class BiomassToCementFuel(RetrofittingTechnology):
         """
         return Attribute(
             name="retrofit_reference_carrier",
-            default_value=["fuel_for_cement"],
+            default_value=["cement_fuel"],
             element=self,
         )
 
@@ -73,10 +73,10 @@ class BiomassToCementFuel(RetrofittingTechnology):
         cement kiln operation.
         """
         attr = self.lifetime
-        cement_kiln = self.model.conversion_technologies["cement_kiln"]
+        cement_production = self.model.conversion_technologies["cement_production"]
         attr.set_data(
-            default_value=cement_kiln.lifetime.default_value,
-            unit=cement_kiln.lifetime.unit,
+            default_value=cement_production.lifetime.default_value,
+            unit=cement_production.lifetime.unit,
             source=AssumptionInformation(
                 description=(
                     "The lifetime of biomass to cement fuel is assumed to be the same "

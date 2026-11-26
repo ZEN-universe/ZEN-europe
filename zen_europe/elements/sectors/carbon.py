@@ -3,6 +3,8 @@ from zen_creator import Sector
 from zen_europe.elements.carriers.carbon import Carbon
 from zen_europe.elements.conversion_technologies.carbon_storage import CarbonStorage
 from zen_europe.elements.conversion_technologies.DAC import DAC
+from zen_europe.elements.conversion_technologies.fischer_tropsch import FischerTropsch
+from zen_europe.elements.conversion_technologies.methanation import Methanation
 from zen_europe.elements.conversion_technologies.methanol_from_hydrogen import (
     MethanolFromHydrogen,
 )
@@ -12,6 +14,12 @@ from zen_europe.elements.retrofitting_technologies.biomass_plant_CCS import (
 )
 from zen_europe.elements.retrofitting_technologies.cement_post_comb import (
     CementPostComb,
+)
+from zen_europe.elements.retrofitting_technologies.ceramic_post_comb import (
+    CeramicPostComb,
+)
+from zen_europe.elements.retrofitting_technologies.glass_post_comb import (
+    GlassPostComb,
 )
 from zen_europe.elements.retrofitting_technologies.natural_gas_turbine_CCS import (
     NaturalGasTurbineCCS,
@@ -25,7 +33,7 @@ class CarbonSector(Sector):
     """Carbon capture, transport and storage."""
 
     name = "carbon"
-    required_sectors = ["electricity", "heat"]
+    required_sectors = ["electricity", "heat", "industrial_heat"]
 
     def __init__(self) -> None:
         super().__init__()
@@ -37,8 +45,12 @@ class CarbonSector(Sector):
             BiomassPlantCCS,
             SMR_CCS,
             CementPostComb,
+            GlassPostComb,
+            CeramicPostComb,
             BF_BOF_CCS,
             NG_DRI_CCS,
             MethanolFromHydrogen,
             Carbon,
+            Methanation,
+            FischerTropsch,
         ]

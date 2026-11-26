@@ -9,6 +9,8 @@ from zen_creator import (
     SourceInformation,
 )
 
+from zen_europe.utils.constants import Constants
+
 BIOMASS_TYPE_MAP = {
     "biomass": [
         "MINBIOAGRW1",
@@ -67,7 +69,7 @@ class ENSPRESO(Dataset[pd.DataFrame]):
             publication="",
             publication_year=2026,
             url="http://data.europa.eu/89h/74ed5a04-7d74-4807-9eab-b94774309d9f",
-            doi="10.2905/JRC.44AZBC8",
+            doi="https://doi.org/10.2905/JRC.44AZBC8",
         )
 
     def _set_path(self) -> Path | None:
@@ -109,7 +111,9 @@ class ENSPRESO(Dataset[pd.DataFrame]):
             biomass_potential.groupby(["NUTS0", "Year"]).sum()["Value"].unstack()
         )
         # convert PJ to GW
-        biomass_potential = biomass_potential / 3.6 * 1000 / 8760
+        biomass_potential = (
+            biomass_potential / Constants.GJ_PER_MWH * 1000 / Constants.HOURS_PER_YEAR
+        )
 
         # interpolate for all years between biomass_potential.columns.min() and
         # biomass_potential.columns.max()

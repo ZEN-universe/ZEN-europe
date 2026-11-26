@@ -7,9 +7,7 @@ import pandas as pd
 from zen_europe.datasets.datasets.carrier.truck_standard_load_profiles import (
     TruckStandardLoadProfiles,
 )
-from zen_europe.datasets.datasets.technology.truck_technologies_icct import (
-    TruckTechnologiesICCT,
-)
+from zen_europe.utils.constants import Constants
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -22,7 +20,6 @@ from zen_creator import Attribute, Carrier, ConversionTechnology, DatasetCollect
 from zen_creator.utils.attribute import SourceInformation
 from zen_creator.utils.settings import Settings
 
-from zen_europe.datasets.datasets.carrier.eurostat import Eurostat
 from zen_europe.datasets.datasets.carrier.statistical_pocketbook_transport import (
     StatisticalPocketbookTransport,
 )
@@ -44,12 +41,10 @@ class TruckMileageDemand(DatasetCollection):
             raise ValueError("source_path must be set to load the dataset collection.")
 
         return {
-            "eurostat": Eurostat(self.settings, self.source_path),
             "statistical_pocketbook_transport": StatisticalPocketbookTransport(
                 self.settings, self.source_path
             ),
             "truck_standard_load_profiles": TruckStandardLoadProfiles(self.source_path),
-            "truck_technologies": TruckTechnologiesICCT(self.source_path),
         }
 
     def get_demand(self, element: Carrier) -> Attribute:
@@ -115,7 +110,9 @@ class TruckMileageDemand(DatasetCollection):
         """
         slp_country = self._get_hourly_demand(element=element)
         total_demand = self._get_total_demand(element=element)
-        peak_demand_share = (slp_country / (total_demand / 8760)).max()
+        peak_demand_share = (
+            slp_country / (total_demand / Constants.HOURS_PER_YEAR)
+        ).max()
         return peak_demand_share
 
     def get_max_load(self, element: ConversionTechnology) -> Attribute:

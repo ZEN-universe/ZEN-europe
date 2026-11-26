@@ -149,6 +149,6 @@ class SwissOilBalance(Dataset[pd.DataFrame]):
         data = cast(float, self.data.loc[("Flugpetrol", "Endverbrauch - Total"), year])
         energy_density = 43.2 / (
             Constants.GJ_PER_MWH * 1000
-        )  # [GWh/t] https://www.bfe.admin.ch/bfe/de/home/versorgung/statistik-und-geodaten/energiestatistiken/gesamtenergiestatistik.exturl.html/aHR0cHM6Ly9wdWJkYi5iZmUuYWRtaW4uY2gvZGUvcHVibGljYX/Rpb24vZG93bmxvYWQvNzQ0Mg==.html
+        )  # [GWh/t] https://pubdb.bfe.admin.ch/de/publication/download/7442
         data *= energy_density
         return data

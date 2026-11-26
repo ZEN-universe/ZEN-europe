@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, cast
-
-import pandas as pd
+from typing import TYPE_CHECKING
 
 from zen_europe.datasets.dataset_collections.hydro_existing_capacity_plant_level import (  # noqa: E501
     HydroExistingCapacityPlantLevel,
@@ -165,13 +163,17 @@ class RunOfRiverHydro(ConversionTechnology):
 
     def _set_capacity_limit(self) -> Attribute:
         """
-        Sets the capacity limit for run-of-river hydro.
+        Sets the capacity limit for run-of-river hydro to today's fleet, also when
+        existing capacities are not used.
 
         Returns:
             Attribute: An Attribute object containing the capacity limit data.
         """
         attr = self.capacity_limit
-        data = cast(pd.Series, self.capacity_existing.df)
+        hydro_capacities = HydropowerExistingCapacities(
+            settings=self.settings, source_path=self.source_path
+        )
+        data = hydro_capacities.calculate_capacity_existing(self)
         capacity_limit = data.groupby(level=0).sum()
         capacity_limit.name = "capacity_limit"
         capacity_limit = capacity_limit.reindex(
@@ -185,9 +187,7 @@ class RunOfRiverHydro(ConversionTechnology):
                     "The capacity limit is set to the sum of the"
                     "historical capacity additions across all years."
                 ),
-                metadata=cast(
-                    SourceInformation, self.capacity_existing.sources[-1]
-                ).metadata,
+                metadata=hydro_capacities.metadata,
             ),
             unit="GW",
         )

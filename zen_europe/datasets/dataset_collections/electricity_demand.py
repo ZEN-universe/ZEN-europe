@@ -17,9 +17,7 @@ from zen_creator.utils.attribute import SourceInformation
 from zen_creator.utils.settings import Settings
 
 from zen_europe.datasets.dataset_collections.heat_demand import HeatDemand
-from zen_europe.datasets.datasets.carrier.bfe import BFE
 from zen_europe.datasets.datasets.carrier.entsoe import ENTSOE
-from zen_europe.datasets.datasets.carrier.eurostat import Eurostat
 
 
 class ElectricityDemand(DatasetCollection):
@@ -43,9 +41,7 @@ class ElectricityDemand(DatasetCollection):
         return {
             "entsoe": ENTSOE(self.settings, self.set_nodes, self.source_path),
             "heat_demand": HeatDemand(self.settings, self.source_path),
-            "eurostat": Eurostat(self.settings, self.source_path),
             "when2heat": When2Heat(self.settings, self.source_path),
-            "bfe": BFE(self.source_path),
         }
 
     @staticmethod

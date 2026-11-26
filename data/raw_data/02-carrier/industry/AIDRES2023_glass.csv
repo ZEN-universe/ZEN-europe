@@ -1,0 +1,4 @@
+sub_process,ng_GJ_t,elec_GJ_t,capex_eur_t_yr,emit_ng_ref,emit_elec,eu_production_share,source
+container,4.73,1.07,53,0.338,0.073,0.60,AIDRES 2023 Table 19
+flat,5.43,0.80,61,0.487,0.182,0.30,AIDRES 2023 Table 21
+fibre,7.24,2.16,80,0.634,0.227,0.10,AIDRES 2023 Table 23

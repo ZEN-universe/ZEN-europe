@@ -13,6 +13,7 @@ from zen_creator.elements import Technology
 from zen_creator.utils.attribute import Attribute
 
 from zen_europe.utils.constants import Constants
+from zen_europe.utils.utils import ISO2_TO_NODE
 
 
 class ENTSOGCapacityMap(Dataset[pd.DataFrame]):
@@ -38,7 +39,6 @@ class ENTSOGCapacityMap(Dataset[pd.DataFrame]):
     # the map reports no commissioning year, so all points are assumed to be
     # available from this year onwards
     CONSTRUCTION_YEAR = 2010
-    COUNTRY_CODES = {"GR": "EL", "GB": "UK"}
 
     def __init__(self, source_path: Path | str | None = None):
         super().__init__(source_path=source_path)
@@ -75,7 +75,7 @@ class ENTSOGCapacityMap(Dataset[pd.DataFrame]):
 
         for column in ("From CC", "To CC"):
             codes = points[column].astype(str).str.strip()
-            points[column] = codes.mask(codes == "nan").replace(self.COUNTRY_CODES)
+            points[column] = codes.mask(codes == "nan").replace(ISO2_TO_NODE)
 
         points = points[
             (points["capacity"] > 0)

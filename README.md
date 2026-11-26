@@ -5,7 +5,7 @@
 [![Code Quality Checks](https://github.com/ZEN-universe/ZEN-europe/actions/workflows/format_lint_typecheck.yml/badge.svg?branch=main)](https://github.com/ZEN-universe/ZEN-europe/actions/workflows/format_lint_typecheck.yml)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
-[![Documentation Status](https://readthedocs.org/projects/zen-europe/badge/?version=latest)](https://zen-europe.readthedocs.io/en/latest/)
+[![Documentation Status](https://app.readthedocs.org/projects/zen-europe/badge/?version=latest)](https://zen-europe.readthedocs.io/en/latest/)
 
 ZEN-europe generates the input data of a European energy system model for
 [ZEN-garden](https://github.com/ZEN-universe/ZEN-garden), built on

@@ -24,6 +24,8 @@ from zen_creator.datasets.datasets.dataset import Dataset
 from zen_creator.datasets.datasets.metadata import MetaData
 from zen_creator.utils.settings import Settings
 
+from zen_europe.utils.utils import NODE_TO_ISO2
+
 logger = logging.getLogger(__name__)
 
 # This dataset queries the ENTSO-E Transparency Platform via the entsoe-py
@@ -86,11 +88,10 @@ _NODES: list[str] = [
     "UK",
     "XK",
 ]
-_NODE_TO_ENTSOE_CODE: dict[str, str] = {"EL": "GR", "UK": "GB"}
 
 
 def _entsoe_code(node: str) -> str:
-    return _NODE_TO_ENTSOE_CODE.get(node, node)
+    return NODE_TO_ISO2.get(node, node)
 
 
 # Bidding-zone -> country-node folding for the NEIGHBOURS adjacency table

@@ -31,7 +31,8 @@ class TruckTechnologiesICCT(Dataset[dict[str, pd.DataFrame]]):
     PAYLOAD = 13842 / 1000  # t, Tab A18
     ANNUAL_MILEAGE = 116000  # km, Tab 6
     LIFETIME_MILEAGE = 1400000  # km, Tab 6
-    HOURLY_TONNE_MILEAGE = ANNUAL_MILEAGE / 8760 * PAYLOAD  # tkm/h, Tab 6
+    # tkm/h, Tab 6
+    HOURLY_TONNE_MILEAGE = ANNUAL_MILEAGE / Constants.HOURS_PER_YEAR * PAYLOAD
     MONEY_YEAR = 2022
 
     def __init__(self, source_path: Path | str | None = None):

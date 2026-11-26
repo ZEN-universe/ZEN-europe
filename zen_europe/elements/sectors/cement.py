@@ -1,8 +1,10 @@
 from zen_creator import Sector
 
+from zen_europe.elements.carriers.cement_fuel import CementFuel
 from zen_europe.elements.carriers.clinker import Clinker
-from zen_europe.elements.carriers.fuel_for_cement import FuelForCement
-from zen_europe.elements.conversion_technologies.cement_kiln import CementKiln
+from zen_europe.elements.conversion_technologies.cement_production import (
+    CementProduction,
+)
 from zen_europe.elements.retrofitting_technologies.biomass_to_cement_fuel import (
     BiomassToCementFuel,
 )
@@ -24,17 +26,17 @@ class CementSector(Sector):
     """Cement clinker production."""
 
     name = "cement"
-    required_sectors = []
+    required_sectors = ["industrial_heat"]
 
     def __init__(self) -> None:
         super().__init__()
         self.elements = [
-            CementKiln,
+            CementProduction,
             CoalToCementFuel,
             WasteToCementFuel,
             BiomassToCementFuel,
             HydrogenToCementFuel,
             CementPostComb,
             Clinker,
-            FuelForCement,
+            CementFuel,
         ]

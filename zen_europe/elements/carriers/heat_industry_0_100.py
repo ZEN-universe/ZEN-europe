@@ -1,0 +1,41 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+from zen_creator import Attribute
+from zen_creator.datasets.datasets.metadata import AssumptionInformation
+from zen_creator.elements import Carrier
+
+if TYPE_CHECKING:
+    from zen_creator.model import Model
+
+import numpy as np
+
+
+class HeatIndustry0100(Carrier):
+    """Industrial process heat of 0-100 °C, shared by the industry heat sectors."""
+
+    name: str = "heat_industry_0_100"
+
+    def __init__(self, model: Model, power_unit: str = "MW"):
+        super().__init__(model=model, power_unit=power_unit)
+
+    def _set_availability_export(self) -> Attribute:
+        """Unlimited export."""
+        return self.availability_export.set_data(
+            default_value=np.inf,
+            unit=self.power_unit,
+            source=AssumptionInformation(
+                description="Allow unlimited export to blow off excess heat."
+            ),
+        )
+
+    def _set_availability_export_yearly(self) -> Attribute:
+        """Unlimited yearly export."""
+        return self.availability_export_yearly.set_data(
+            default_value=np.inf,
+            unit=self.energy_unit,
+            source=AssumptionInformation(
+                description="Allow unlimited export to blow off excess heat."
+            ),
+        )

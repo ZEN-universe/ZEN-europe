@@ -29,7 +29,7 @@ class GasolineDieselSpread(Dataset[pd.Series]):
             publication="International Review of Economics & Finance",
             publication_year=2016,
             url="https://www.sciencedirect.com/science/article/pii/S1059056016300247",
-            doi="http://dx.doi.org/10.1016/j.iref.2016.04.011",
+            doi="https://doi.org/10.1016/j.iref.2016.04.011",
         )
 
     def _set_path(self) -> Path | None:

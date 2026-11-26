@@ -41,7 +41,7 @@ class BFE(Dataset[dict[str, pd.DataFrame]]):
             author=["Bundesamt für Energie (BFE)"],
             publication="BFE",
             publication_year=2025,
-            url="https://www.bfe.admin.ch/bfe/de/home/versorgung/statistik-und-geodaten/energiestatistiken/energieverbrauch-nach-verwendungszweck.html",
+            url="https://pubdb.bfe.admin.ch/de/publication/download/12358",
         )
 
     def _set_path(self) -> Path | None:

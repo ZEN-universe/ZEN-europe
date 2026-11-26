@@ -10,7 +10,7 @@ class TruckTransportSector(Sector):
     """Truck freight transport demand."""
 
     name = "truck_transport"
-    required_sectors = ["electricity"]
+    required_sectors = ["electricity", "oil_products"]
 
     def __init__(self) -> None:
         super().__init__()

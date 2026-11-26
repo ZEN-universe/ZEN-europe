@@ -18,13 +18,14 @@ if TYPE_CHECKING:
 from zen_creator import Attribute, ConversionTechnology, DatasetCollection
 from zen_creator.utils.attribute import SourceInformation
 
-from zen_europe.datasets.datasets.carrier.aidres import Aidres
 from zen_europe.datasets.datasets.carrier.manual_steel_demand import (
     Eurofer,
+    GlobalIronSteelTracker,
     TradeEconomics,
-    WorldSteel,
+    WorldSteelInFigures2025,
 )
 from zen_europe.datasets.datasets.carrier.material_economics import MaterialEconomics
+from zen_europe.utils.constants import Constants
 
 
 class SteelDemand(DatasetCollection):
@@ -42,78 +43,62 @@ class SteelDemand(DatasetCollection):
             raise ValueError("source_path must be set to load the dataset collection.")
 
         return {
-            "aidres": Aidres(self.source_path),
             "eurofer": Eurofer(self.source_path),
-            "worldsteel": WorldSteel(self.source_path),
+            "worldsteel_2025": WorldSteelInFigures2025(self.source_path),
+            "global_iron_steel_tracker": GlobalIronSteelTracker(self.source_path),
             "trade_economics": TradeEconomics(self.source_path),
             "material_economics": MaterialEconomics(self.source_path),
         }
 
     def _calculate_steel_demand(
         self, element: Carrier
-    ) -> tuple[pd.DataFrame, pd.Series]:
+    ) -> tuple[pd.Series, pd.DataFrame]:
         """
-        Calculate the steel demand for the given element.
+        Calculate the steel production per node and the share of the element's route
+        per node and year.
+
+        The production is the 2020-2024 mean of Eurofer; nodes missing there take the
+        2024 worldsteel production (PT, UK), NO and CH the manual values. The secondary
+        share starts at the 2024 electric arc furnace share of each node.
+        We assume that in 2050, every node reaches at least the 60% secondary share
+        of Material Economics. This raises the total secondary share of all nodes
+        above the Material Economics share.
+        Another approach would be that every node
+        closes the same fraction of its gap to a full secondary share, so that the
+        secondary share of all nodes together ends at the Material Economics end share.
+        Revisit once scrap is implemented.
         """
-        aidres_dataset = cast(Aidres, self.data["aidres"])
-        data = aidres_dataset.get_demand(element)
-        eurofer_dataset = cast(Eurofer, self.data["eurofer"])
-        worldsteel_dataset = cast(WorldSteel, self.data["worldsteel"])
-        trade_economics_dataset = cast(TradeEconomics, self.data["trade_economics"])
-        material_economics_dataset = cast(
-            MaterialEconomics, self.data["material_economics"]
+        eurofer = cast(Eurofer, self.data["eurofer"])
+        worldsteel = cast(WorldSteelInFigures2025, self.data["worldsteel_2025"])
+        tracker = cast(GlobalIronSteelTracker, self.data["global_iron_steel_tracker"])
+        trade_economics = cast(TradeEconomics, self.data["trade_economics"])
+        material_economics = cast(MaterialEconomics, self.data["material_economics"])
+        nodes = pd.Index(element.model.config.system.set_nodes, name="node")
+
+        production = eurofer.get_crude_steel_output().combine_first(
+            worldsteel.get_crude_steel_production()
         )
-        missing_countries = pd.Index(element.model.config.system.set_nodes).difference(
-            data.index
+        production["NO"] = trade_economics.get_manual_steel_demand_trade_economics("NO")
+        production["CH"] = eurofer.get_manual_steel_demand_eurofer("CH")
+        # worldsteel lists every EU producer, so the other nodes produce no steel
+        production = (
+            production.reindex(nodes, fill_value=0.0) * 1000 / Constants.HOURS_PER_YEAR
+        )  # Mt/a -> kt/h
+
+        share_start = (
+            worldsteel.get_secondary_steel_share()
+            .combine_first(tracker.get_secondary_steel_share())
+            .reindex(nodes, fill_value=1.0)
         )
-
-        for country in missing_countries:
-            if country == "CH":
-                data.loc[country] = eurofer_dataset.get_manual_steel_demand_eurofer(
-                    country
-                )
-            elif country == "UK":
-                data.loc[country] = (
-                    worldsteel_dataset.get_manual_steel_demand_worldsteel(country)
-                )
-            elif country == "NO":
-                data.loc[country] = (
-                    trade_economics_dataset.get_manual_steel_demand_trade_economics(
-                        country
-                    )
-                )
-            else:
-                raise ValueError(
-                    f"Steel demand data for country {country} is not available in the "
-                    "Aidres dataset or any of the manual datasets (Eurofer, "
-                    "WorldSteel, TradeEconomics). Please provide the necessary data "
-                    "for this country."
-                )
-
-        d = data.sort_index() / 8.76
-
-        secondary_steel_share_beginning, secondary_steel_share_end = (
-            material_economics_dataset.get_secondary_steel_ratios()
-        )
-        if element.name == "secondary_steel":
-            rat_start = secondary_steel_share_beginning
-            rat_end = secondary_steel_share_end / rat_start
-        else:
-            rat_start = 1 - secondary_steel_share_beginning
-            rat_end = (1 - secondary_steel_share_end) / rat_start
-
-        d = d * rat_start
-        d.index.name = "node"
-
+        _, share_end_total = material_economics.get_secondary_steel_ratios()
+        share_end = share_start.clip(lower=share_end_total)
         years = element.settings.time.years
-
-        d_yearly_variation = pd.Series(index=years, dtype=float)
-        d_yearly_variation.iloc[0] = 1
-        d_yearly_variation.iloc[-1] = rat_end
-        d_yearly_variation = d_yearly_variation.interpolate(method="index")
-        d_yearly_variation.index.name = "year"
-        d_yearly_variation.name = "demand_yearly_variation"
-        return d, d_yearly_variation
+        share = pd.DataFrame({years[0]: share_start, years[-1]: share_end})
+        share = share.reindex(columns=years).interpolate(method="index", axis=1)
+        if element.name == "primary_steel":
+            share = 1 - share
+        share.columns.name = "year"
+        return production, share
 
     def get_steel_demand(self, element: Carrier) -> Attribute:
         """
@@ -121,21 +106,26 @@ class SteelDemand(DatasetCollection):
 
         This function retrieves the steel demand data for the specified element.
         """
-        d, d_yearly_variation = self._calculate_steel_demand(element)
+        production, share = self._calculate_steel_demand(element)
+        yearly_variation = cast(pd.Series, share.stack())
+        yearly_variation.name = "demand_yearly_variation"
         source = SourceInformation(
             description=(
-                "Steel demand data is derived from multiple sources. The main sourceis "
-                "the Aidres dataset. Additional manual data for missing countries is "
-                "obtained from the following datasets:Eurofer, WorldSteel, and "
-                "TradeEconomics. The secondary steel ratios are derived from the "
-                "Material Economics dataset."
+                "The steel demand is the crude steel production per node (Eurofer "
+                "2020-2024 mean; worldsteel 2024 for PT and UK; TradeEconomics for NO "
+                "and Eurofer EU exports for CH), given as the default demand, times "
+                "the yearly share of the route as the yearly variation. The secondary "
+                "share starts at the 2024 electric arc furnace share per node "
+                "(worldsteel; Global Iron and Steel Tracker for CH and NO) and is "
+                "interpolated linearly to its 2050 value, which is at least the "
+                "Material Economics end share (60%) at every node."
             ),
             metadata=self.metadata,
         )
         return element.demand.set_data(
             source=source,
-            df=d,
-            yearly_variations_df=d_yearly_variation,
+            df=production.to_frame("demand"),
+            yearly_variations_df=yearly_variation,
             unit="tproduct/h",
         )
 
@@ -161,11 +151,11 @@ class SteelDemand(DatasetCollection):
                 f"Unexpected reference carrier '{ref_carrier}' for element "
                 f"'{element.name}'."
             )
-        steel_demand, _ = self._calculate_steel_demand(
+        production, share = self._calculate_steel_demand(
             element.model.carriers[ref_carrier]
         )
-        steel_demand = steel_demand.rename(
-            {"demand": element.settings.time.reference_year - 1}, axis=1
+        steel_demand = (production * share.iloc[:, 0]).to_frame(
+            element.settings.time.reference_year - 1
         )
         capacity_addition = calculate_capacity_addition_from_cumulative(
             steel_demand, element
@@ -174,12 +164,11 @@ class SteelDemand(DatasetCollection):
         source = SourceInformation(
             description=(
                 "It is assumed that all current primary steel demand is based on the "
-                "BF-BOF route, and all current secondary steel demand is basedon the "
-                "EAF route. Steel demand data is derived from multiple sources. The "
-                "main sourceis the Aidres dataset. Additional manual data for missing "
-                "countries is obtained from the following datasets:Eurofer, "
-                "WorldSteel, and TradeEconomics. The secondary steel ratios are "
-                "derived from the Material Economics dataset."
+                "BF-BOF route, and all current secondary steel demand is based on the "
+                "EAF route. The current steel demand is the crude steel production "
+                "per node (Eurofer, worldsteel, TradeEconomics) times its 2024 oxygen "
+                "or electric arc furnace share (worldsteel, Global Iron and Steel "
+                "Tracker)."
             ),
             metadata=self.metadata,
         )

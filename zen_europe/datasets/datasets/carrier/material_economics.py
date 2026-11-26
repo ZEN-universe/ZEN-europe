@@ -34,7 +34,11 @@ class MaterialEconomics(Dataset[dict[str, pd.DataFrame]]):
             author=["Material Economics"],
             publication="Material Economics",
             publication_year=2019,
-            url="https://materialeconomics.com/publications/publication/industrial-transformation-2050",
+            url=(
+                "https://www.cisl.cam.ac.uk/system/files/documents/"
+                "material-economics-industrial-transformation-2050.pdf"
+            ),
+            note="Copy hosted by CISL; materialeconomics.com is offline.",
         )
 
     def _set_path(self) -> Path | None:
@@ -83,9 +87,7 @@ class MaterialEconomics(Dataset[dict[str, pd.DataFrame]]):
             source=SourceInformation(
                 description=(
                     "The clinker carbon intensity is based on Material Economics "
-                    "(2019), 'Industrial Transformation 2050' "
-                    "(https://materialeconomics.com/publications/publication/"
-                    "industrial-transformation-2050)."
+                    "(2019), 'Industrial Transformation 2050'."
                 ),
                 metadata=self.metadata,
             ),

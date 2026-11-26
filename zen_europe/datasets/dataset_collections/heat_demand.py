@@ -228,25 +228,26 @@ class HeatDemand(DatasetCollection):
 
         return share_district_heat
 
-    def get_capacity_existing(
+    def calculate_capacity_existing(
         self, element: ConversionTechnology, is_dh: bool = False
-    ) -> Attribute:
+    ) -> pd.Series:
         """
-        Get the existing capacity of a heat conversion technology.
+        Calculate today's fleet of a heat conversion technology without writing it
+        to the element, so that attributes derived from the fleet are independent of
+        whether existing capacities are used.
 
         Args:
             element (ConversionTechnology): The heat conversion technology element for
-                which to get the existing capacity.
+                which to calculate the existing capacity.
             is_dh (bool): A boolean indicating whether the technology is district
                 heating or not.
 
         Returns:
-            Attribute: An Attribute object containing the existing capacity data.
+            pd.Series: The capacity (GW) per node and year of construction.
         """
         heat_demand = self._calculate_demand(element)
         peak_demand = heat_demand.max()
         heating_share = self._calculate_heating_share_household()
-        add_description = ""
         if is_dh:
             heating_share_dh = self._calculate_heating_share_DH()
             heating_share_dh_grid = heating_share.loc["district_heating_grid"]
@@ -260,10 +261,6 @@ class HeatDemand(DatasetCollection):
             )
             dhg_cf = dhg_conversion_factors[0]["district_heat"]["default_value"]
             heating_share *= dhg_cf
-            add_description = (
-                "The heating share for district heating is adjusted by the conversion "
-                "factor of the district heating grid."
-            )
         assert element.name in heating_share.index.get_level_values(
             0
         ), f"Element {element.name} not found in heating share data."
@@ -283,8 +280,30 @@ class HeatDemand(DatasetCollection):
         capacity_addition = calculate_capacity_addition_from_cumulative(
             capacity_existing, element
         )
-        df = format_capacity_existing(capacity_addition)
+        return format_capacity_existing(capacity_addition)
 
+    def get_capacity_existing(
+        self, element: ConversionTechnology, is_dh: bool = False
+    ) -> Attribute:
+        """
+        Get the existing capacity of a heat conversion technology.
+
+        Args:
+            element (ConversionTechnology): The heat conversion technology element for
+                which to get the existing capacity.
+            is_dh (bool): A boolean indicating whether the technology is district
+                heating or not.
+
+        Returns:
+            Attribute: An Attribute object containing the existing capacity data.
+        """
+        df = self.calculate_capacity_existing(element, is_dh)
+        add_description = (
+            "The heating share for district heating is adjusted by the conversion "
+            "factor of the district heating grid."
+            if is_dh
+            else ""
+        )
         source = SourceInformation(
             description=(
                 "The existing capacity of a heat conversion technology is calculated "

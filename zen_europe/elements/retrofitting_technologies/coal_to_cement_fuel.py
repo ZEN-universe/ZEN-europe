@@ -16,10 +16,10 @@ from zen_creator import AssumptionInformation, Attribute, RetrofittingTechnology
 
 class CoalToCementFuel(RetrofittingTechnology):
     """Class containing all data and assumptions for coal-fired cement-kiln
-    fuel supply (hard coal to fuel for cement)."""
+    fuel supply (hard coal to cement fuel)."""
 
     name: str = "coal_to_cement_fuel"
-    base_technology_name: str = "cement_kiln"
+    base_technology_name: str = "cement_production"
 
     def __init__(self, model: Model, power_unit: str = "MW"):
         super().__init__(model=model, power_unit=power_unit)
@@ -28,10 +28,10 @@ class CoalToCementFuel(RetrofittingTechnology):
 
     def _set_reference_carrier(self) -> Attribute:
         """
-        Sets the reference carrier of coal to cement fuel to fuel for cement.
+        Sets the reference carrier of coal to cement fuel to cement fuel.
         """
         return Attribute(
-            name="reference_carrier", default_value=["fuel_for_cement"], element=self
+            name="reference_carrier", default_value=["cement_fuel"], element=self
         )
 
     def _set_input_carrier(self) -> Attribute:
@@ -44,10 +44,10 @@ class CoalToCementFuel(RetrofittingTechnology):
 
     def _set_output_carrier(self) -> Attribute:
         """
-        Set the output carrier of coal to cement fuel to fuel for cement.
+        Set the output carrier of coal to cement fuel to cement fuel.
         """
         return Attribute(
-            name="output_carrier", default_value=["fuel_for_cement"], element=self
+            name="output_carrier", default_value=["cement_fuel"], element=self
         )
 
     def _set_retrofit_reference_carrier(self) -> Attribute:
@@ -57,7 +57,7 @@ class CoalToCementFuel(RetrofittingTechnology):
         """
         return Attribute(
             name="retrofit_reference_carrier",
-            default_value=["fuel_for_cement"],
+            default_value=["cement_fuel"],
             element=self,
         )
 
@@ -70,10 +70,10 @@ class CoalToCementFuel(RetrofittingTechnology):
         cement kiln operation.
         """
         attr = self.lifetime
-        cement_kiln = self.model.conversion_technologies["cement_kiln"]
+        cement_production = self.model.conversion_technologies["cement_production"]
         attr.set_data(
-            default_value=cement_kiln.lifetime.default_value,
-            unit=cement_kiln.lifetime.unit,
+            default_value=cement_production.lifetime.default_value,
+            unit=cement_production.lifetime.unit,
             source=AssumptionInformation(
                 description=(
                     "The lifetime of coal to cement fuel is assumed to be the same "
@@ -88,7 +88,7 @@ class CoalToCementFuel(RetrofittingTechnology):
         """
         Return the conversion factor of coal to cement fuel.
 
-        Hard coal is the fuel-for-cement reference fuel, so the conversion
+        Hard coal is the cement fuel reference fuel, so the conversion
         factor is 1.
         """
         aidres_dataset = Aidres(source_path=self.source_path)
@@ -108,7 +108,7 @@ class CoalToCementFuel(RetrofittingTechnology):
         """
         Sets the specific capital expenditure (capex) for coal to cement fuel.
 
-        Coal is the reference fuel for cement kilns, so no additional retrofitting
+        Coal is the reference cement fuel kilns, so no additional retrofitting
         costs are assumed for coal to cement fuel conversion.
 
         Returns:
@@ -121,7 +121,7 @@ class CoalToCementFuel(RetrofittingTechnology):
             source=AssumptionInformation(
                 description=(
                     "The specific capital expenditure (capex) for coal to cement fuel "
-                    "is set to 0, since hard coal is the reference fuel for cement "
+                    "is set to 0, since hard coal is the reference cement fuel "
                     "kilns and no additional retrofitting costs are assumed for coal "
                     "to cement fuel conversion."
                 ),

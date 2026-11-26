@@ -230,24 +230,6 @@ class TechnologyCostDatabase(DatasetCollection):
             multiplier=self._get_pyrolysis_multiplier(element),
         )
 
-    def get_opex_specific_variable_pyrolysis(
-        self,
-        element: ConversionTechnology,
-        plant_size: str | None = None,
-        metric: str = "mean",
-    ) -> Attribute:
-        """Variable operational cost for pyrolysis, per unit of reference carrier."""
-        return self._set_technology_attribute(
-            element,
-            element.opex_specific_variable,
-            "vopex",
-            plant_size,
-            metric,
-            description="variable operational cost",
-            annual_values=False,
-            multiplier=self._get_pyrolysis_multiplier(element),
-        )
-
     def _get_pyrolysis_multiplier(self, element: ConversionTechnology) -> float:
         """Total pyrolysis output per unit of reference-carrier output.
 
@@ -319,6 +301,7 @@ class TechnologyCostDatabase(DatasetCollection):
         plant_size: str | None = None,
         metric: str = "mean",
         reference_year: int | None = None,
+        proxy_element_name: str | None = None,
     ) -> tuple[pd.Series, list[str]]:
         """Conversion efficiency [-] for `technology`, indexed by year.
 
@@ -327,8 +310,9 @@ class TechnologyCostDatabase(DatasetCollection):
         computation together with carrier-specific heating values) and has no
         single common attribute to populate across all conversion technologies.
         """
+        technology = proxy_element_name or element.name
         data = self._aggregate(
-            element.name,
+            technology,
             "efficiency",
             plant_size,
             metric,
@@ -336,62 +320,12 @@ class TechnologyCostDatabase(DatasetCollection):
         )
         optimization_years = pd.Index(element.settings.time.years)
         data = self._reindex_to_years(data, optimization_years)
-        agencies = self._extract_agencies(element.name, "efficiency", plant_size)
+        agencies = self._extract_agencies(technology, "efficiency", plant_size)
         assert not data.empty, (
-            f"No efficiency data found for technology '{element.name}' "
+            f"No efficiency data found for technology '{technology}' "
             f"at plant size '{plant_size}' in any agency dataset."
         )
         return data, agencies
-
-    def check_if_available(self, technology: str, variable: str | None = None) -> bool:
-        """Whether any agency reports data for `technology` (optionally `variable`)."""
-        for dataset in self.data.values():
-            df = cast(Any, dataset).get_costs()
-            if technology not in df.index.get_level_values("technology"):
-                continue
-            if variable is None:
-                return True
-            if variable in df.xs(technology, level="technology").index.get_level_values(
-                "variable"
-            ):
-                return True
-        return False
-
-    def export_cost_table(
-        self,
-        path: Path,
-        technologies: list[str] | None = None,
-        plant_size: str | None = None,
-        reference_year: int | None = None,
-    ) -> pd.DataFrame:
-        """Export a min/mean/max cost table (capex, fopex, vopex) to Excel.
-
-        This is the numeric-export counterpart of the legacy script's
-        `save_cost_curves`; the matplotlib `plot_cost_curves` figure export
-        was intentionally not ported.
-        """
-        reference_year = reference_year or self.settings.time.reference_year
-        if technologies is None:
-            technologies = sorted(self._available_technologies())
-
-        table: dict[tuple[str, str, str], pd.Series] = {}
-        units: dict[tuple[str, str, str], str] = {}
-        for technology in technologies:
-            for variable in COST_VARIABLES:
-                for metric in ("min", "mean", "max"):
-                    series = self._aggregate(
-                        technology, variable, plant_size, metric, reference_year
-                    )
-                    if series.empty:
-                        continue
-                    key = (technology, variable, metric)
-                    table[key] = series
-                    units[key] = self._unit_for(technology, variable, plant_size)
-        cost_df = pd.DataFrame(table).T
-        cost_df.index.names = ["technology", "variable", "metric"]
-        cost_df.insert(0, "unit", pd.Series(units))
-        cost_df.to_excel(path)
-        return cost_df
 
     # -------- aggregation internals ------------------
     def _get_attribute_data(
@@ -615,7 +549,11 @@ class TechnologyCostDatabase(DatasetCollection):
         key = (technology, variable, plant_size)
         if key not in self._rows_cache:
             self._rows_cache[key] = self._read_rows(technology, variable, plant_size)
-        return self._rows_cache[key]
+        rows = self._rows_cache[key]
+        # cite the agencies reporting data in sources.md; the loop in _read_rows
+        # and the cache do not record them
+        self.mark_used(*rows["agency"].unique())
+        return rows
 
     def _read_rows(
         self, technology: str, variable: str, plant_size: str | None
@@ -657,13 +595,6 @@ class TechnologyCostDatabase(DatasetCollection):
             f" plant size {plant_size}: {rows['unit'].unique()}"
         )
         return str(rows["unit"].iloc[0])
-
-    def _available_technologies(self) -> set[str]:
-        technologies: set[str] = set()
-        for dataset in self.data.values():
-            df = cast(Any, dataset).get_costs()
-            technologies.update(df.index.get_level_values("technology"))
-        return technologies
 
     @staticmethod
     def _reindex_to_years(series: pd.Series, years: pd.Index) -> pd.Series:

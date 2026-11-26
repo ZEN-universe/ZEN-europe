@@ -331,22 +331,6 @@ class UNECE(Dataset[dict[str, pd.DataFrame]]):
         return self._allocate_unassigned_vehicles(aggregated, total, hybrids_separate)
 
     @instance_cache
-    def get_fleet(self, hybrids_separate: bool = False) -> pd.DataFrame:
-        """Passenger car fleet per technology, node and year.
-
-        Args:
-            hybrids_separate: Whether hybrids (HEV) and plug-in hybrids (PHEV)
-                are modelled as separate technologies. If not, they are counted
-                towards the petrol cars.
-
-        Returns:
-            The fleet indexed by technology and node, with the years as
-            columns.
-        """
-        aggregated, total = self.get_passenger_vehicles("fleet", hybrids_separate)
-        return self._allocate_unassigned_vehicles(aggregated, total, hybrids_separate)
-
-    @instance_cache
     def get_total_fleet(self, hybrids_separate: bool = False) -> pd.DataFrame:
         """Total passenger car fleet per node and year, excluding the
         drivetrains that are not modelled.

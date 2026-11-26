@@ -9,13 +9,13 @@ from zen_creator.elements import Carrier
 from zen_creator.utils.attribute import Attribute
 
 
-class FuelForCement(Carrier):
-    """Fuel for cement carrier class.
+class CementFuel(Carrier):
+    """Cement fuel carrier class.
 
-    This class implements the specific behavior for the fuel for cement carrier.
+    This class implements the specific behavior for the cement fuel carrier.
     """
 
-    name: str = "fuel_for_cement"
+    name: str = "cement_fuel"
 
     def __init__(self, model: Model, power_unit: str = "MW"):
         super().__init__(model=model, power_unit=power_unit)
@@ -24,7 +24,7 @@ class FuelForCement(Carrier):
 
     def _set_availability_import(self) -> Attribute:
         """
-        Return the import availability of fuel for cement.
+        Return the import availability of cement fuel.
 
         """
         return Attribute(

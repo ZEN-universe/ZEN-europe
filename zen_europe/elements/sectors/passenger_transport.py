@@ -1,7 +1,5 @@
 from zen_creator import Sector
 
-from zen_europe.elements.carriers.diesel import Diesel
-from zen_europe.elements.carriers.gasoline import Gasoline
 from zen_europe.elements.carriers.passenger_mileage import PassengerMileage
 from zen_europe.elements.conversion_technologies.BEV import BEV
 from zen_europe.elements.conversion_technologies.ICE_diesel import ICE_diesel
@@ -12,7 +10,7 @@ class PassengerTransportSector(Sector):
     """Passenger vehicle transport demand."""
 
     name = "passenger_transport"
-    required_sectors = ["electricity"]
+    required_sectors = ["electricity", "oil_products"]
 
     def __init__(self) -> None:
         super().__init__()
@@ -20,7 +18,5 @@ class PassengerTransportSector(Sector):
             BEV,
             ICE_diesel,
             ICE_petrol,
-            Gasoline,
-            Diesel,
             PassengerMileage,
         ]
