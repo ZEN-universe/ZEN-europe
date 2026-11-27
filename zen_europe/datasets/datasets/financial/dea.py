@@ -1,16 +1,16 @@
 from __future__ import annotations
 
+import hashlib
+import os
 import re
 import urllib.request
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from pathlib import Path
+from pathlib import Path
 
 import pandas as pd
 from zen_creator.datasets.datasets.dataset import Dataset
 from zen_creator.datasets.datasets.metadata import MetaData
 
+from zen_europe.datasets.datasets.financial import _cost_schema
 from zen_europe.datasets.datasets.financial._cost_schema import (
     CO2_BASIS_UNITS,
     INDEX_NAMES,
@@ -31,19 +31,6 @@ _MAIN_TECHS: dict[str, tuple[str, str, str, str | None]] = {
         "renewable power",
         "wind",
         "large",
-    ),
-    "photovoltaics_utility": (
-        "PV",
-        "renewable power",
-        "solar",
-        "utility-scale, ground mounted",
-    ),
-    "photovoltaics_rooftop": ("PV", "renewable power", "solar", "residential rooftop"),
-    "photovoltaics_rooftop_com": (
-        "PV",
-        "renewable power",
-        "solar",
-        "commercial/industrial rooftop",
     ),
     "natural_gas_turbine": (
         "Gas turbine, combined cycle",
@@ -71,28 +58,7 @@ _MAIN_TECHS: dict[str, tuple[str, str, str, str | None]] = {
     "fuel_cell": ("Low temp PEM fuel cell", "back pressure", "hydrogen", "small"),
 }
 
-# DEA reports rooftop-residential/rooftop-commercial/utility-scale PV as three separate
-# `Technology` rows, keyed here via `_SIZE_MAP_PV` purely to find each one's DEA label
-# -- unlike
-# `_MAIN_TECHS`'s other `fixed_size` entries, this isn't a real small/medium/large
-# *capacity*
-# split, since each of the three is already its own internal technology name. None of
-# them have
-# genuine size variation, so (per `_cost_schema`'s "agencies/technologies without a size
-# dimension report under 'M'" convention, followed by every other agency here) their
-# rows are
-# tagged `plant_size="M"` regardless of which DEA label matched -- see `_parse_main`.
-_PV_TECHS = {
-    "photovoltaics_utility",
-    "photovoltaics_rooftop",
-    "photovoltaics_rooftop_com",
-}
 _SIZE_MAP = {"S": "small", "M": "medium", "L": "large"}
-_SIZE_MAP_PV = {
-    "S": "residential rooftop",
-    "M": "commercial/industrial rooftop",
-    "L": "utility-scale, ground mounted",
-}
 
 # `heat_pump_DH`'s DEA label now carries a DH-supply-temperature suffix (a 2025
 # catalogue
@@ -117,9 +83,15 @@ _LABEL_SUFFIXES: dict[str, str] = {
 # fixed-bottom foundation, still the dominant real-world technology and the closest
 # continuation
 # of the old entries -- always at plant_size "L", matching their old fixed "large" size.
+# Photovoltaics lost its "renewable power" category in the same way. Its three DEA
+# entries are separate technologies here, without a size dimension, so they report
+# under plant_size "M" (the `_cost_schema` convention).
 _MAIN_TECHS_LITERAL: dict[str, tuple[str, str]] = {
     "wind_offshore": ("Offshore Wind - AC connected - Fixed bottom", "L"),
     "wind_offshore_near_shore": ("Nearshore Wind - AC connected - Fixed bottom", "L"),
+    "photovoltaics_utility": ("PV - solar - utility-scale, ground mounted", "M"),
+    "photovoltaics_rooftop": ("PV - solar - residential rooftop", "M"),
+    "photovoltaics_rooftop_com": ("PV - solar - commercial/industrial rooftop", "M"),
 }
 
 # internal technology name -> DEA (technology label, building age) row key,
@@ -430,12 +402,6 @@ _PH_EFFICIENCY_PAR = "Total efficiency, net [%], nominel load"
 _PH_MONEY_YEAR_SRC = 2025
 
 
-def _dea_size(plant_size: str, technology: str) -> str:
-    return (
-        _SIZE_MAP_PV[plant_size] if technology in _PV_TECHS else _SIZE_MAP[plant_size]
-    )
-
-
 def _convert_main_unit(unit_src: str, variable: str) -> float:
     """Multiplier from a DEA source unit to this package's standard unit."""
     if variable == "capex" and unit_src in ("MEUR/MW_e", "MEUR/MW_h"):
@@ -546,9 +512,13 @@ class DEA(Dataset[pd.DataFrame]):
         return path
 
     def _set_data(self) -> pd.DataFrame:
-        cache_path = self.path / "dea_processed.feather"
+        cache_path = self.path / f"dea_processed_{self._parser_fingerprint()}.feather"
         if cache_path.exists() and not get_active_cache_settings().overwrite_dea:
             return pd.read_feather(cache_path).set_index(INDEX_NAMES)
+        # processed caches of other parser versions are stale
+        for stale_path in self.path.glob("dea_processed*.feather"):
+            if stale_path != cache_path:
+                stale_path.unlink(missing_ok=True)
 
         financial, technical = self._load("main")
         ih_financial, ih_technical = self._load("ih")
@@ -566,8 +536,26 @@ class DEA(Dataset[pd.DataFrame]):
         data = pd.DataFrame(rows, columns=INDEX_NAMES + VALUE_COLUMNS)
         data = data.drop_duplicates(subset=INDEX_NAMES)
         data = data.set_index(INDEX_NAMES).sort_index()
-        data.reset_index().to_feather(cache_path)
+        # write atomically, so that a parallel process never reads a half-written
+        # cache
+        temporary = cache_path.with_name(f"{cache_path.name}.{os.getpid()}.tmp")
+        data.reset_index().to_feather(temporary)
+        os.replace(temporary, cache_path)
         return data
+
+    @staticmethod
+    def _parser_fingerprint() -> str:
+        """Short hash of the parser and cost schema source code.
+
+        The processed cache stores the parsed rows under the internal technology
+        names, so it has to be rebuilt whenever the technology mappings or the
+        parsing change, e.g. when a technology is renamed. Keying the cache file by
+        this hash rebuilds it automatically; the downloaded workbooks are kept.
+        """
+        digest = hashlib.sha256()
+        for source_file in (__file__, _cost_schema.__file__):
+            digest.update(Path(source_file).read_bytes())
+        return digest.hexdigest()[:12]
 
     def _load(
         self, source: str, category_fixup: bool = False
@@ -666,15 +654,14 @@ class DEA(Dataset[pd.DataFrame]):
             fixed_size,
         ) in _MAIN_TECHS.items():
             for plant_size in ("S", "M", "L"):
-                size = _dea_size(plant_size, technology)
+                size = _SIZE_MAP[plant_size]
                 if fixed_size is not None and size != fixed_size:
                     continue
                 label = " - ".join(
                     [dea_tech, category, dea_input, size]
                 ) + _LABEL_SUFFIXES.get(technology, "")
-                output_size = "M" if technology in _PV_TECHS else plant_size
                 rows += self._parse_main_label(
-                    financial, technical, label, technology, output_size
+                    financial, technical, label, technology, plant_size
                 )
         for technology, (label, plant_size) in _MAIN_TECHS_LITERAL.items():
             rows += self._parse_main_label(

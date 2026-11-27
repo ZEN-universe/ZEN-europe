@@ -10,6 +10,7 @@ import pandas as pd
 import pytest
 
 from zen_europe.datasets.datasets.financial._cost_schema import SCENARIOS
+from zen_europe.datasets.datasets.financial.dea import DEA
 from zen_europe.datasets.datasets.financial.ECB import _read_cache, _write_cache
 from zen_europe.datasets.datasets.financial.euref import EUREF
 from zen_europe.datasets.datasets.financial.luw import LUW
@@ -43,6 +44,17 @@ def test_ecb_cache_appears_only_once_complete(
     assert exists_while_writing == [False, False]
     pd.testing.assert_frame_equal(cast(pd.DataFrame, _read_cache(path)), data)
     assert list(tmp_path.iterdir()) == [path]
+
+
+def test_dea_cache_follows_the_technology_mapping() -> None:
+    """The processed DEA cache is keyed by the parser source, so a renamed
+    technology is not lost to a cache written under its old name."""
+    dea = DEA(RAW_DATA_PATH)
+    technologies = dea.get_costs().index.get_level_values("technology")
+
+    assert {"photovoltaics_utility", "photovoltaics_rooftop"} <= set(technologies)
+    caches = sorted(path.name for path in dea.path.glob("dea_processed*.feather"))
+    assert caches == [f"dea_processed_{DEA._parser_fingerprint()}.feather"]
 
 
 def _select(costs: pd.DataFrame, technology: str, variable: str) -> pd.DataFrame:

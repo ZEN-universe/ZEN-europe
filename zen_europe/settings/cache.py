@@ -79,7 +79,7 @@ CACHE_PROVIDERS = (
     CacheProvider(
         "dea",
         CacheArtifactKind.DERIVED_CACHE,
-        ("03-technology/cost/dea/dea_processed.feather",),
+        ("03-technology/cost/dea/dea_processed*.feather",),
     ),
     CacheProvider(
         "ecb",
