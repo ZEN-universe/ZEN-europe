@@ -1,8 +1,8 @@
 """Aggregated technology cost database.
 
 Combines capex/opex/efficiency/lifetime/construction-time figures from
-several independent technology-cost sources (DEA, TYNDP, DIW, LUW, EUREF,
-Potencia) into a single queryable database, following the same "many
+several independent technology-cost sources (DEA, DIW, LUW, EUREF, Potencia,
+Schmidt, Victoria) into a single queryable database, following the same "many
 agencies, one schema" approach as the legacy ``agg_financial_parameters.py``
 script this class replaces.
 
@@ -44,9 +44,6 @@ from zen_europe.datasets.datasets.financial.ECB import ECBInflation
 from zen_europe.datasets.datasets.financial.euref import EUREF
 from zen_europe.datasets.datasets.financial.luw import LUW
 from zen_europe.datasets.datasets.financial.potencia import Potencia
-from zen_europe.datasets.datasets.financial.tyndp_technology_cost import (
-    TYNDPTechnologyCost,
-)
 from zen_europe.datasets.datasets.technology.storage_technologies_schmidt import (
     StorageTechnologiesSchmidt,
 )
@@ -56,7 +53,6 @@ from zen_europe.datasets.datasets.technology.storage_technologies_victoria impor
 
 _AGENCY_DATASETS: dict[str, Callable[..., Dataset[Any]]] = {
     "dea": DEA,
-    "tyndp": TYNDPTechnologyCost,
     "diw": DIW,
     "luw": LUW,
     "euref": EUREF,

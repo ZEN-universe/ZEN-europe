@@ -1,4 +1,4 @@
-"""Shared schema for technology-cost datasets (DEA, TYNDP, DIW, LUW, EUREF).
+"""Shared schema for technology-cost datasets (DEA, DIW, LUW, EUREF, Potencia).
 
 Every agency dataset in this package parses its own raw source file(s) into a
 long-format ``pd.DataFrame`` using this schema, so that
