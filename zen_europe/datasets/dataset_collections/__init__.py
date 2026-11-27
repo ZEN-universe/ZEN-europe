@@ -1,6 +1,7 @@
 from .ceramic_production_data import CeramicProductionData
 from .clinker_data import ClinkerData
 from .edges import Edges
+from .existing_capacity_photovoltaics import ExistingCapacityPhotovoltaics
 from .food_production_data import FoodProductionData
 from .glass_production_data import GlassProductionData
 from .hydropower_existing_capacities import HydropowerExistingCapacities
@@ -26,4 +27,5 @@ __all__ = [
     "CeramicProductionData",
     "PaperProductionData",
     "FoodProductionData",
+    "ExistingCapacityPhotovoltaics",
 ]

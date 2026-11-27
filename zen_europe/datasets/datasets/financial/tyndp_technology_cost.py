@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -90,21 +90,23 @@ class TYNDPTechnologyCost(Dataset[pd.DataFrame]):
                 ranked = self._rank_scenarios(
                     sel.set_index("Scenario")[year_columns], tyndp_technology
                 )
-                for (scenario, year), value_src in ranked.stack().items():
-                    rows.append(
-                        (
-                            technology,
-                            "M",
-                            scenario,
-                            variable,
-                            year,
-                            float(value_src),  # kEuro/MW == Euro/kW
-                            "Euro/kW",
-                            _MONEY_YEAR_SRC,
-                            float(value_src),
-                            unit_src,
+                for scenario in _RANKED_SCENARIOS:
+                    for year in year_columns:
+                        value_src = cast(float, ranked.at[scenario, year])
+                        rows.append(
+                            (
+                                technology,
+                                "M",
+                                scenario,
+                                variable,
+                                year,
+                                value_src,  # kEuro/MW == Euro/kW
+                                "Euro/kW",
+                                _MONEY_YEAR_SRC,
+                                value_src,
+                                unit_src,
+                            )
                         )
-                    )
         data = pd.DataFrame(rows, columns=INDEX_NAMES + VALUE_COLUMNS)
         return data.set_index(INDEX_NAMES).sort_index()
 
@@ -119,9 +121,9 @@ class TYNDPTechnologyCost(Dataset[pd.DataFrame]):
         2050, as the interpolation in `TechnologyCostDatabase` did before.
         """
         values = values.reindex(list(_TYNDP_SCENARIOS)).astype(float).ffill(axis=1)
-        assert values.notna().all().all(), (
-            f"Missing TYNDP scenario values for {tyndp_technology}:\n{values}"
-        )
+        assert (
+            values.notna().all().all()
+        ), f"Missing TYNDP scenario values for {tyndp_technology}:\n{values}"
         ranked = np.sort(values.to_numpy(), axis=0)
         return pd.DataFrame(
             ranked, index=list(_RANKED_SCENARIOS), columns=values.columns
