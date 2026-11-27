@@ -721,7 +721,7 @@ class DEA(Dataset[pd.DataFrame]):
         for suffix in (
             ("MW_e", "MW_h") if var_label != "Variable O&M" else ("MWh_e", "MWh_h")
         ):
-            money = "MEUR" if var_label == "Nominal investment" else "Euro"
+            money = "MEUR" if var_label == "Nominal investment" else "EUR"
             year_str = "/y" if var_label == "Fixed O&M" else ""
             par = f"{var_label} (*total) [{money}/{suffix}{year_str}]"
             if (tech_rows["par"] == par).any():

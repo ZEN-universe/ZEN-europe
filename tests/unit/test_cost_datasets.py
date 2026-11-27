@@ -57,6 +57,21 @@ def test_dea_cache_follows_the_technology_mapping() -> None:
     assert caches == [f"dea_processed_{DEA._parser_fingerprint()}.feather"]
 
 
+@pytest.mark.parametrize(
+    "technology", ["wind_onshore", "photovoltaics_utility", "heat_pump_DH"]
+)
+def test_dea_reports_fixed_and_variable_om(technology: str) -> None:
+    """DEA labels its O&M in EUR (not Euro), electric- and heat-basis alike."""
+    costs = DEA(RAW_DATA_PATH).get_costs()
+    variables = set(
+        costs.xs(technology, level="technology").index.get_level_values("variable")
+    )
+
+    assert {"capex", "fopex"} <= variables
+    if technology != "photovoltaics_utility":  # DEA reports no PV variable O&M
+        assert "vopex" in variables
+
+
 def _select(costs: pd.DataFrame, technology: str, variable: str) -> pd.DataFrame:
     """The rows of `technology` and `variable`, indexed by scenario and year."""
     rows = costs.xs(
