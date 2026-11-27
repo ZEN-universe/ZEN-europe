@@ -105,11 +105,9 @@ _TECHS: dict[str, tuple[str, str, str | None]] = {
         "Fluidized bed combustion",
         None,
     ),
-    "oil_plant": (
-        "Fuel oil fired power plants",
-        "Integrated gasification combined cycle",
-        None,
-    ),
+    # the fuel-oil steam turbine rather than the integrated gasification combined
+    # cycle, which costs over four times as much as the other agencies' oil plants
+    "oil_plant": ("Fuel oil fired power plants", "Steam turbine", None),
     "fuel_cell": ("Fuel cells", "Hydrogen fuel cell power plant", None),
 }
 
