@@ -3,6 +3,24 @@
 This file gets automatically updated in ZEN-europe's continuous integration 
 procedures. Do not edit the file manually.
 
+## [v2.2.0] - 2026-11-27 
+
+### Bug Fixes 🐛
+- Convert the LUW methanation variable opex from €/kWh. The source labels it €/MWh_SNG, but the value (0.0015) is given in €/kWh like every other LUW variable opex, so it was 1000 times too small. [[🔀 PR #80](https://github.com/ZEN-universe/ZEN-europe/pull/80) @jacob-mannhardt]
+- Read the EUREF efficiency for every reported year. Only the 2020 column was read and applied to all years, so the reported improvements up to 2050 were lost; this changes the conversion factors of the district heating boilers and the retrofit flow coupling factors of the CCS plants. [[🔀 PR #80](https://github.com/ZEN-universe/ZEN-europe/pull/80) @jacob-mannhardt]
+- Write the ECB inflation and exchange-rate caches atomically. The cache was written directly to its final path, so a parallel pytest-xdist worker could read it half-written and fail with an `EmptyDataError`; it is now written to a temporary file that replaces the cache in one step. [[🔀 PR #80](https://github.com/ZEN-universe/ZEN-europe/pull/80) @jacob-mannhardt]
+
+### Maintenance Tasks 🧹
+- Add unit tests for the LUW methanation unit, the yearly EUREF efficiency, the EUREF rooftop PV mapping and the atomic ECB cache write. [[🔀 PR #80](https://github.com/ZEN-universe/ZEN-europe/pull/80) @jacob-mannhardt]
+
+### Data Changes 📊
+- Remove the TYNDP 2020 cost assumptions from the technology cost database. The figures date from 2020, and the 2024 and 2026 TYNDP cycles take their generation costs mainly from the DEA Technology Catalogue, which the database already includes. [[🔀 PR #80](https://github.com/ZEN-universe/ZEN-europe/pull/80) @jacob-mannhardt]
+- Map the EUREF residential and commercial rooftop PV rows to `rooftop_photovoltaics` and `rooftop_photovoltaics_com`. The very high, medium and low resource areas give the min, ref and max scenarios, as for utility-scale PV. [[🔀 PR #80](https://github.com/ZEN-universe/ZEN-europe/pull/80) @jacob-mannhardt]
+- Map EUREF hard coal and lignite plants to supercritical instead of conventional steam turbines. New plants are built supercritical, which is also what Potencia and DEA report. [[🔀 PR #80](https://github.com/ZEN-universe/ZEN-europe/pull/80) @jacob-mannhardt]
+- Map Potencia oil plants to the fuel-oil steam turbine instead of the integrated gasification combined cycle. The IGCC costs over four times as much as the oil plants of the other agencies. [[🔀 PR #80](https://github.com/ZEN-universe/ZEN-europe/pull/80) @jacob-mannhardt]
+- Map `electrode_boiler` to the EUREF "Boilers electricity" row instead of the LUW "Local Electric Heating" row. The LUW row is a resistance heater at 100 €/kW, far below the cost of an electric boiler. [[🔀 PR #80](https://github.com/ZEN-universe/ZEN-europe/pull/80) @jacob-mannhardt]
+- Stop mapping run-of-river hydro to the DIW small hydro plant. DIW only splits hydro into small and large plants, and the large plants already stand for reservoir hydro. [[🔀 PR #80](https://github.com/ZEN-universe/ZEN-europe/pull/80) @jacob-mannhardt]
+
 ## [v2.1.0] - 2026-11-26 
 
 ### Data Changes 📊
