@@ -10,6 +10,7 @@ import pandas as pd
 import pytest
 
 from zen_europe.datasets.datasets.financial._cost_schema import SCENARIOS
+from zen_europe.datasets.datasets.financial.dea import DEA
 from zen_europe.datasets.datasets.financial.ECB import _read_cache, _write_cache
 from zen_europe.datasets.datasets.financial.euref import EUREF
 from zen_europe.datasets.datasets.financial.luw import LUW
@@ -43,6 +44,32 @@ def test_ecb_cache_appears_only_once_complete(
     assert exists_while_writing == [False, False]
     pd.testing.assert_frame_equal(cast(pd.DataFrame, _read_cache(path)), data)
     assert list(tmp_path.iterdir()) == [path]
+
+
+def test_dea_cache_follows_the_technology_mapping() -> None:
+    """The processed DEA cache is keyed by the parser source, so a renamed
+    technology is not lost to a cache written under its old name."""
+    dea = DEA(RAW_DATA_PATH)
+    technologies = dea.get_costs().index.get_level_values("technology")
+
+    assert {"photovoltaics_utility", "photovoltaics_rooftop"} <= set(technologies)
+    caches = sorted(path.name for path in dea.path.glob("dea_processed*.feather"))
+    assert caches == [f"dea_processed_{DEA._parser_fingerprint()}.feather"]
+
+
+@pytest.mark.parametrize(
+    "technology", ["wind_onshore", "photovoltaics_utility", "heat_pump_DH"]
+)
+def test_dea_reports_fixed_and_variable_om(technology: str) -> None:
+    """DEA labels its O&M in EUR (not Euro), electric- and heat-basis alike."""
+    costs = DEA(RAW_DATA_PATH).get_costs()
+    variables = set(
+        costs.xs(technology, level="technology").index.get_level_values("variable")
+    )
+
+    assert {"capex", "fopex"} <= variables
+    if technology != "photovoltaics_utility":  # DEA reports no PV variable O&M
+        assert "vopex" in variables
 
 
 def _select(costs: pd.DataFrame, technology: str, variable: str) -> pd.DataFrame:
@@ -79,9 +106,9 @@ class TestEUREF:
         assert efficiency[2030] > efficiency[2020]
 
     @pytest.mark.parametrize(
-        "technology", ["rooftop_photovoltaics", "rooftop_photovoltaics_com"]
+        "technology", ["photovoltaics_rooftop", "photovoltaics_rooftop_com"]
     )
-    def test_rooftop_photovoltaics_has_every_scenario(self, technology: str) -> None:
+    def test_photovoltaics_rooftop_has_every_scenario(self, technology: str) -> None:
         capex = _select(EUREF(RAW_DATA_PATH).get_costs(), technology, "capex")
 
         by_scenario = capex["value"].groupby(level="scenario").mean()

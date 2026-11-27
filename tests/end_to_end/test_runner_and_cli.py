@@ -24,8 +24,11 @@ def test_model_structure() -> None:
 
     cn = "zen_europe.elements.energy_systems.zen_europe_nuts0.EnergySystemNuts0"
     assert str(type(model.energy_system)) == f"<class '{cn}'>"
-    cn = "zen_europe.elements.conversion_technologies.photovoltaics.Photovoltaics"
-    assert str(type(model.elements["photovoltaics"])) == f"<class '{cn}'>"
+    cn = (
+        "zen_europe.elements.conversion_technologies.photovoltaics_utility."
+        "PhotovoltaicsUtility"
+    )
+    assert str(type(model.elements["photovoltaics_utility"])) == f"<class '{cn}'>"
     cn = "zen_europe.elements.carriers.electricity.Electricity"
     assert str(type(model.elements["electricity"])) == f"<class '{cn}'>"
     cn = "zen_europe.elements.transport_technologies.power_line.PowerLine"

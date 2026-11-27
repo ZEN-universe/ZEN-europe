@@ -69,7 +69,8 @@ from .oil_to_naphtha_conversion import OilToNaphthaConversion
 from .olefin_from_methanol import OlefinFromMethanol
 from .olefin_from_naphtha import OlefinFromNaphtha
 from .paper_production import PaperProduction
-from .photovoltaics import Photovoltaics
+from .photovoltaics_rooftop import PhotovoltaicsRooftop
+from .photovoltaics_utility import PhotovoltaicsUtility
 from .pyrolysis import Pyrolysis
 from .refining import Refining
 from .run_of_river_hydro import RunOfRiverHydro
@@ -82,7 +83,8 @@ from .wind_offshore import WindOffshore
 from .wind_onshore import WindOnshore
 
 __all__ = [
-    "Photovoltaics",
+    "PhotovoltaicsUtility",
+    "PhotovoltaicsRooftop",
     "DistrictHeatingGrid",
     "WindOffshore",
     "WindOnshore",

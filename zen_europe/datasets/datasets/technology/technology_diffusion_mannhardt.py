@@ -43,7 +43,7 @@ class TechnologyDiffusionMannhardt(Dataset[dict[str, pd.DataFrame]]):
     REFERENCE_TECHNOLOGIES = {
         "LOW": "wind offshore",
         "MEDIUM": "wind onshore",
-        "HIGH": "photovoltaics",
+        "HIGH": "photovoltaics_utility",
         "VERY_HIGH": "battery electric vehicles",
     }
 
@@ -117,7 +117,8 @@ class TechnologyDiffusionMannhardt(Dataset[dict[str, pd.DataFrame]]):
         "oil_to_kerosene_conversion",
     ]
     HIGH = [
-        "photovoltaics",
+        "photovoltaics_utility",
+        "photovoltaics_rooftop",
         "natural_gas_boiler",
         "heat_pump",
         "oil_boiler",

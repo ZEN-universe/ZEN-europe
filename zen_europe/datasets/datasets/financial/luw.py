@@ -25,9 +25,9 @@ _TECHS: dict[str, str] = {
     # NOTE: the LUW source data maps offshore wind to the same "Wind onshore
     # PP" row as onshore wind (verified against the original spreadsheet;
     # LUW has no separate offshore entry), so we do not port wind_offshore.
-    "photovoltaics": "PV fixed tilted PP",
-    "rooftop_photovoltaics": "PV rooftop -residential",
-    "rooftop_photovoltaics_com": "PV rooftop -industrial",
+    "photovoltaics_utility": "PV fixed tilted PP",
+    "photovoltaics_rooftop": "PV rooftop -residential",
+    "photovoltaics_rooftop_com": "PV rooftop -industrial",
     "run-of-river_hydro": "Hydro Run-of-River PP",
     "reservoir_hydro": "Hydro Reservoir/ Dam",
     "natural_gas_turbine": "CCGT PP",

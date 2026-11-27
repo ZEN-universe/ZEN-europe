@@ -17,7 +17,8 @@ class ENSPRESO1(Dataset[dict[str, pd.Series]]):
 
     COLUMN_MAPPING = {
         "wind_onshore": "wind_onshore_capacity_gw_medium",
-        "photovoltaics": "solar_capacity_gw_high_pv_ground",
+        "photovoltaics_utility": "solar_capacity_gw_medium_pv_ground",
+        "photovoltaics_rooftop": "solar_capacity_gw_medium_pv_roof",
     }
 
     def __init__(self, source_path: Path | str | None = None):
@@ -74,11 +75,8 @@ class ENSPRESO1(Dataset[dict[str, pd.Series]]):
         data_pv_wind_onshore = data_pv_wind_onshore.groupby("nuts0_code").sum(
             numeric_only=True
         )
-        data_pv_wind_onshore = data_pv_wind_onshore
-        data["wind_onshore"] = data_pv_wind_onshore[self.COLUMN_MAPPING["wind_onshore"]]
-        data["photovoltaics"] = data_pv_wind_onshore[
-            self.COLUMN_MAPPING["photovoltaics"]
-        ]
+        for technology, column in self.COLUMN_MAPPING.items():
+            data[technology] = data_pv_wind_onshore[column]
         return data
 
     # -------- methods ------------------------

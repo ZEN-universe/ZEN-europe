@@ -2,17 +2,14 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from zen_europe.datasets.dataset_collections.lifetime_expectation import (
-    LifetimeExpectation,
+from zen_europe.datasets.dataset_collections.existing_capacity_photovoltaics import (
+    ExistingCapacityPhotovoltaics,
 )
 from zen_europe.datasets.dataset_collections.potential_capacity_renewables import (
     PotentialCapacityRenewables,
 )
 from zen_europe.datasets.dataset_collections.technology_cost_database import (
     TechnologyCostDatabase,
-)
-from zen_europe.datasets.datasets.technology.irena_solar_capacity import (
-    IRENASolarCapacity,
 )
 from zen_europe.datasets.datasets.technology.pan_european_climate_database import (
     PanEuropeanClimateDatabase,
@@ -27,10 +24,13 @@ if TYPE_CHECKING:
 from zen_creator import AssumptionInformation, Attribute, ConversionTechnology
 
 
-class Photovoltaics(ConversionTechnology):
-    """Class containing all data and assumptions for photovoltaics."""
+class PhotovoltaicsRooftop(ConversionTechnology):
+    """Class containing all data and assumptions for rooftop photovoltaics.
 
-    name: str = "photovoltaics"
+    Rooftop photovoltaics takes the costs of residential rooftop systems.
+    """
+
+    name: str = "photovoltaics_rooftop"
 
     def __init__(self, model: Model, power_unit: str = "MW"):
         super().__init__(model=model, power_unit=power_unit)
@@ -39,7 +39,7 @@ class Photovoltaics(ConversionTechnology):
 
     def _set_reference_carrier(self) -> Attribute:
         """
-        Sets the reference carrier of photovoltaics to electricity.
+        Sets the reference carrier of rooftop photovoltaics to electricity.
         """
         return Attribute(
             name="reference_carrier", default_value=["electricity"], element=self
@@ -47,16 +47,14 @@ class Photovoltaics(ConversionTechnology):
 
     def _set_input_carrier(self) -> Attribute:
         """
-        Sets the input carrier of photovoltaics to an empty list.
-
-        This is because photovoltaics do not have an input carrier,
-        as they convert solar energy directly into electricity.
+        Sets the input carrier of rooftop photovoltaics to an empty list, as it
+        converts solar energy directly into electricity.
         """
         return Attribute(name="input_carrier", default_value=[], element=self)
 
     def _set_output_carrier(self) -> Attribute:
         """
-        Set the output carrier of photovoltaics to electricity.
+        Set the output carrier of rooftop photovoltaics to electricity.
         """
         return Attribute(
             name="output_carrier", default_value=["electricity"], element=self
@@ -66,18 +64,20 @@ class Photovoltaics(ConversionTechnology):
 
     def _set_lifetime(self) -> Attribute:
         """
-        Sets the lifetime of photovoltaics.
+        Sets the lifetime of rooftop photovoltaics.
 
+        PowerPlantMatching does not list rooftop systems, so the lifetime cannot be
+        estimated from decommissioned plants and is taken from the technology
+        database directly.
         """
-        lifetime_expectation = LifetimeExpectation(
+        tech_db = TechnologyCostDatabase(
             settings=self.settings, source_path=self.source_path
         )
-        return lifetime_expectation.get_lifetime(self)
+        return tech_db.get_lifetime(self)
 
     def _set_construction_time(self) -> Attribute:
         """
-        Sets the construction time of district heating grids.
-
+        Sets the construction time of rooftop photovoltaics.
         """
         if self.settings.investment.use_construction_times:
             tech_db = TechnologyCostDatabase(
@@ -89,27 +89,24 @@ class Photovoltaics(ConversionTechnology):
 
     def _set_conversion_factor(self) -> Attribute:
         """
-        Return the conversion factor of photovoltaics.
+        Return the conversion factor of rooftop photovoltaics.
 
-        The conversion factor is empty, as photovoltaics has no input carrier.
+        The conversion factor is empty, as rooftop photovoltaics has no input carrier.
         """
         attr = self.conversion_factor
         return attr.set_data(
             default_value=[],
             source=AssumptionInformation(
                 description=(
-                    "The conversion factor of photovoltaics is manually set to an "
-                    "empty list, as it has no input carrier."
+                    "The conversion factor of rooftop photovoltaics is manually set to "
+                    "an empty list, as it has no input carrier."
                 ),
             ),
         )
 
     def _set_capex_specific_conversion(self) -> Attribute:
         """
-        Sets the specific capital expenditure (capex) for photovoltaics.
-
-        Returns:
-            Attribute: An Attribute object containing the specific capex data.
+        Sets the specific capital expenditure (capex) for rooftop photovoltaics.
         """
         tech_db = TechnologyCostDatabase(
             settings=self.settings, source_path=self.source_path
@@ -118,10 +115,8 @@ class Photovoltaics(ConversionTechnology):
 
     def _set_opex_specific_fixed(self) -> Attribute:
         """
-        Sets the specific fixed operational expenditure (opex) for photovoltaics.
-
-        Returns:
-            Attribute: An Attribute object containing the specific fixed opex data.
+        Sets the specific fixed operational expenditure (opex) for rooftop
+        photovoltaics.
         """
         tech_db = TechnologyCostDatabase(
             settings=self.settings, source_path=self.source_path
@@ -130,10 +125,8 @@ class Photovoltaics(ConversionTechnology):
 
     def _set_opex_specific_variable(self) -> Attribute:
         """
-        Sets the specific variable operational expenditure (opex) for photovoltaics.
-
-        Returns:
-            Attribute: An Attribute object containing the specific variable opex data.
+        Sets the specific variable operational expenditure (opex) for rooftop
+        photovoltaics.
         """
         tech_db = TechnologyCostDatabase(
             settings=self.settings, source_path=self.source_path
@@ -142,24 +135,18 @@ class Photovoltaics(ConversionTechnology):
 
     def _set_capacity_limit(self) -> Attribute:
         """
-        Sets the capacity limit for photovoltaics.
-
-        Returns:
-            Attribute: An Attribute object containing the capacity limit data.
+        Sets the capacity limit for rooftop photovoltaics.
         """
         pcr = PotentialCapacityRenewables(source_path=self.source_path)
         return pcr.get_capacity_limit(self)
 
     def _set_capacity_existing(self) -> Attribute:
         """
-        Sets the existing capacity for photovoltaics.
-
-        Returns:
-            Attribute: An Attribute object containing the existing capacity data.
+        Sets the existing capacity for rooftop photovoltaics.
         """
         if self.settings.investment.use_existing_capacities:
-            irena = IRENASolarCapacity(source_path=self.source_path)
-            return irena.get_capacity_existing(self)
+            existing = ExistingCapacityPhotovoltaics(source_path=self.source_path)
+            return existing.get_capacity_existing(self)
         else:
             attr = self.capacity_existing
             attr.set_data(
@@ -173,10 +160,7 @@ class Photovoltaics(ConversionTechnology):
 
     def _set_max_load(self) -> Attribute:
         """
-        Sets the maximum load for photovoltaics.
-
-        Returns:
-            Attribute: An Attribute object containing the maximum load data.
+        Sets the maximum load for rooftop photovoltaics.
         """
         pecd = PanEuropeanClimateDatabase(
             settings=self.settings, source_path=self.source_path
@@ -185,7 +169,7 @@ class Photovoltaics(ConversionTechnology):
 
     def _set_max_diffusion_rate(self) -> Attribute:
         """
-        Sets the maximum diffusion rate of photovoltaics.
+        Sets the maximum diffusion rate of rooftop photovoltaics.
         """
         if not self.settings.investment.use_diffusion_rates:
             return self.max_diffusion_rate

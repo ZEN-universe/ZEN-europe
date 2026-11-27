@@ -36,8 +36,8 @@ class PanEuropeanClimateDatabase(Dataset[dict[str, pd.DataFrame]]):
     top-10%-of-locations siting). Offshore nodes without existing wind farms use the
     future-turbine profile (code 21), scaled down to existing-technology full load
     hours (see `_get_max_load_wind_offshore`). Solar PV uses the utility-scale
-    fixed-tilt panel technology (62); hydropower indicators have no
-    technology/energy_scenario dimension in PECD.
+    fixed-tilt panel technology (62), rooftop PV the residential rooftop technology
+    (61); hydropower indicators have no technology/energy_scenario dimension in PECD.
 
     Solar PV is downloaded directly at NUTS0 resolution. Wind and hydropower are
     *not* available at NUTS0 -- PECD only reports them at its own regional zones
@@ -84,9 +84,15 @@ class PanEuropeanClimateDatabase(Dataset[dict[str, pd.DataFrame]]):
     # regional resolution (not NUTS0) and aggregated to NUTS0 afterwards -- see
     # `_aggregate_to_nuts0`.
     TECHNOLOGY_REQUESTS: dict[str, dict[str, str | None]] = {
-        "photovoltaics": {
+        "photovoltaics_utility": {
             "variable": "solar_photovoltaic_generation_capacity_factor",
             "technology": "62",  # SPV utility-scale fixed
+            "energy_scenario": None,
+            "spatial_resolution": "nuts_0",
+        },
+        "photovoltaics_rooftop": {
+            "variable": "solar_photovoltaic_generation_capacity_factor",
+            "technology": "61",  # SPV residential rooftop
             "energy_scenario": None,
             "spatial_resolution": "nuts_0",
         },
@@ -272,11 +278,11 @@ class PanEuropeanClimateDatabase(Dataset[dict[str, pd.DataFrame]]):
     def _aggregate_to_nuts0(self, technology: str, data: pd.DataFrame) -> pd.DataFrame:
         """Aggregate `data`'s PECD-region columns into NUTS0-country columns.
 
-        `photovoltaics` is already downloaded at nuts_0 resolution and passes
+        Photovoltaics is already downloaded at nuts_0 resolution and passes
         through unchanged; wind and hydro indicators are downloaded at PECD's
         own regional resolution (see `TECHNOLOGY_REQUESTS`) and need aggregating.
         """
-        if technology == "photovoltaics":
+        if technology in {"photovoltaics_utility", "photovoltaics_rooftop"}:
             return data
         if technology in {
             "reservoir_hydro",
@@ -357,7 +363,12 @@ class PanEuropeanClimateDatabase(Dataset[dict[str, pd.DataFrame]]):
             pd.Series: A pandas Series containing the maximum load data.
         """
 
-        if element.name in ["photovoltaics", "wind_onshore", "wind_offshore"]:
+        if element.name in [
+            "photovoltaics_utility",
+            "photovoltaics_rooftop",
+            "wind_onshore",
+            "wind_offshore",
+        ]:
             return self._get_max_load_solar_and_wind(element)
         raise ValueError(
             "Max load data is not available directly from the PECD dataset for "

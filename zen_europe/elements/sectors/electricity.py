@@ -17,7 +17,12 @@ from zen_europe.elements.conversion_technologies.natural_gas_turbine import (
 )
 from zen_europe.elements.conversion_technologies.nuclear import Nuclear
 from zen_europe.elements.conversion_technologies.oil_plant import OilPlant
-from zen_europe.elements.conversion_technologies.photovoltaics import Photovoltaics
+from zen_europe.elements.conversion_technologies.photovoltaics_rooftop import (
+    PhotovoltaicsRooftop,
+)
+from zen_europe.elements.conversion_technologies.photovoltaics_utility import (
+    PhotovoltaicsUtility,
+)
 from zen_europe.elements.conversion_technologies.run_of_river_hydro import (
     RunOfRiverHydro,
 )
@@ -45,7 +50,8 @@ class ElectricitySector(Sector):
     def __init__(self) -> None:
         super().__init__()
         self.elements = [
-            Photovoltaics,
+            PhotovoltaicsUtility,
+            PhotovoltaicsRooftop,
             WindOnshore,
             WindOffshore,
             HardCoalPlant,

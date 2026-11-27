@@ -110,7 +110,7 @@ retrofitting, storage and transport technologies. They are listed in
 
 Each element is a class in ``zen_europe/elements/<element type>/``. The class
 name and the ``name`` attribute identify the element, for example
-``Photovoltaics`` with ``name = "photovoltaics"``.
+``PhotovoltaicsUtility`` with ``name = "photovoltaics_utility"``.
 
 
 Code layout
