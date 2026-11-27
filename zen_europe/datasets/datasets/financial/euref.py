@@ -50,11 +50,31 @@ _TECHS: dict[tuple[str, str | None], str] = {
     ("photovoltaics_utility", "min"): "Solar PV - utility-scale - high resource area",
     ("photovoltaics_utility", "ref"): "Solar PV - utility-scale - medium resource area",
     ("photovoltaics_utility", "max"): "Solar PV - utility-scale - low resource area",
+    (
+        "photovoltaics_rooftop",
+        "min",
+    ): "Solar PV - residential - very high resource area",
+    ("photovoltaics_rooftop", "ref"): "Solar PV - residential - medium resource area",
+    ("photovoltaics_rooftop", "max"): "Solar PV - residential - low resource area",
+    (
+        "photovoltaics_rooftop_com",
+        "min",
+    ): "Solar PV - commercial and industrial - very high resource area",
+    (
+        "photovoltaics_rooftop_com",
+        "ref",
+    ): "Solar PV - commercial and industrial - medium resource area",
+    (
+        "photovoltaics_rooftop_com",
+        "max",
+    ): "Solar PV - commercial and industrial - low resource area",
     ("natural_gas_turbine", None): "Gas turbine combined cycle gas conventional",
     ("natural_gas_turbine_CCS", None): "Gas combined cycle CCS post combustion",
-    ("hard_coal_plant", None): "Steam turbine coal conventional",
+    # supercritical rather than conventional steam turbines, as new coal and lignite
+    # plants are built supercritical (as in Potencia and DEA)
+    ("hard_coal_plant", None): "Steam turbine coal supercritical",
     ("hard_coal_plant_CCS", None): "Integrated gasification coal CCS pre combustion",
-    ("lignite_coal_plant", None): "Steam turbine lignite conventional",
+    ("lignite_coal_plant", None): "Steam turbine lignite supercritical",
     ("biomass_plant", None): "Steam turbine biomass solid conventional",
     ("biomass_plant_CCS", None): "Steam turbine biomass solid conventional w. CCS",
     ("waste_plant", None): "Small waste burning plant",
@@ -67,12 +87,16 @@ _TECHS: dict[tuple[str, str | None], str] = {
     ("biomass_boiler_DH", None): "District heating boilers biomass",
     ("hard_coal_boiler_DH", None): "District heating boilers coal",
     ("electrode_boiler_DH", None): "District heating electricity",
+    ("electrode_boiler", None): "Boilers electricity",
     ("run-of-river_hydro", None): "Run of river",
     ("reservoir_hydro", None): "Lakes",
 }
-# column-block order in the source sheet: (our variable name, dict-column-index)
+# column-block order in the source sheet: (our variable name, dict-column-index).
+# The cost and efficiency blocks have one column per year, the lifetime block a
+# single column.
 _COST_VARIABLE_SEGMENTS = {0: "capex", 1: "fopex", 2: "vopex"}
-_TECH_VARIABLE_SEGMENTS = {3: "efficiency", 5: "lifetime"}
+_YEARLY_SEGMENTS = {**_COST_VARIABLE_SEGMENTS, 3: "efficiency"}
+_CONSTANT_SEGMENTS = {5: "lifetime"}
 _MONEY_YEAR_SRC = 2020
 
 
@@ -132,17 +156,20 @@ class EUREF(Dataset[pd.DataFrame]):
             )
             unit_src = cast(str, raw.iloc[0, segment_start])
 
-            if segment_idx in _COST_VARIABLE_SEGMENTS:
-                variable = _COST_VARIABLE_SEGMENTS[segment_idx]
+            if segment_idx in _YEARLY_SEGMENTS:
+                variable = _YEARLY_SEGMENTS[segment_idx]
                 years = [int(y) for y in raw.iloc[1, segment_start:segment_end]]
                 block = raw.iloc[2:, segment_start:segment_end].reset_index(drop=True)
                 block.index = techs
-                multiplier = _convert_unit(unit_src, variable)
-                schema_unit = {
-                    "capex": "Euro/kW",
-                    "fopex": "Euro/kW",
-                    "vopex": "Euro/MWh",
-                }[variable]
+                if variable == "efficiency":
+                    multiplier, schema_unit = 1.0, "-"
+                else:
+                    multiplier = _convert_unit(unit_src, variable)
+                    schema_unit = {
+                        "capex": "Euro/kW",
+                        "fopex": "Euro/kW",
+                        "vopex": "Euro/MWh",
+                    }[variable]
                 for tech_row, values in block.iterrows():
                     for year, value_src in zip(years, values, strict=True):
                         value_src = pd.to_numeric(value_src, errors="coerce")
@@ -158,12 +185,11 @@ class EUREF(Dataset[pd.DataFrame]):
                                 float(value_src),
                             )
                         )
-            elif segment_idx in _TECH_VARIABLE_SEGMENTS:
-                variable = _TECH_VARIABLE_SEGMENTS[segment_idx]
-                # efficiency/lifetime have a single value per technology (no year
-                # breakdown)
+            elif segment_idx in _CONSTANT_SEGMENTS:
+                variable = _CONSTANT_SEGMENTS[segment_idx]
+                # a single value per technology (no year breakdown)
                 values = raw.iloc[2:, segment_start].reset_index(drop=True)
-                schema_unit = "-" if variable == "efficiency" else "1"
+                schema_unit = "1"
                 for tech_row, value_src in zip(techs, values, strict=True):
                     value_src = pd.to_numeric(value_src, errors="coerce")
                     if pd.isna(value_src):
@@ -200,10 +226,15 @@ class EUREF(Dataset[pd.DataFrame]):
                 euref_tech = _lookup_euref_technology(technology, scenario)
                 if euref_tech is None:
                     continue
-                for variable in ("capex", "fopex", "vopex"):
+                for variable in _YEARLY_SEGMENTS.values():
                     entries = by_euref_tech.get((euref_tech, variable))
                     if not entries:
                         continue
+                    money_year = (
+                        _MONEY_YEAR_SRC
+                        if variable in _COST_VARIABLE_SEGMENTS.values()
+                        else None
+                    )
                     for year, value, unit, value_src in entries:
                         out_rows.append(
                             (
@@ -214,12 +245,12 @@ class EUREF(Dataset[pd.DataFrame]):
                                 year,
                                 value,
                                 unit,
-                                _MONEY_YEAR_SRC,
+                                money_year,
                                 value_src,
                                 unit,
                             )
                         )
-                for variable in ("efficiency", "lifetime"):
+                for variable in _CONSTANT_SEGMENTS.values():
                     entries = by_euref_tech.get((euref_tech, variable))
                     if not entries:
                         continue

@@ -38,7 +38,8 @@ _TECHS: dict[str, str] = {
     "biomass_plant": "Biomass PP",
     "waste_plant": "MSW incinerator",
     "heat_pump": "Local Heat Pump",
-    "electrode_boiler": "Local Electric Heating",
+    # electrode_boiler is not mapped: LUW only reports local resistance heating,
+    # which is far cheaper than an electric boiler
     "natural_gas_boiler": "Local NG Heating",
     "oil_boiler": "Local Oil Heating",
     "biomass_boiler": "Local Biomass Heating",
@@ -60,6 +61,9 @@ _VARIABLES: dict[str, str] = {
     "vopex": "Opex var",
 }
 _MONEY_YEAR_SRC = 2020
+# The source labels the methanation vopex `€/MWh_{SNG}`, but its value (0.0015) is
+# given in €/kWh like every other LUW vopex, so it is converted as €/kWh.
+_MISLABELED_KWH_UNITS: frozenset[str] = frozenset({"€/MWh_{SNG}"})
 
 
 def _clean_unit(unit: str) -> str:
@@ -78,18 +82,16 @@ def _convert_to_schema_unit(unit_src: str, variable: str) -> float:
 
     LUW reports capex/fopex on a `€/kW*` basis (electric-, H2-, SNG- or
     liquid-fuel-equivalent kW, all treated as generically "kW" here, matching
-    the legacy script's simplification) and vopex on a `€/kWh*` (or, for SNG,
-    already `€/MWh`) basis.
+    the legacy script's simplification) and vopex on a `€/kWh*` basis (see
+    `_MISLABELED_KWH_UNITS` for the one vopex labeled `€/MWh`).
     """
     if variable in ("capex", "fopex"):
         if "kW" in unit_src and "kWh" not in unit_src:
             return 1.0
         raise ValueError(f"Unexpected LUW {variable} unit '{unit_src}'")
     if variable == "vopex":
-        if "kWh" in unit_src:
+        if "kWh" in unit_src or unit_src in _MISLABELED_KWH_UNITS:
             return 1000.0  # Euro/kWh -> Euro/MWh
-        if "MWh" in unit_src:
-            return 1.0
         raise ValueError(f"Unexpected LUW vopex unit '{unit_src}'")
     raise ValueError(f"Unexpected LUW variable '{variable}'")
 

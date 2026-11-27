@@ -23,7 +23,8 @@ _COST_TECHS: dict[str, str] = {
     "photovoltaics_utility": "PVUtility",
     "photovoltaics_rooftop": "PVRooftop[residential]",
     "photovoltaics_rooftop_com": "PVRooftop[commercial]",
-    "run-of-river_hydro": "Hydro[small]",
+    # run-of-river hydro is not mapped: DIW only splits hydro into small and large
+    # plants, and large plants already stand for reservoir hydro
     "reservoir_hydro": "Hydro[large]",
     "natural_gas_turbine": "GasPowerPlant(CCGT)",
     "natural_gas_turbine_CCS": "GasPowerPlant(CCGT)+CCTS",
