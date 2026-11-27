@@ -79,7 +79,7 @@ class PotentialCapacityRenewables(DatasetCollection):
             )
             for node in missing_nodes:
                 data.loc[node] = euro_calliope_dataset.get_capacity_limit(element, node)
-            kind = "rooftop" if element.name == "rooftop_photovoltaics" else "ground"
+            kind = "rooftop" if element.name == "photovoltaics_rooftop" else "ground"
             description = (
                 f"Potential capacity of {element.name} is the {kind} PV potential of "
                 "the ENSPRESO 1 medium scenario. For missing nodes (CH, NO), the "

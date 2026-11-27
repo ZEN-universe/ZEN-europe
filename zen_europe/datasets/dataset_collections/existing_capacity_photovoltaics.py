@@ -54,7 +54,7 @@ class ExistingCapacityPhotovoltaics(DatasetCollection):
 
     def get_capacity_existing(self, element: Technology) -> Attribute:
         """Get the existing capacity of utility-scale or rooftop photovoltaics."""
-        if element.name == "photovoltaics":
+        if element.name == "photovoltaics_utility":
             data = self._get_utility(element)
             description = (
                 "The existing capacity of utility-scale photovoltaics is the "
@@ -62,7 +62,7 @@ class ExistingCapacityPhotovoltaics(DatasetCollection):
                 f"{self.MIN_UTILITY_CAPACITY_MW:g} MW. Smaller plants are rooftop "
                 "installations, which PowerPlantMatching only lists for Germany."
             )
-        elif element.name == "rooftop_photovoltaics":
+        elif element.name == "photovoltaics_rooftop":
             data = self._get_rooftop(element)
             description = (
                 "The existing capacity of rooftop photovoltaics is the total "
@@ -85,7 +85,7 @@ class ExistingCapacityPhotovoltaics(DatasetCollection):
         return powerplantmatching.calculate_capacity_existing(
             element,
             min_capacity=self.MIN_UTILITY_CAPACITY_MW,
-            proxy_element_name="photovoltaics",
+            proxy_element_name="photovoltaics_utility",
         )
 
     def _get_rooftop(self, element: Technology) -> pd.Series:

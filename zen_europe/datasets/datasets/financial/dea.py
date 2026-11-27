@@ -32,14 +32,14 @@ _MAIN_TECHS: dict[str, tuple[str, str, str, str | None]] = {
         "wind",
         "large",
     ),
-    "photovoltaics": (
+    "photovoltaics_utility": (
         "PV",
         "renewable power",
         "solar",
         "utility-scale, ground mounted",
     ),
-    "rooftop_photovoltaics": ("PV", "renewable power", "solar", "residential rooftop"),
-    "rooftop_photovoltaics_com": (
+    "photovoltaics_rooftop": ("PV", "renewable power", "solar", "residential rooftop"),
+    "photovoltaics_rooftop_com": (
         "PV",
         "renewable power",
         "solar",
@@ -82,7 +82,11 @@ _MAIN_TECHS: dict[str, tuple[str, str, str, str | None]] = {
 # dimension report under 'M'" convention, followed by every other agency here) their
 # rows are
 # tagged `plant_size="M"` regardless of which DEA label matched -- see `_parse_main`.
-_PV_TECHS = {"photovoltaics", "rooftop_photovoltaics", "rooftop_photovoltaics_com"}
+_PV_TECHS = {
+    "photovoltaics_utility",
+    "photovoltaics_rooftop",
+    "photovoltaics_rooftop_com",
+}
 _SIZE_MAP = {"S": "small", "M": "medium", "L": "large"}
 _SIZE_MAP_PV = {
     "S": "residential rooftop",

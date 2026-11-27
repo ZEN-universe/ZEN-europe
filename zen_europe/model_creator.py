@@ -8,7 +8,7 @@ from . import settings  # noqa: F401
 
 # import custom element classes to register them in the registry (side effect)
 from .elements.carriers import Biomass, Electricity  # noqa: F401
-from .elements.conversion_technologies import Photovoltaics  # noqa: F401
+from .elements.conversion_technologies import PhotovoltaicsUtility  # noqa: F401
 from .elements.energy_systems import EnergySystemNuts0  # noqa: F401
 from .elements.retrofitting_technologies import SMR_CCS  # noqa: F401
 from .elements.sectors import ElectricitySector  # noqa: F401

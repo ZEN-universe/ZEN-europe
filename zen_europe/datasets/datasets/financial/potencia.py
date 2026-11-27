@@ -42,9 +42,9 @@ from zen_europe.datasets.datasets.financial._cost_schema import (
 _TECHS: dict[str, tuple[str, str, str | None]] = {
     "wind_onshore": ("Wind power plants", "Onshore", None),
     "wind_offshore": ("Wind power plants", "Offshore", None),
-    "photovoltaics": ("Solar PV power plants", "Solar PV power plants", "L"),
-    "rooftop_photovoltaics": ("Solar PV power plants", "Solar PV power plants", "S"),
-    "rooftop_photovoltaics_com": (
+    "photovoltaics_utility": ("Solar PV power plants", "Solar PV power plants", "L"),
+    "photovoltaics_rooftop": ("Solar PV power plants", "Solar PV power plants", "S"),
+    "photovoltaics_rooftop_com": (
         "Solar PV power plants",
         "Solar PV power plants",
         "M",

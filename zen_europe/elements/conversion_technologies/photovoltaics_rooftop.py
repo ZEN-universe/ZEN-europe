@@ -24,13 +24,13 @@ if TYPE_CHECKING:
 from zen_creator import AssumptionInformation, Attribute, ConversionTechnology
 
 
-class RooftopPhotovoltaics(ConversionTechnology):
+class PhotovoltaicsRooftop(ConversionTechnology):
     """Class containing all data and assumptions for rooftop photovoltaics.
 
     Rooftop photovoltaics takes the costs of residential rooftop systems.
     """
 
-    name: str = "rooftop_photovoltaics"
+    name: str = "photovoltaics_rooftop"
 
     def __init__(self, model: Model, power_unit: str = "MW"):
         super().__init__(model=model, power_unit=power_unit)

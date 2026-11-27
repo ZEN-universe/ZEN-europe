@@ -27,10 +27,10 @@ if TYPE_CHECKING:
 from zen_creator import AssumptionInformation, Attribute, ConversionTechnology
 
 
-class Photovoltaics(ConversionTechnology):
+class PhotovoltaicsUtility(ConversionTechnology):
     """Class containing all data and assumptions for utility-scale photovoltaics."""
 
-    name: str = "photovoltaics"
+    name: str = "photovoltaics_utility"
 
     def __init__(self, model: Model, power_unit: str = "MW"):
         super().__init__(model=model, power_unit=power_unit)

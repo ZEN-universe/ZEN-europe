@@ -52,12 +52,12 @@ class EuroCalliope(Dataset[pd.Series]):
         data: dict[tuple[str, str], float] = {}
         data[("wind_onshore", "NO")] = 11.045267511637062 * 100
         data[("wind_offshore", "NO")] = 8.202832823416685 * 100
-        data[("photovoltaics", "NO")] = 0.28532725082404814 * 100
-        data[("rooftop_photovoltaics", "NO")] = 0.28532725082404814 * 100
+        data[("photovoltaics_utility", "NO")] = 0.28532725082404814 * 100
+        data[("photovoltaics_rooftop", "NO")] = 0.28532725082404814 * 100
         data[("wind_onshore", "CH")] = 0.4275919580817223 * 100
         data[("wind_offshore", "CH")] = 0.0
-        data[("photovoltaics", "CH")] = 0.5971794910850416 * 100
-        data[("rooftop_photovoltaics", "CH")] = 0.5971794910850416 * 100
+        data[("photovoltaics_utility", "CH")] = 0.5971794910850416 * 100
+        data[("photovoltaics_rooftop", "CH")] = 0.5971794910850416 * 100
         return pd.Series(data, name="potential_capacity_gw")
 
     # -------- methods ------------------------

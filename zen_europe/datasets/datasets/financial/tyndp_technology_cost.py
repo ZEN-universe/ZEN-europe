@@ -19,8 +19,8 @@ from zen_europe.datasets.datasets.financial._cost_schema import (
 _TECHS: dict[str, str] = {
     "wind_onshore": "Wind on-shore",
     "wind_offshore": "Wind off-shore",
-    "rooftop_photovoltaics": "Solar PV (residential)",
-    "photovoltaics": "Solar PV (commercial)",
+    "photovoltaics_rooftop": "Solar PV (residential)",
+    "photovoltaics_utility": "Solar PV (commercial)",
     "natural_gas_turbine": "CCGT",
     "oc_natural_gas_turbine": "OCGT",
 }

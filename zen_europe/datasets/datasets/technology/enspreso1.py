@@ -17,8 +17,8 @@ class ENSPRESO1(Dataset[dict[str, pd.Series]]):
 
     COLUMN_MAPPING = {
         "wind_onshore": "wind_onshore_capacity_gw_medium",
-        "photovoltaics": "solar_capacity_gw_medium_pv_ground",
-        "rooftop_photovoltaics": "solar_capacity_gw_medium_pv_roof",
+        "photovoltaics_utility": "solar_capacity_gw_medium_pv_ground",
+        "photovoltaics_rooftop": "solar_capacity_gw_medium_pv_roof",
     }
 
     def __init__(self, source_path: Path | str | None = None):

@@ -53,7 +53,7 @@ class PowerPlantMatching(Dataset[pd.DataFrame]):
         "pumped_hydro": {"Fueltype": ["Hydro"], "Technology": ["Pumped Storage"]},
         "wind_onshore": {"Fueltype": ["Wind"], "Technology": ["Onshore", np.nan]},
         "wind_offshore": {"Fueltype": ["Wind"], "Technology": ["Offshore"]},
-        "photovoltaics": {"Fueltype": ["Solar"], "Technology": ["PV", np.nan]},
+        "photovoltaics_utility": {"Fueltype": ["Solar"], "Technology": ["PV", np.nan]},
     }
 
     def __init__(self, source_path: Path | str | None = None):

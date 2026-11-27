@@ -84,13 +84,13 @@ class PanEuropeanClimateDatabase(Dataset[dict[str, pd.DataFrame]]):
     # regional resolution (not NUTS0) and aggregated to NUTS0 afterwards -- see
     # `_aggregate_to_nuts0`.
     TECHNOLOGY_REQUESTS: dict[str, dict[str, str | None]] = {
-        "photovoltaics": {
+        "photovoltaics_utility": {
             "variable": "solar_photovoltaic_generation_capacity_factor",
             "technology": "62",  # SPV utility-scale fixed
             "energy_scenario": None,
             "spatial_resolution": "nuts_0",
         },
-        "rooftop_photovoltaics": {
+        "photovoltaics_rooftop": {
             "variable": "solar_photovoltaic_generation_capacity_factor",
             "technology": "61",  # SPV residential rooftop
             "energy_scenario": None,
@@ -282,7 +282,7 @@ class PanEuropeanClimateDatabase(Dataset[dict[str, pd.DataFrame]]):
         through unchanged; wind and hydro indicators are downloaded at PECD's
         own regional resolution (see `TECHNOLOGY_REQUESTS`) and need aggregating.
         """
-        if technology in {"photovoltaics", "rooftop_photovoltaics"}:
+        if technology in {"photovoltaics_utility", "photovoltaics_rooftop"}:
             return data
         if technology in {
             "reservoir_hydro",
@@ -364,8 +364,8 @@ class PanEuropeanClimateDatabase(Dataset[dict[str, pd.DataFrame]]):
         """
 
         if element.name in [
-            "photovoltaics",
-            "rooftop_photovoltaics",
+            "photovoltaics_utility",
+            "photovoltaics_rooftop",
             "wind_onshore",
             "wind_offshore",
         ]:

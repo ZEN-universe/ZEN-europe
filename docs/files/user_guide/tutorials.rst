@@ -42,7 +42,7 @@ To choose the dataset name and the output location:
 This writes ``./datasets/my_dataset`` and ``./datasets/config.yaml``.
 
 After a run, open ``sources.md`` in any element folder, for example
-``data/created_models/zen-europe/set_technologies/set_conversion_technologies/photovoltaics/sources.md``,
+``data/created_models/zen-europe/set_technologies/set_conversion_technologies/photovoltaics_utility/sources.md``,
 to see where each value comes from.
 
 
@@ -218,7 +218,7 @@ Remove or add single elements
    settings:
      structure:
        remove_technologies: [nuclear, lignite_coal_plant]
-       set_conversion_technologies: [photovoltaics]
+       set_conversion_technologies: [photovoltaics_utility]
 
 ``remove_technologies`` accepts technologies and carriers.
 ``set_conversion_technologies``, ``set_storage_technologies``,
@@ -430,7 +430,7 @@ of writing it:
    print(list(model.conversion_technologies))
 
    # values of an attribute
-   capex = model.elements["photovoltaics"].capex_specific_conversion
+   capex = model.elements["photovoltaics_utility"].capex_specific_conversion
    print(capex.default_value, capex.unit)
    print(capex.df)
 
