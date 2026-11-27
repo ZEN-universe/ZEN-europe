@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import os
 from datetime import datetime
 from pathlib import Path
 
@@ -34,9 +35,17 @@ def _read_cache(path: Path | None) -> pd.DataFrame | None:
 
 
 def _write_cache(path: Path | None, data: pd.DataFrame) -> None:
-    """Cache the yearly series, unless there is no source path to cache it in."""
-    if path is not None:
-        data.to_csv(path)
+    """Cache the yearly series, unless there is no source path to cache it in.
+
+    The series is written to a temporary file that then replaces the cache in one
+    step, so that a parallel process (e.g. a pytest-xdist worker) never reads a
+    half-written cache.
+    """
+    if path is None:
+        return
+    temporary = path.with_name(f"{path.name}.{os.getpid()}.tmp")
+    data.to_csv(temporary)
+    os.replace(temporary, path)
 
 
 def _read_yearly_observations(url: str) -> pd.DataFrame:

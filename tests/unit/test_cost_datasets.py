@@ -1,19 +1,48 @@
-"""Unit tests for the agency datasets of the technology cost database."""
+"""Unit tests for the agency datasets of the technology cost database and the ECB
+series they are rebased with."""
 
 from __future__ import annotations
 
-from typing import cast
+from pathlib import Path
+from typing import Any, cast
 
 import pandas as pd
 import pytest
 
 from zen_europe.datasets.datasets.financial._cost_schema import SCENARIOS
+from zen_europe.datasets.datasets.financial.ECB import _read_cache, _write_cache
 from zen_europe.datasets.datasets.financial.euref import EUREF
 from zen_europe.datasets.datasets.financial.luw import LUW
 
 from .conftest import RAW_DATA_PATH
 
 COST_PATH = RAW_DATA_PATH / "03-technology" / "cost"
+
+
+def test_ecb_cache_appears_only_once_complete(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A parallel process that finds the cache must find it complete, so the cache
+    file must not exist while the series is being written."""
+    path = tmp_path / "ecb_inflation.csv"
+    data = pd.DataFrame(
+        {"inflation_rate": [1.02, 1.03]}, index=pd.Index([2023, 2024], name="year")
+    )
+    to_csv = pd.DataFrame.to_csv
+    exists_while_writing = []
+
+    def spy(self: pd.DataFrame, *args: Any, **kwargs: Any) -> Any:
+        exists_while_writing.append(path.exists())
+        result = to_csv(self, *args, **kwargs)
+        exists_while_writing.append(path.exists())
+        return result
+
+    monkeypatch.setattr(pd.DataFrame, "to_csv", spy)
+    _write_cache(path, data)
+
+    assert exists_while_writing == [False, False]
+    pd.testing.assert_frame_equal(cast(pd.DataFrame, _read_cache(path)), data)
+    assert list(tmp_path.iterdir()) == [path]
 
 
 def _select(costs: pd.DataFrame, technology: str, variable: str) -> pd.DataFrame:
