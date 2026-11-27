@@ -43,8 +43,9 @@ class PotentialCapacityRenewables(DatasetCollection):
         Get the potential capacity for renewable technologies.
 
         Wind uses ENSPRESO 2, with ENSPRESO 1 (medium) for the UK onshore, which
-        ENSPRESO 2 does not cover. Photovoltaics uses ENSPRESO 1, with EuroCalliope
-        as a fallback for the nodes ENSPRESO 1 does not cover (CH, NO).
+        ENSPRESO 2 does not cover. Ground-mounted and rooftop photovoltaics use
+        ENSPRESO 1 (medium), with EuroCalliope as a fallback for the nodes ENSPRESO 1
+        does not cover (CH, NO).
         """
         if element.name == "wind_offshore":
             enspreso2 = cast(ENSPRESO2, self.data["enspreso2"])
@@ -78,10 +79,11 @@ class PotentialCapacityRenewables(DatasetCollection):
             )
             for node in missing_nodes:
                 data.loc[node] = euro_calliope_dataset.get_capacity_limit(element, node)
+            kind = "rooftop" if element.name == "rooftop_photovoltaics" else "ground"
             description = (
-                "Potential capacity data for renewable technologies is derived "
-                "from the high scenario of the ENSPRESO 1 dataset. For missing "
-                "nodes (CH, NO), the EuroCalliope dataset is used as a fallback."
+                f"Potential capacity of {element.name} is the {kind} PV potential of "
+                "the ENSPRESO 1 medium scenario. For missing nodes (CH, NO), the "
+                "rooftop PV potential of EuroCalliope is used as a fallback."
             )
         data = data.sort_index()
         data.index.name = "node"

@@ -153,7 +153,12 @@ class PowerPlantMatching(Dataset[pd.DataFrame]):
         return data
 
     # -------- methods ------------------------
-    def calculate_capacity_existing(self, element: Technology) -> pd.Series:
+    def calculate_capacity_existing(
+        self,
+        element: Technology,
+        min_capacity: float = 0.0,
+        proxy_element_name: str | None = None,
+    ) -> pd.Series:
         """
         Calculate today's fleet of a technology without writing it to the element,
         so that attributes derived from the fleet are independent of whether
@@ -161,22 +166,28 @@ class PowerPlantMatching(Dataset[pd.DataFrame]):
 
         Args:
             element: The element for which to calculate the existing capacity.
+            min_capacity: Plants below this capacity (MW) are left out.
+            proxy_element_name: Take the plants of this technology instead.
 
         Returns:
             pd.Series: The capacity (GW) per node and year of construction.
         """
+        technology = proxy_element_name or element.name
         data_raw = self.data.copy()
         data_raw = data_raw[
-            data_raw["DateOut"].isna()
-            | (data_raw["DateOut"] > element.settings.time.reference_year)
+            (
+                data_raw["DateOut"].isna()
+                | (data_raw["DateOut"] > element.settings.time.reference_year)
+            )
+            & (data_raw["Capacity"] >= min_capacity)
         ]
         data = data_raw.groupby(["technology", "node", "year"])["Capacity"].sum()
         data = data.sort_index() / 1000  # convert MW to GW
-        assert element.name in data.index.get_level_values(0), (
-            f"Existing capacity data for {element.name} is not available in the "
+        assert technology in data.index.get_level_values(0), (
+            f"Existing capacity data for {technology} is not available in the "
             "PowerPlantMatching dataset."
         )
-        data = data.loc[element.name]
+        data = data.loc[technology]
         reference_year = element.settings.time.reference_year
         data = data[data.index.get_level_values("year") < reference_year]
         return format_capacity_existing(data)

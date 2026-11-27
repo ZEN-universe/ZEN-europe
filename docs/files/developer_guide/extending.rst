@@ -244,7 +244,8 @@ an explicit assumption. It does not read or transform raw data:
    def _set_capacity_existing(self) -> Attribute:
        """Existing capacity of photovoltaics."""
        if self.settings.investment.use_existing_capacities:
-           return IRENASolarCapacity(source_path=self.source_path).get_capacity_existing(self)
+           existing = ExistingCapacityPhotovoltaics(source_path=self.source_path)
+           return existing.get_capacity_existing(self)
        return self.capacity_existing.set_data(
            default_value=0,
            source=AssumptionInformation(description="No existing capacities."),

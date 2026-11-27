@@ -2,6 +2,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from zen_europe.datasets.dataset_collections.existing_capacity_photovoltaics import (
+    ExistingCapacityPhotovoltaics,
+)
 from zen_europe.datasets.dataset_collections.lifetime_expectation import (
     LifetimeExpectation,
 )
@@ -10,9 +13,6 @@ from zen_europe.datasets.dataset_collections.potential_capacity_renewables impor
 )
 from zen_europe.datasets.dataset_collections.technology_cost_database import (
     TechnologyCostDatabase,
-)
-from zen_europe.datasets.datasets.technology.irena_solar_capacity import (
-    IRENASolarCapacity,
 )
 from zen_europe.datasets.datasets.technology.pan_european_climate_database import (
     PanEuropeanClimateDatabase,
@@ -28,7 +28,7 @@ from zen_creator import AssumptionInformation, Attribute, ConversionTechnology
 
 
 class Photovoltaics(ConversionTechnology):
-    """Class containing all data and assumptions for photovoltaics."""
+    """Class containing all data and assumptions for utility-scale photovoltaics."""
 
     name: str = "photovoltaics"
 
@@ -152,14 +152,14 @@ class Photovoltaics(ConversionTechnology):
 
     def _set_capacity_existing(self) -> Attribute:
         """
-        Sets the existing capacity for photovoltaics.
+        Sets the existing capacity for utility-scale photovoltaics.
 
         Returns:
             Attribute: An Attribute object containing the existing capacity data.
         """
         if self.settings.investment.use_existing_capacities:
-            irena = IRENASolarCapacity(source_path=self.source_path)
-            return irena.get_capacity_existing(self)
+            existing = ExistingCapacityPhotovoltaics(source_path=self.source_path)
+            return existing.get_capacity_existing(self)
         else:
             attr = self.capacity_existing
             attr.set_data(

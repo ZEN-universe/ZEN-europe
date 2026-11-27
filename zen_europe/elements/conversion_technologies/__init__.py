@@ -72,6 +72,7 @@ from .paper_production import PaperProduction
 from .photovoltaics import Photovoltaics
 from .pyrolysis import Pyrolysis
 from .refining import Refining
+from .rooftop_photovoltaics import RooftopPhotovoltaics
 from .run_of_river_hydro import RunOfRiverHydro
 from .SMR import SMR
 from .waste_boiler_DH import WasteBoilerDH
@@ -83,6 +84,7 @@ from .wind_onshore import WindOnshore
 
 __all__ = [
     "Photovoltaics",
+    "RooftopPhotovoltaics",
     "DistrictHeatingGrid",
     "WindOffshore",
     "WindOnshore",

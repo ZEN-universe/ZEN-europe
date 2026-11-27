@@ -118,6 +118,7 @@ class TechnologyDiffusionMannhardt(Dataset[dict[str, pd.DataFrame]]):
     ]
     HIGH = [
         "photovoltaics",
+        "rooftop_photovoltaics",
         "natural_gas_boiler",
         "heat_pump",
         "oil_boiler",
